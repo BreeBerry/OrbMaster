@@ -2842,15 +2842,17 @@ const AUDIO = {
 };
 
 // Boss-specific battle tracks (keyed by boss index 0-based)
-// Bosses 8-10 (Queen Asabeth, Elkgore, Mad Martin) fall back to main music
 const BOSS_TRACKS = {
-  0: 'Audio/Boss 1 - Lemon_Zest_Fury.mp3',          // Lemons
+  0: 'Audio/Boss 1 - Lemon_Zest_Fury.mp3',             // Lemons
   1: 'Audio/Boss 2 - Gears_of_the_Glacial_Throne.mp3', // Templefrist
-  2: 'Audio/Boss 3 - The_Conductor_s_Gambit.mp3',    // Bigginsly
-  3: 'Audio/Boss 4 - Laboratory_Logic.mp4',          // Nanomic (mp4 container)
-  4: 'Audio/Boss 5 - High_Stakes_Ballroom.mp3',      // Natty D
-  5: 'Audio/Boss 6 - Petal_Punch_Velocity.mp3',      // Pretty Pea
-  6: 'Audio/Boss 7 - Titan_s_Threshold.mp4',         // Sir Louie (mp4 container)
+  2: 'Audio/Boss 3 - The_Conductor_s_Gambit.mp3',      // Bigginsly
+  3: 'Audio/Boss 4 - Laboratory_Logic.mp3',             // Nanomic
+  4: 'Audio/Boss 5 - High_Stakes_Ballroom.mp3',         // Natty D
+  5: 'Audio/Boss 6 - Petal_Punch_Velocity.mp3',         // Pretty Pea
+  6: 'Audio/Boss 7 - Titan_s_Threshold.mp3',            // Sir Louie
+  7: 'Audio/Boss 8 - Sovereign_s_Last_Decree.mp3',      // Queen Asabeth
+  8: 'Audio/Boss 9 - Titan_Beneath_the_Bough.mp3',      // Elkgore
+  9: 'Audio/Boss 10 - Mad_Martin_s_Last_Beat.mp3',      // Mad Martin
 };
 
 // Register service worker for offline play
@@ -2865,10 +2867,4 @@ document.addEventListener('click',      ensureAudio, { once: true });
 
 // Register service worker for offline play
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(()=>{});
-  });
-}
-
-// Init boss progress
-if (STAT
+  window.addEventListener
