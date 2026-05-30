@@ -2842,8 +2842,15 @@ const AUDIO = {
 };
 
 // Boss-specific battle tracks (keyed by boss index 0-based)
+// Bosses 8-10 (Queen Asabeth, Elkgore, Mad Martin) fall back to main music
 const BOSS_TRACKS = {
-  0: 'Audio/Boss 1 - Lemon_Zest_Fury.mp3',
+  0: 'Audio/Boss 1 - Lemon_Zest_Fury.mp3',          // Lemons
+  1: 'Audio/Boss 2 - Gears_of_the_Glacial_Throne.mp3', // Templefrist
+  2: 'Audio/Boss 3 - The_Conductor_s_Gambit.mp3',    // Bigginsly
+  3: 'Audio/Boss 4 - Laboratory_Logic.mp4',          // Nanomic (mp4 container)
+  4: 'Audio/Boss 5 - High_Stakes_Ballroom.mp3',      // Natty D
+  5: 'Audio/Boss 6 - Petal_Punch_Velocity.mp3',      // Pretty Pea
+  6: 'Audio/Boss 7 - Titan_s_Threshold.mp4',         // Sir Louie (mp4 container)
 };
 
 // Register service worker for offline play
@@ -2864,25 +2871,4 @@ if ('serviceWorker' in navigator) {
 }
 
 // Init boss progress
-if (STATE.bossProgress[0] < 1) STATE.bossProgress[0] = 1;
-
-// Ensure starting colors are unlocked
-['red','blue','yellow','green','orange'].forEach(c => {
-  if (!STATE.unlockedColors.includes(c)) STATE.unlockedColors.push(c);
-});
-
-// Apply any unlocks earned from past boss victories
-applyColorUnlocks();
-applyMindBreakerRank();
-
-// Ensure equippedOrbs has 4 slots
-while (STATE.equippedOrbs.length < 4) STATE.equippedOrbs.push(null);
-
-// Init profile + settings
-initProfile();
-initSettings();
-
-saveState();
-</script>
-</body>
-</html>
+if (STAT
