@@ -2370,52 +2370,75 @@ function renderInventory() {
   document.getElementById('inv-frags').textContent = getTotalFrags();
   const content = document.getElementById('inv-content');
 
-  const rarities = ['common','uncommon','rare'];
-  const rarityLabel = {common:'Common Orbs',uncommon:'Uncommon Orbs',rare:'Rare Orbs'};
-
-  let html = `<div style="text-align:center;margin-bottom:6px;font-size:12px;color:#a78bfa;">Collect fragments → buy orbs → unlock power</div>`;
-
-  rarities.forEach(rarity => {
-    html += `<div class="inv-section-title">${rarityLabel[rarity]}</div><div class="orb-grid">`;
-    ORB_ORDER.filter(c=>ORB_DEFS[c].rarity===rarity).forEach(color => {
+  // ── Section 1: Owned Ability Orbs ──
+  const ownedColors = ORB_ORDER.filter(c => STATE.ownedOrbs[c]);
+  let orbsHtml = `<div class="inv-section-title">⚔️ Owned Ability Orbs</div>`;
+  if (ownedColors.length === 0) {
+    orbsHtml += `<div style="text-align:center;color:#6d28d9;font-size:12px;padding:16px 0;">
+      No ability orbs yet — forge them in the Orb Forge!
+    </div>`;
+  } else {
+    orbsHtml += `<div class="orb-grid">`;
+    ownedColors.forEach(color => {
       const def = ORB_DEFS[color];
-      const unlocked = STATE.unlockedOrbs.includes(color);
-      const owned = STATE.ownedOrbs[color];
-      const frags = STATE.fragments[color] || 0;
-      const canBuy = unlocked && !owned && frags >= def.cost;
-      html += `
-        <div class="orb-card ${!unlocked?'locked-card':''}">
+      const isEquipped = STATE.equippedOrbs.includes(color);
+      orbsHtml += `
+        <div class="orb-card" style="border-color:${isEquipped?'#f59e0b':'#4c1d95'};">
           <img src="${def.img}" alt="${color}">
           <div class="orb-card-name">${def.name}</div>
-          <div class="orb-card-count">${unlocked?frags+' frags':'🔒'}</div>
           <div class="orb-card-ability">${def.abilityDesc}</div>
-          <span class="orb-rarity-badge rarity-${rarity}">${rarity}</span>
-          ${unlocked && owned ? `<div class="owned-badge">✅ Owned</div>` : ''}
-          ${unlocked && !owned ? `
-            <div style="font-size:10px;color:#fbbf24;margin-top:3px;">Cost: ${def.cost} frags</div>
-            <div class="shop-btn-row">
-              <button class="buy-orb-btn" ${canBuy?'':'disabled'} onclick="buyOrb('${color}')">
-                ${canBuy?'Buy':'Need '+(def.cost-frags)+' more'}
-              </button>
-            </div>
-          ` : ''}
-        </div>
-      `;
+          <span class="orb-rarity-badge rarity-${def.rarity}">${def.rarity}</span>
+          <div class="owned-badge" style="color:${isEquipped?'#fbbf24':'#10b981'};">
+            ${isEquipped ? '⚡ Equipped' : '✅ In Stash'}
+          </div>
+        </div>`;
     });
-    html += '</div>';
+    orbsHtml += `</div>`;
+  }
+
+  // ── Section 2: Purchased Upgrades ──
+  const rank = STATE.mindBreakerRank || 1;
+  const purchasedUpgrades = MINDBREAKER_UPGRADES.filter(u => rank >= u.rank);
+  let upgradesHtml = `<div class="inv-section-title">🪨 Purchased Upgrades</div>`;
+  upgradesHtml += `<div style="background:#1e0a3c;border-radius:10px;padding:10px 14px;margin-bottom:8px;border:1px solid #4c1d95;">
+    <div style="font-size:13px;color:#e9d5ff;font-weight:bold;">MindBreaker Altar — Rank ${rank}</div>
+    <div style="font-size:11px;color:#a78bfa;margin-top:3px;">${rank >= 6 ? '6 orb slots (max)' : rank >= 5 ? '5 orb slots' : '4 orb slots (base)'}</div>
+  </div>`;
+  if (purchasedUpgrades.length === 0) {
+    upgradesHtml += `<div style="text-align:center;color:#6d28d9;font-size:12px;padding:8px 0;">
+      No upgrades purchased yet — visit the Orb Forge!
+    </div>`;
+  } else {
+    purchasedUpgrades.forEach(upg => {
+      upgradesHtml += `
+        <div style="background:#1e0a3c;border-radius:10px;padding:10px 14px;margin-bottom:8px;border:1px solid #10b981;display:flex;align-items:center;gap:10px;">
+          <div style="font-size:28px;">${upg.rank===5?'🔵':'🟣'}</div>
+          <div>
+            <div style="font-size:13px;color:#e9d5ff;font-weight:bold;">✅ ${upg.name}</div>
+            <div style="font-size:10px;color:#86efac;margin-top:2px;">${upg.desc}</div>
+          </div>
+        </div>`;
+    });
+  }
+
+  // ── Section 3: Fragment Wallet ──
+  const unlockedColors = STATE.unlockedColors || ['red','blue','yellow','green','orange'];
+  let fragsHtml = `<div class="inv-section-title">💎 Fragment Wallet</div><div class="orb-grid">`;
+  ORB_ORDER.forEach(color => {
+    const def = ORB_DEFS[color];
+    const isUnlocked = unlockedColors.includes(color);
+    const frags = STATE.fragments[color] || 0;
+    fragsHtml += `
+      <div class="orb-card ${!isUnlocked ? 'locked-card' : ''}">
+        <img src="${def.img}" alt="${color}" style="${!isUnlocked ? 'filter:grayscale(1);opacity:0.35' : ''}">
+        <div class="orb-card-name">${def.name}</div>
+        <div class="orb-card-count" style="color:#fbbf24;">${isUnlocked ? frags + ' frags' : '🔒'}</div>
+        <span class="orb-rarity-badge rarity-${def.rarity}">${def.rarity}</span>
+      </div>`;
   });
+  fragsHtml += `</div>`;
 
-  content.innerHTML = html;
-}
-
-function buyOrb(color) {
-  const def = ORB_DEFS[color];
-  if ((STATE.fragments[color]||0) < def.cost) { showToast('Not enough fragments!'); return; }
-  STATE.fragments[color] -= def.cost;
-  STATE.ownedOrbs[color] = 1;
-  saveState();
-  showToast(`${def.name} Orb purchased!`);
-  renderInventory();
+  content.innerHTML = orbsHtml + upgradesHtml + fragsHtml;
 }
 
 // ══════════════════════════════════════════════
@@ -2833,38 +2856,4 @@ const AUDIO = {
       AUDIO._osc(1047,'sine',0.6,0.5,0.5);
     },
     lose() {
-      [400,350,300,220].forEach((f,i) => AUDIO._osc(f,'sawtooth',0.25,0.3,i*0.15));
-    },
-    unlock()    { [440,550,660,880].forEach((f,i)=>AUDIO._osc(f,'sine',0.2,0.35,i*0.1)); },
-    forge()     { AUDIO._osc(200,'sawtooth',0.1,0.4); AUDIO._osc(400,'sine',0.15,0.4,0.1); AUDIO._osc(800,'sine',0.2,0.5,0.2); },
-    navigate()  { AUDIO._osc(500,'sine',0.06,0.15); },
-  }
-};
-
-// Boss-specific battle tracks (keyed by boss index 0-based)
-const BOSS_TRACKS = {
-  0: 'Audio/Boss 1 - Lemon_Zest_Fury.mp3',             // Lemons
-  1: 'Audio/Boss 2 - Gears_of_the_Glacial_Throne.mp3', // Templefrist
-  2: 'Audio/Boss 3 - The_Conductor_s_Gambit.mp3',      // Bigginsly
-  3: 'Audio/Boss 4 - Laboratory_Logic.mp3',             // Nanomic
-  4: 'Audio/Boss 5 - High_Stakes_Ballroom.mp3',         // Natty D
-  5: 'Audio/Boss 6 - Petal_Punch_Velocity.mp3',         // Pretty Pea
-  6: 'Audio/Boss 7 - Titan_s_Threshold.mp3',            // Sir Louie
-  7: 'Audio/Boss 8 - Sovereign_s_Last_Decree.mp3',      // Queen Asabeth
-  8: 'Audio/Boss 9 - Titan_Beneath_the_Bough.mp3',      // Elkgore
-  9: 'Audio/Boss 10 - Mad_Martin_s_Last_Beat.mp3',      // Mad Martin
-};
-
-// Register service worker for offline play
-function ensureAudio() {
-  if (AUDIO.started) return;
-  AUDIO.started = true;
-  AUDIO.init();
-  AUDIO.startMusic();
-}
-document.addEventListener('touchstart', ensureAudio, { once: true });
-document.addEventListener('click',      ensureAudio, { once: true });
-
-// Register service worker for offline play
-if ('serviceWorker' in navigator) {
-  window.addEventListener
+      [400,350,300,220].forEach((
