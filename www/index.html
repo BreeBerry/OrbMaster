@@ -1,0 +1,2888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>OrbMaster</title>
+
+<!-- PWA / Android App -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#7c3aed">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="OrbMaster">
+<link rel="apple-touch-icon" href="Images/OrbMaster title trans.png">
+<meta name="description" content="Crack the code. Master the Orbs.">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; touch-action: manipulation; }
+  /* ── GLOBAL BUTTON TYPOGRAPHY ── */
+  button, input, select, textarea {
+    font-family: var(--font-sans);
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Primary action buttons — bold, clean sans */
+  .launch-main-btn,
+  .start-battle-btn,
+  .submit-btn,
+  .results-btn,
+  .modal-btn,
+  .forge-buy-btn,
+  .altar-upgrade-btn,
+  .buy-orb-btn {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  /* Secondary / navigation buttons — medium weight sans */
+  .launch-side-btn,
+  .back-btn,
+  .nav-btn,
+  .clear-btn,
+  .codex-tab,
+  .reset-btn,
+  .settings-row button {
+    font-family: var(--font-sans);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+
+  /* Ability & orb interaction buttons — sans, readable at small size */
+  .ability-btn,
+  .picker-orb,
+  .roster-orb,
+  .ability-equip-slot,
+  .forge-card {
+    font-family: var(--font-sans);
+    font-weight: 400;
+  }
+
+  /* Mono buttons — technical / numeric / code matrix */
+  .code-size-btn,
+  .row-num,
+  .forge-frags,
+  .fragment-display,
+  .turns-left,
+  .picker-label,
+  .altar-rank,
+  .altar-upgrade-cost,
+  .forge-card-frags,
+  .forge-card-have,
+  .forge-card-cost {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    letter-spacing: 0.03em;
+  }
+
+  :root {
+    --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, "Noto Sans", sans-serif,
+      "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+      "Liberation Mono", "Courier New", monospace;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background: #1a0a2e;
+    color: #f0e6d3;
+    min-height: 100vh;
+    overflow-x: hidden;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+  .screen { display: none; min-height: 100vh; flex-direction: column; }
+  .screen.active { display: flex; }
+
+  /* ── TITLE SCREEN ── */
+  #screen-title {
+    background: url('Images/OrbMaster blank.png') center/cover;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    position: relative;
+  }
+  #screen-title::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: rgba(10,0,30,0.55);
+  }
+  .title-content { position: relative; text-align: center; padding: 20px; margin-top: -18vh; }
+  .title-logo { width: 85%; max-width: 340px; filter: drop-shadow(0 0 20px #a855f7); }
+  .press-start-img { width: 70%; max-width: 280px; margin-top: 30px; animation: pulse 1.4s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .title-tagline { font-size: 12px; color: #c4b5fd; margin-top: 16px; letter-spacing: 2px; }
+
+  /* ── SHARED HEADER ── */
+  .game-header {
+    background: linear-gradient(135deg,#3b1fa0,#1e0a4a);
+    padding: 12px 14px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 2px solid #a855f7;
+    flex-shrink: 0;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.6);
+  }
+  .back-btn {
+    background: #3b1fa0; border: 1px solid #7c3aed; color: #e9d5ff;
+    padding: 6px 14px; border-radius: 20px; font-size: 13px; cursor: pointer;
+  }
+  .back-btn:active { background: #5b21b6; }
+  .header-title { font-size: 17px; color: #ffffff; font-weight: bold; letter-spacing: 1px; text-shadow: 0 1px 6px rgba(0,0,0,0.8); }
+  .fragment-display { display: flex; align-items: center; gap: 4px; font-size: 13px; color: #fde68a; font-weight: bold; text-shadow: 0 1px 4px rgba(0,0,0,0.8); font-family: var(--font-mono); }
+
+  /* ── NAV BAR ── */
+  .nav-bar {
+    background: #1e0a4a;
+    border-top: 2px solid #7c3aed;
+    display: flex;
+    flex-shrink: 0;
+  }
+  .nav-btn {
+    flex: 1; padding: 10px 4px; text-align: center;
+    font-size: 10px; color: #a78bfa; cursor: pointer;
+    border: none; background: none;
+    transition: background 0.15s;
+  }
+  .nav-btn.active, .nav-btn:active { background: #2d1b69; color: #e9d5ff; }
+  .nav-icon { font-size: 20px; display: block; margin-bottom: 2px; }
+
+  /* ── CAMPAIGN SCREEN ── */
+  #screen-campaign {
+    background: url('Images/stone wall.png') center/cover fixed;
+  }
+  #screen-campaign::before {
+    content: ''; position: fixed; inset: 0;
+    background: rgba(10,0,30,0.45); pointer-events: none;
+  }
+  .campaign-scroll {
+    flex: 1; overflow-y: auto; padding: 14px;
+    position: relative;
+  }
+  .boss-card {
+    background: linear-gradient(135deg, rgba(45,27,105,0.92), rgba(15,5,40,0.92));
+    border: 1px solid #7c3aed;
+    border-radius: 14px; margin-bottom: 14px;
+    display: flex; flex-direction: column;
+    cursor: pointer;
+    transition: border-color 0.2s, transform 0.1s;
+    position: relative; overflow: hidden;
+  }
+  .boss-card.locked { opacity: 0.5; cursor: not-allowed; }
+  .boss-card.unlocked:active { transform: scale(0.97); border-color: #a855f7; }
+  .boss-card.beaten { border-color: #10b981; }
+  /* Full-width boss image at top */
+  .boss-img-wrap {
+    width: 100%; height: 200px;
+    position: relative; overflow: hidden;
+    border-radius: 14px 14px 0 0;
+  }
+  .boss-img {
+    width: 100%; height: 100%;
+    object-fit: contain; object-position: center bottom;
+    background: radial-gradient(ellipse at bottom, rgba(88,28,220,0.25) 0%, transparent 70%);
+  }
+  .boss-img-locked-overlay {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.45);
+    font-size: 52px;
+  }
+  .boss-card-body { padding: 10px 12px 12px; }
+  .boss-info { flex: 1; }
+  .boss-name { font-size: 18px; color: #e9d5ff; font-weight: bold; }
+  .boss-level { font-size: 11px; color: #a78bfa; margin-top: 2px; }
+  .boss-loot { font-size: 10px; color: #86efac; margin-top: 4px; }
+  .boss-req { font-size: 10px; color: #fbbf24; margin-top: 2px; }
+  .boss-badge { position: absolute; top: 10px; right: 10px; font-size: 24px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8)); }
+  .boss-orb-preview { display: flex; gap: 4px; margin-top: 6px; }
+  .mini-orb { width: 20px; height: 20px; object-fit: contain; }
+  .boss-code-size { font-size: 10px; color: #f9a8d4; }
+
+  /* ── LOADOUT SCREEN ── */
+  #screen-loadout { background: linear-gradient(180deg, #1a0a2e, #0f0520); }
+  .loadout-boss-section {
+    background: linear-gradient(180deg,#1a0a2e,#2d1b69);
+    border-bottom: 2px solid #7c3aed;
+    display: flex; flex-direction: column; align-items: center;
+    position: relative;
+  }
+  .loadout-boss-img {
+    width: 100%; height: 220px;
+    object-fit: contain; object-position: center bottom;
+    display: block;
+  }
+  .loadout-boss-info {
+    width: 100%; padding: 10px 14px 12px;
+    background: linear-gradient(0deg, rgba(15,5,40,0.95) 0%, transparent 100%);
+  }
+  .loadout-boss-name { font-size: 20px; color: #e9d5ff; font-weight: bold; }
+  .loadout-boss-loot { font-size: 11px; color: #86efac; margin-top: 4px; }
+  .loadout-boss-special { font-size: 10px; color: #fb923c; margin-top: 3px; }
+
+  /* ── LOADOUT REDESIGN ── */
+  .loadout-body { flex: 1; overflow-y: auto; }
+  .loadout-section {
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(124,58,237,0.25);
+  }
+  .section-title {
+    font-size: 11px; color: #a78bfa; letter-spacing: 1.5px;
+    text-transform: uppercase; margin-bottom: 10px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .section-title::after { content:''; flex:1; height:1px; background:rgba(124,58,237,0.3); }
+
+  /* MindBreaker Adjuster */
+  .mindbreaker-altar {
+    background: linear-gradient(135deg,rgba(30,10,74,0.8),rgba(10,3,30,0.8));
+    border: 1px solid #7c3aed; border-radius: 12px;
+    padding: 12px; margin-bottom: 8px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .altar-icon { font-size: 32px; flex-shrink: 0; }
+  .altar-info { flex: 1; }
+  .altar-name { font-size: 13px; color: #e9d5ff; font-weight: bold; }
+  .altar-rank { font-size: 10px; color: #a78bfa; margin-top: 2px; }
+  .code-size-adjuster { display: flex; gap: 6px; margin-top: 10px; }
+  .code-size-btn {
+    flex: 1; padding: 10px 4px; text-align: center;
+    border-radius: 8px; border: 1px solid #4c1d95;
+    background: rgba(15,5,40,0.6); color: #6d28d9;
+    font-size: 16px; font-weight: bold; cursor: pointer;
+    transition: all 0.15s;
+    font-family: var(--font-mono);
+  }
+  .code-size-btn.active { background: linear-gradient(135deg,#7c3aed,#4f46e5); border-color: #a855f7; color: white; box-shadow: 0 0 10px rgba(124,58,237,0.5); }
+  .code-size-btn.locked-size { opacity: 0.3; cursor: not-allowed; }
+  .code-size-btn:not(.locked-size):not(.active):active { border-color: #7c3aed; color: #c4b5fd; }
+  .code-size-label { font-size: 9px; color: #a78bfa; margin-top: 2px; }
+
+  /* Ability Slots */
+  .ability-slots-row { display: flex; gap: 8px; justify-content: center; margin-bottom: 10px; }
+  .ability-equip-slot {
+    width: 58px; height: 58px; border-radius: 12px;
+    border: 2px dashed #4c1d95;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    cursor: pointer; background: rgba(15,5,40,0.5); position: relative;
+    transition: border-color 0.15s;
+  }
+  .ability-equip-slot.filled { border-style: solid; border-color: #7c3aed; background: rgba(45,27,105,0.5); }
+  .ability-equip-slot img { width: 36px; height: 36px; object-fit: contain; }
+  .ability-equip-slot .slot-label { font-size: 8px; color: #6d28d9; margin-top: 2px; }
+  .ability-equip-slot .remove-x {
+    position: absolute; top: -5px; right: -5px;
+    background: #dc2626; color: white; border-radius: 50%;
+    width: 16px; height: 16px; font-size: 9px;
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+  }
+  .ability-equip-slot.empty::after { content: '+'; color: #4c1d95; font-size: 20px; }
+
+  /* Ability orb roster */
+  .orb-roster { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .roster-orb {
+    background: rgba(45,27,105,0.5); border: 1px solid #4c1d95;
+    border-radius: 10px; padding: 6px 3px; text-align: center; cursor: pointer;
+    transition: border-color 0.15s; position: relative;
+  }
+  .roster-orb.equipped-orb { border-color: #7c3aed; background: rgba(88,28,220,0.35); }
+  .roster-orb:active:not(.locked-orb) { border-color: #a855f7; background: rgba(88,28,220,0.5); }
+  .roster-orb.locked-orb { opacity: 0.3; cursor: not-allowed; }
+  .roster-orb img { width: 36px; height: 36px; object-fit: contain; }
+  .roster-orb-name { font-size: 8px; color: #c4b5fd; margin-top: 2px; }
+  .roster-orb-ability { font-size: 7px; color: #86efac; margin-top: 1px; line-height: 1.2; }
+  .roster-orb .equipped-check { position: absolute; top: 2px; right: 3px; font-size: 9px; color: #a855f7; }
+
+  /* Unlocked puzzle colors panel */
+  .unlocked-colors-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .color-pip {
+    display: flex; flex-direction: column; align-items: center;
+    width: 44px;
+  }
+  .color-pip img { width: 32px; height: 32px; object-fit: contain; }
+  .color-pip-name { font-size: 7px; color: #a78bfa; margin-top: 2px; }
+  .color-pip.locked-pip { opacity: 0.2; }
+  .color-pip .pip-lock { font-size: 9px; color: #4c1d95; }
+
+  .start-battle-btn {
+    display: block; width: calc(100% - 28px); margin: 0 14px 14px;
+    background: linear-gradient(135deg, #7c3aed, #4f46e5);
+    color: white; border: none; border-radius: 12px;
+    padding: 14px; font-size: 16px; font-weight: bold;
+    cursor: pointer; letter-spacing: 1px;
+  }
+  .start-battle-btn:active { opacity: 0.85; }
+  .start-battle-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ── BATTLE SCREEN ── */
+  #screen-battle {
+    background: url('Images/OrbMaster blank.png') center/cover;
+  }
+  #screen-battle::before {
+    content: ''; position: fixed; inset: 0;
+    background: rgba(5,0,20,0.75); pointer-events: none;
+  }
+  .battle-content { position: relative; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .battle-boss-banner {
+    position: relative;
+    flex-shrink: 0;
+    overflow: hidden;
+    border-bottom: 2px solid #7c3aed;
+  }
+  .battle-boss-img {
+    width: 100%; height: 180px;
+    object-fit: contain; object-position: center bottom;
+    display: block;
+    background: radial-gradient(ellipse at bottom, rgba(88,28,220,0.2) 0%, transparent 70%);
+  }
+  .battle-boss-info {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 8px 12px;
+    background: linear-gradient(0deg, rgba(5,0,20,0.92) 0%, transparent 100%);
+    display: flex; align-items: flex-end; justify-content: space-between;
+  }
+  .battle-boss-name { font-size: 16px; color: #e9d5ff; font-weight: bold; }
+  .turns-left { font-size: 13px; color: #fb923c; font-weight: bold; font-family: var(--font-mono); letter-spacing: 0.5px; }
+  .battle-boss-special { font-size: 10px; color: #f9a8d4; margin-top: 1px; }
+
+  .orb-abilities {
+    display: flex; gap: 6px; padding: 8px 12px;
+    background: rgba(15,5,40,0.8);
+    border-bottom: 1px solid #4c1d95;
+    flex-shrink: 0;
+  }
+  .ability-btn {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    padding: 5px 2px; border-radius: 8px;
+    border: 1px solid #4c1d95;
+    background: rgba(45,27,105,0.6);
+    cursor: pointer; font-size: 8px; color: #c4b5fd;
+    min-width: 0;
+  }
+  .ability-btn img { width: 28px; height: 28px; object-fit: contain; }
+  .ability-btn.used { opacity: 0.35; cursor: not-allowed; filter: grayscale(1); }
+  .ability-btn.disabled-orb { opacity: 0.25; cursor: not-allowed; }
+  .ability-btn:not(.used):not(.disabled-orb):active { border-color: #a855f7; background: rgba(88,28,220,0.6); }
+  .ability-name { margin-top: 2px; text-align: center; line-height: 1.2; }
+
+  .guess-grid-area {
+    flex: 1; overflow-y: auto; padding: 8px 12px;
+    display: flex; flex-direction: column; justify-content: flex-end;
+  }
+  .guess-row {
+    display: flex; align-items: center; gap: 6px;
+    margin-bottom: 6px; background: rgba(30,10,74,0.6);
+    border-radius: 8px; padding: 5px 8px;
+    border: 1px solid #4c1d95;
+  }
+  .guess-row.current { border-color: #a855f7; background: rgba(88,28,220,0.3); }
+  .guess-row.past { border-color: #3b1fa0; }
+  .row-num { font-size: 11px; color: #6d28d9; width: 18px; text-align: center; flex-shrink: 0; font-family: var(--font-mono); }
+  .guess-orbs { display: flex; gap: 4px; flex: 1; }
+  .guess-orb-slot {
+    width: 34px; height: 34px; border-radius: 50%;
+    border: 2px dashed #4c1d95;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(15,5,40,0.6);
+    flex-shrink: 0;
+  }
+  .guess-orb-slot img { width: 28px; height: 28px; object-fit: contain; }
+  .guess-orb-slot.revealed { border: 2px solid #7c3aed; }
+  .peg-section { display: flex; flex-wrap: wrap; gap: 3px; width: 44px; flex-shrink: 0; }
+  .peg {
+    width: 16px; height: 16px; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+  .peg.red { background: #dc2626; box-shadow: 0 0 4px #dc2626; }
+  .peg.white { background: #f0f0f0; box-shadow: 0 0 4px #f0f0f0; }
+  .peg.empty { background: rgba(255,255,255,0.08); }
+
+  .color-picker {
+    padding: 8px 12px;
+    background: rgba(15,5,40,0.9);
+    border-top: 1px solid #4c1d95;
+    flex-shrink: 0;
+  }
+  .picker-label { font-size: 10px; color: #6d28d9; margin-bottom: 6px; font-family: var(--font-mono); letter-spacing: 1px; }
+  .picker-orbs { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+  .picker-orb {
+    width: 40px; height: 40px; border-radius: 50%;
+    border: 2px solid #4c1d95;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; background: rgba(45,27,105,0.5);
+    transition: border-color 0.15s, transform 0.1s;
+  }
+  .picker-orb img { width: 32px; height: 32px; object-fit: contain; }
+  .picker-orb.selected { border-color: #a855f7; transform: scale(1.15); background: rgba(88,28,220,0.6); }
+  .picker-orb:active { transform: scale(1.1); }
+
+  .submit-row {
+    display: flex; gap: 8px; padding: 8px 12px;
+    background: rgba(5,0,20,0.95);
+    border-top: 1px solid #3b1fa0;
+    flex-shrink: 0;
+  }
+  .submit-btn {
+    flex: 1; padding: 12px; background: linear-gradient(135deg,#7c3aed,#4f46e5);
+    border: none; border-radius: 10px; color: white;
+    font-size: 14px; font-weight: bold; cursor: pointer;
+  }
+  .submit-btn:active { opacity: 0.8; }
+  .submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .clear-btn {
+    padding: 12px 18px; background: #3b1fa0;
+    border: 1px solid #7c3aed; border-radius: 10px;
+    color: #c4b5fd; font-size: 14px; cursor: pointer;
+  }
+
+  /* ── RESULTS SCREEN ── */
+  #screen-results {
+    background: linear-gradient(180deg,#1a0a2e,#0f0520);
+    align-items: center; justify-content: center;
+  }
+  .results-box { padding: 24px; text-align: center; max-width: 360px; width: 100%; }
+  .results-boss-img { width: 200px; height: 200px; object-fit: contain; border-radius: 12px; margin-bottom: 14px; filter: drop-shadow(0 0 24px rgba(168,85,247,0.5)); }
+  .results-outcome { font-size: 28px; font-weight: bold; margin-bottom: 6px; }
+  .results-outcome.win { color: #34d399; text-shadow: 0 0 20px #34d399; }
+  .results-outcome.lose { color: #f87171; text-shadow: 0 0 20px #f87171; }
+  .results-boss-name { font-size: 16px; color: #c4b5fd; margin-bottom: 14px; }
+  .results-secret { margin-bottom: 14px; }
+  .secret-label { font-size: 11px; color: #6d28d9; margin-bottom: 6px; }
+  .secret-orbs { display: flex; justify-content: center; gap: 8px; }
+  .secret-orbs img { width: 36px; height: 36px; object-fit: contain; }
+  .results-reward { background: rgba(45,27,105,0.5); border-radius: 12px; padding: 14px; margin-bottom: 16px; border: 1px solid #7c3aed; }
+  .reward-title { font-size: 12px; color: #a78bfa; margin-bottom: 10px; }
+  .reward-items { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .reward-item { display: flex; flex-direction: column; align-items: center; }
+  .reward-item img { width: 32px; height: 32px; object-fit: contain; }
+  .reward-item span { font-size: 11px; color: #fbbf24; font-weight: bold; }
+  .results-total { font-size: 14px; color: #34d399; margin-bottom: 16px; }
+  .results-btn {
+    display: block; width: 100%; padding: 14px;
+    background: linear-gradient(135deg,#7c3aed,#4f46e5);
+    border: none; border-radius: 12px; color: white;
+    font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 8px;
+  }
+  .results-btn.secondary { background: #3b1fa0; border: 1px solid #7c3aed; }
+
+  /* ── INVENTORY SCREEN ── */
+  #screen-inventory { background: linear-gradient(180deg,#1a0a2e,#0f0520); }
+  .inv-scroll { flex: 1; overflow-y: auto; padding: 14px; }
+  .inv-section-title { font-size: 12px; color: #a78bfa; letter-spacing: 1px; margin: 14px 0 8px; }
+  .orb-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+  .orb-card {
+    background: rgba(45,27,105,0.5); border: 1px solid #4c1d95;
+    border-radius: 10px; padding: 10px 6px; text-align: center;
+  }
+  .orb-card.locked-card { opacity: 0.3; }
+  .orb-card img { width: 44px; height: 44px; object-fit: contain; }
+  .orb-card-name { font-size: 11px; color: #c4b5fd; margin-top: 4px; }
+  .orb-card-count { font-size: 13px; color: #fbbf24; font-weight: bold; }
+  .orb-card-ability { font-size: 9px; color: #86efac; margin-top: 3px; line-height: 1.3; }
+  .orb-rarity-badge { font-size: 8px; padding: 1px 5px; border-radius: 8px; margin-top: 3px; display: inline-block; }
+  .rarity-common { background: #1e40af; color: #bfdbfe; }
+  .rarity-uncommon { background: #5b21b6; color: #e9d5ff; }
+  .rarity-rare { background: #7c2d12; color: #fed7aa; }
+  .owned-badge { font-size: 10px; color: #34d399; margin-top: 2px; }
+  .shop-btn-row { display: flex; gap: 6px; margin-top: 5px; }
+  .buy-orb-btn {
+    flex: 1; padding: 5px; font-size: 10px;
+    background: #3b1fa0; border: 1px solid #7c3aed;
+    border-radius: 6px; color: #c4b5fd; cursor: pointer;
+  }
+  .buy-orb-btn:active { background: #5b21b6; }
+  .buy-orb-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .total-frags { font-size: 20px; color: #fbbf24; font-weight: bold; text-align: center; margin-bottom: 14px; }
+
+  /* ── MODALS ── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 100; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal-box {
+    background: linear-gradient(135deg,#2d1b69,#1e0a4a);
+    border: 1px solid #7c3aed;
+    border-radius: 16px; padding: 20px;
+    width: 100%; max-width: 340px;
+    max-height: 80vh; overflow-y: auto;
+  }
+  .modal-title { font-size: 16px; color: #e9d5ff; font-weight: bold; margin-bottom: 12px; }
+  .modal-body { font-size: 13px; color: #c4b5fd; line-height: 1.5; margin-bottom: 16px; }
+  .modal-btn {
+    width: 100%; padding: 12px;
+    background: linear-gradient(135deg,#7c3aed,#4f46e5);
+    border: none; border-radius: 10px;
+    color: white; font-size: 14px; cursor: pointer; margin-top: 6px;
+  }
+  .modal-btn.cancel { background: #3b1fa0; border: 1px solid #7c3aed; }
+
+  /* ── MISC ── */
+  /* Safe-area (notch / gesture bar) */
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* ── LANDSCAPE ADJUSTMENTS ── */
+  @media (orientation: landscape) {
+    body { max-width: 100%; }
+
+    /* Campaign — side-by-side boss cards */
+    .boss-img-wrap { height: 140px; }
+    .boss-card { flex-direction: row; }
+    .boss-card .boss-img-wrap { width: 140px; height: 140px; border-radius: 14px 0 0 14px; flex-shrink: 0; }
+    .boss-img { border-radius: 14px 0 0 14px; }
+    .boss-img-locked-overlay { border-radius: 14px 0 0 14px; }
+    .boss-card-body { flex: 1; }
+
+    /* Loadout — boss left, controls right */
+    #screen-loadout { flex-direction: row; flex-wrap: wrap; }
+    #screen-loadout .game-header { width: 100%; }
+    .loadout-boss-section { width: 42%; min-height: calc(100vh - 48px); border-bottom: none; border-right: 2px solid #7c3aed; }
+    .loadout-boss-img { height: 100%; max-height: 260px; }
+    #screen-loadout > div[style] { width: 58%; }
+    .start-battle-btn { width: calc(58% - 28px); position: fixed; bottom: 0; right: 0; margin: 0 0 env(safe-area-inset-bottom); border-radius: 12px 0 0 12px; }
+
+    /* Battle — boss left, game right */
+    .battle-content { flex-direction: row; flex-wrap: wrap; overflow: hidden; }
+    .battle-boss-banner { width: 38%; height: calc(100vh - 0px); border-bottom: none; border-right: 2px solid #7c3aed; }
+    .battle-boss-img { width: 100%; height: 100%; object-fit: cover; object-position: center; }
+    .battle-boss-info { bottom: 0; left: 0; right: 0; }
+    .orb-abilities { width: 62%; flex-wrap: wrap; border-bottom: 1px solid #4c1d95; }
+    .guess-grid-area { width: 62%; flex: 1; }
+    .color-picker { width: 62%; }
+    .submit-row { width: 62%; }
+
+    /* Results — side by side */
+    #screen-results { flex-direction: row; align-items: center; justify-content: center; }
+    .results-box { max-width: 460px; }
+    .results-boss-img { width: 140px; height: 140px; }
+
+    /* Title */
+    .title-logo { max-width: 280px; }
+    .press-start-img { max-width: 200px; margin-top: 16px; }
+  }
+  /* ── TITLE LAUNCHER HUD ── */
+  .title-hud-top {
+    position: absolute; top: 0; left: 0; right: 0;
+    display: flex; justify-content: space-between; align-items: flex-start;
+    padding: 14px 16px;
+    padding-top: calc(14px + env(safe-area-inset-top));
+    z-index: 2;
+  }
+  .hud-btn {
+    background: rgba(45,27,105,0.75);
+    border: 1px solid #7c3aed;
+    border-radius: 50%; width: 46px; height: 46px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 22px;
+    backdrop-filter: blur(6px);
+    transition: background 0.15s, transform 0.1s;
+  }
+  .hud-btn:active { background: rgba(88,28,220,0.7); transform: scale(0.93); }
+  .avatar-btn {
+    background: rgba(45,27,105,0.75);
+    border: 2px solid #a855f7;
+    border-radius: 50%; width: 50px; height: 50px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; overflow: hidden;
+    backdrop-filter: blur(6px);
+    transition: border-color 0.15s, transform 0.1s;
+  }
+  .avatar-btn:active { border-color: #e9d5ff; transform: scale(0.93); }
+  .avatar-emoji { font-size: 26px; }
+  .title-launch-btns {
+    position: absolute; bottom: 40px; left: 0; right: 0;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    z-index: 2;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .launch-main-btn {
+    background: linear-gradient(135deg,#7c3aed,#4f46e5);
+    border: none; border-radius: 30px;
+    color: white; font-size: 16px; font-weight: bold;
+    padding: 14px 48px; cursor: pointer; letter-spacing: 2px;
+    box-shadow: 0 0 24px rgba(124,58,237,0.6);
+    animation: pulse 1.4s infinite;
+  }
+  .launch-row { display: flex; gap: 12px; }
+  .launch-side-btn {
+    background: rgba(45,27,105,0.8);
+    border: 1px solid #7c3aed;
+    border-radius: 20px; color: #e9d5ff;
+    font-size: 13px; padding: 10px 22px; cursor: pointer;
+    backdrop-filter: blur(6px); letter-spacing: 1px;
+    transition: background 0.15s;
+  }
+  .launch-side-btn:active { background: rgba(88,28,220,0.8); }
+
+  /* ── PROFILE MODAL ── */
+  .profile-avatar-large {
+    font-size: 64px; text-align: center; margin-bottom: 10px;
+  }
+  .avatar-grid {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 12px 0;
+  }
+  .avatar-option {
+    font-size: 28px; text-align: center; padding: 8px;
+    border-radius: 10px; cursor: pointer;
+    border: 2px solid transparent;
+    background: rgba(45,27,105,0.5);
+    transition: border-color 0.15s;
+  }
+  .avatar-option.selected { border-color: #a855f7; background: rgba(88,28,220,0.5); }
+  .avatar-option:active { border-color: #e9d5ff; }
+  .profile-stat-row {
+    display: flex; justify-content: space-between;
+    padding: 8px 0; border-bottom: 1px solid rgba(124,58,237,0.3);
+    font-size: 13px;
+  }
+  .profile-stat-row:last-child { border-bottom: none; }
+  .profile-stat-label { color: #a78bfa; }
+  .profile-stat-value { color: #e9d5ff; font-weight: bold; font-family: var(--font-mono); }
+  .profile-name-input {
+    width: 100%; padding: 10px 12px; margin-bottom: 12px;
+    background: rgba(15,5,40,0.8); border: 1px solid #7c3aed;
+    border-radius: 10px; color: #e9d5ff; font-size: 14px;
+    font-family: 'Georgia', serif;
+  }
+  .profile-name-input:focus { outline: none; border-color: #a855f7; }
+
+  /* ── ORB FORGE (STORE) SCREEN ── */
+  #screen-forge { background: linear-gradient(180deg,#1a0a2e,#0f0520); }
+  .forge-header-banner {
+    background: linear-gradient(135deg,#2d1b69,#1e0a4a);
+    padding: 16px 14px 12px;
+    border-bottom: 2px solid #f59e0b;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .forge-title { font-size: 22px; color: #fbbf24; font-weight: bold; letter-spacing: 2px; text-shadow: 0 0 14px #f59e0b; }
+  .forge-subtitle { font-size: 11px; color: #a78bfa; margin-top: 4px; }
+  .forge-frags { font-size: 14px; color: #fbbf24; margin-top: 6px; font-family: var(--font-mono); }
+  .forge-scroll { flex: 1; overflow-y: auto; padding: 14px; }
+  .forge-section-title {
+    font-size: 12px; color: #f59e0b; letter-spacing: 2px;
+    margin: 14px 0 8px; text-transform: uppercase;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .forge-section-title::after {
+    content: ''; flex: 1; height: 1px; background: rgba(245,158,11,0.3);
+  }
+  .forge-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 8px; }
+  .forge-card {
+    background: linear-gradient(135deg,rgba(45,27,105,0.7),rgba(15,5,40,0.8));
+    border: 1px solid #4c1d95; border-radius: 12px;
+    padding: 12px; text-align: center; position: relative;
+  }
+  .forge-card.affordable { border-color: #f59e0b; }
+  .forge-card.owned-card { border-color: #10b981; }
+  .forge-card img { width: 56px; height: 56px; object-fit: contain; }
+  .forge-card-name { font-size: 13px; color: #e9d5ff; font-weight: bold; margin-top: 6px; }
+  .forge-card-ability { font-size: 9px; color: #86efac; margin-top: 3px; line-height: 1.3; }
+  .forge-card-rarity { font-size: 8px; margin-top: 4px; padding: 2px 6px; border-radius: 8px; display: inline-block; }
+  .forge-card-frags { font-size: 12px; color: #fbbf24; margin-top: 6px; font-weight: bold; }
+  .forge-card-have { font-size: 10px; color: #a78bfa; margin-top: 2px; }
+  .forge-buy-btn {
+    display: block; width: 100%; margin-top: 8px;
+    padding: 8px; border-radius: 8px; font-size: 12px; cursor: pointer;
+    background: linear-gradient(135deg,#f59e0b,#d97706);
+    border: none; color: #1a0a2e; font-weight: bold;
+    transition: opacity 0.15s;
+  }
+  .forge-buy-btn:active { opacity: 0.8; }
+  .forge-buy-btn:disabled { background: #3b1fa0; color: #6d28d9; cursor: not-allowed; }
+  .forge-buy-btn.owned-btn { background: #10b981; color: white; cursor: default; }
+  .forge-locked-badge {
+    position: absolute; top: 8px; right: 8px;
+    font-size: 14px; opacity: 0.7;
+  }
+
+  /* ── SETTINGS MODAL ── */
+  .settings-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 0; border-bottom: 1px solid rgba(124,58,237,0.3);
+  }
+  .settings-row:last-child { border-bottom: none; }
+  .settings-label { font-size: 13px; color: #c4b5fd; }
+  .settings-sublabel { font-size: 10px; color: #6d28d9; margin-top: 2px; }
+  .toggle-btn {
+    width: 44px; height: 24px; border-radius: 12px;
+    border: none; cursor: pointer; position: relative;
+    transition: background 0.2s; flex-shrink: 0;
+  }
+  .toggle-btn.on { background: #7c3aed; }
+  .toggle-btn.off { background: #3b1fa0; }
+  .toggle-btn::after {
+    content: ''; position: absolute;
+    width: 18px; height: 18px; border-radius: 50%; background: white;
+    top: 3px; transition: left 0.2s;
+  }
+  .toggle-btn.on::after { left: 23px; }
+  .toggle-btn.off::after { left: 3px; }
+  .reset-btn {
+    padding: 8px 14px; background: #7f1d1d;
+    border: 1px solid #dc2626; border-radius: 8px;
+    color: #fca5a5; font-size: 12px; cursor: pointer;
+  }
+  .reset-btn:active { background: #991b1b; }
+  .settings-version { text-align: center; font-size: 10px; color: #4c1d95; margin-top: 14px; }
+
+  /* ── MINDBREAKER ALTAR (FORGE) ── */
+  .forge-altar-banner {
+    background: linear-gradient(135deg,rgba(20,8,50,0.95),rgba(40,15,90,0.9));
+    border: 1px solid #f59e0b; border-radius: 14px;
+    margin-bottom: 16px; overflow: hidden;
+  }
+  .forge-altar-header {
+    padding: 14px; display: flex; align-items: center; gap: 12px;
+    border-bottom: 1px solid rgba(245,158,11,0.3);
+  }
+  .forge-altar-icon { font-size: 40px; }
+  .forge-altar-title { font-size: 17px; color: #fbbf24; font-weight: bold; letter-spacing: 1px; }
+  .forge-altar-subtitle { font-size: 10px; color: #a78bfa; margin-top: 3px; }
+  .forge-altar-rank-badge {
+    margin-left: auto; background: rgba(124,58,237,0.4);
+    border: 1px solid #7c3aed; border-radius: 20px;
+    padding: 4px 10px; font-size: 11px; color: #c4b5fd;
+  }
+  .forge-altar-upgrades { padding: 10px 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+  .altar-upgrade-card {
+    background: rgba(15,5,40,0.6); border: 1px solid #4c1d95;
+    border-radius: 10px; padding: 10px 12px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .altar-upgrade-card.available { border-color: #f59e0b; }
+  .altar-upgrade-card.purchased { border-color: #10b981; }
+  .altar-upgrade-card.locked { opacity: 0.5; }
+  .altar-upgrade-icon { font-size: 24px; flex-shrink: 0; }
+  .altar-upgrade-info { flex: 1; }
+  .altar-upgrade-name { font-size: 13px; color: #e9d5ff; font-weight: bold; }
+  .altar-upgrade-desc { font-size: 10px; color: #a78bfa; margin-top: 2px; line-height: 1.3; }
+  .altar-upgrade-cost { font-size: 10px; color: #fbbf24; margin-top: 4px; }
+  .altar-upgrade-btn {
+    padding: 8px 14px; border-radius: 8px; border: none;
+    font-size: 12px; font-weight: bold; cursor: pointer;
+    flex-shrink: 0;
+  }
+  .altar-upgrade-btn.buy { background: linear-gradient(135deg,#f59e0b,#d97706); color: #1a0a2e; }
+  .altar-upgrade-btn.buy:disabled { background: #3b1fa0; color: #6d28d9; cursor: not-allowed; }
+  .altar-upgrade-btn.done { background: #10b981; color: white; cursor: default; }
+  .altar-upgrade-btn.locked { background: #3b1fa0; color: #4c1d95; cursor: not-allowed; }
+
+  /* ── CODEX SCREEN ── */
+  #screen-codex { background: linear-gradient(180deg,#1a0a2e,#0a0318); }
+  .codex-header {
+    background: linear-gradient(135deg,#2d1b69,#1e0a4a);
+    padding: 14px; display: flex; align-items: center; gap: 12px;
+    border-bottom: 2px solid #7c3aed; flex-shrink: 0;
+  }
+  .codex-header-icon { font-size: 28px; }
+  .codex-header-title { font-size: 20px; color: #e9d5ff; font-weight: bold; letter-spacing: 1px; }
+  .codex-header-sub { font-size: 10px; color: #7c3aed; margin-top: 2px; }
+  .codex-tabs {
+    display: flex; overflow-x: auto; background: #150730;
+    border-bottom: 1px solid #4c1d95; flex-shrink: 0;
+    scrollbar-width: none;
+  }
+  .codex-tabs::-webkit-scrollbar { display: none; }
+  .codex-tab {
+    padding: 10px 14px; font-size: 11px; color: #6d28d9;
+    white-space: nowrap; cursor: pointer; border: none;
+    background: none; border-bottom: 2px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
+    flex-shrink: 0;
+  }
+  .codex-tab.active { color: #e9d5ff; border-bottom-color: #a855f7; }
+  .codex-tab:active { color: #c4b5fd; }
+  .codex-body { flex: 1; overflow-y: auto; padding: 14px; }
+  .codex-section { display: none; }
+  .codex-section.active { display: block; }
+  .codex-h1 {
+    font-size: 16px; color: #e9d5ff; font-weight: bold;
+    margin: 0 0 10px; padding-bottom: 6px;
+    border-bottom: 1px solid rgba(124,58,237,0.4);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .codex-h2 {
+    font-size: 13px; color: #a855f7; font-weight: bold;
+    margin: 14px 0 6px; letter-spacing: 0.5px;
+  }
+  .codex-p { font-size: 12px; color: #c4b5fd; line-height: 1.7; margin-bottom: 8px; }
+  .codex-rule {
+    background: rgba(45,27,105,0.4); border-left: 3px solid #7c3aed;
+    border-radius: 0 8px 8px 0; padding: 8px 12px; margin-bottom: 6px;
+    font-size: 12px; color: #c4b5fd; line-height: 1.5;
+    font-family: var(--font-sans);
+  }
+  .codex-rule strong { color: #e9d5ff; }
+  .codex-rule.mono { font-family: var(--font-mono); font-size: 11px; }
+  /* Orb entry in codex */
+  .codex-orb-entry {
+    display: flex; align-items: flex-start; gap: 10px;
+    background: rgba(30,10,74,0.5); border: 1px solid #4c1d95;
+    border-radius: 10px; padding: 10px; margin-bottom: 8px;
+  }
+  .codex-orb-img { width: 44px; height: 44px; object-fit: contain; flex-shrink: 0; }
+  .codex-orb-info { flex: 1; }
+  .codex-orb-name { font-size: 13px; color: #e9d5ff; font-weight: bold; }
+  .codex-orb-rarity { font-size: 9px; padding: 1px 6px; border-radius: 8px; display: inline-block; margin: 2px 0 4px; }
+  .codex-orb-ability { font-size: 11px; color: #86efac; line-height: 1.4; }
+  .codex-orb-unlock { font-size: 10px; color: #fbbf24; margin-top: 3px; }
+  .codex-orb-cost { font-size: 10px; color: #a78bfa; margin-top: 2px; }
+  /* Boss entry */
+  .codex-boss-entry {
+    display: flex; align-items: center; gap: 10px;
+    background: rgba(30,10,74,0.5); border: 1px solid #4c1d95;
+    border-radius: 10px; margin-bottom: 8px; overflow: hidden;
+  }
+  .codex-boss-img { width: 70px; height: 70px; object-fit: contain; flex-shrink: 0; padding: 6px; }
+  .codex-boss-info { flex: 1; padding: 8px 8px 8px 0; }
+  .codex-boss-name { font-size: 13px; color: #e9d5ff; font-weight: bold; }
+  .codex-boss-pool { font-size: 10px; color: #a78bfa; margin-top: 3px; display: flex; flex-wrap: wrap; gap: 3px; align-items: center; }
+  .codex-boss-special { font-size: 10px; color: #fb923c; margin-top: 3px; }
+  .codex-boss-loot { font-size: 10px; color: #86efac; margin-top: 2px; }
+  /* Peg legend */
+  .codex-peg-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .codex-peg { width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0; }
+  .codex-peg.red { background: #dc2626; box-shadow: 0 0 6px #dc2626; }
+  .codex-peg.white { background: #f0f0f0; box-shadow: 0 0 6px #f0f0f0; }
+  .codex-peg.empty { background: rgba(255,255,255,0.1); border: 1px solid #4c1d95; }
+  .codex-peg-label { font-size: 12px; color: #c4b5fd; }
+  /* Tip box */
+  .codex-tip {
+    background: rgba(124,58,237,0.15); border: 1px solid rgba(124,58,237,0.4);
+    border-radius: 10px; padding: 10px 12px; margin-bottom: 10px;
+    font-size: 11px; color: #c4b5fd; line-height: 1.6;
+  }
+  .codex-tip::before { content: '💡 '; }
+
+  .hint-revealed { background: rgba(88,28,220,0.3) !important; border-color: #a855f7 !important; }
+  .flash { animation: flash 0.5s; }
+  @keyframes flash { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .toast {
+    position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+    background: #2d1b69; border: 1px solid #7c3aed;
+    color: #e9d5ff; padding: 10px 20px; border-radius: 20px;
+    font-size: 13px; z-index: 200; pointer-events: none;
+    opacity: 0; transition: opacity 0.3s;
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- TITLE SCREEN -->
+<div id="screen-title" class="screen active">
+  <!-- Top HUD -->
+  <div class="title-hud-top">
+    <div class="avatar-btn" onclick="openModal('modal-profile')" title="Profile">
+      <span class="avatar-emoji" id="title-avatar">🧙</span>
+    </div>
+    <div class="hud-btn" onclick="openModal('modal-settings')" title="Settings">⚙️</div>
+  </div>
+
+  <!-- Center logo -->
+  <div class="title-content">
+    <img src="Images/OrbMaster title trans.png" alt="OrbMaster" class="title-logo">
+    <div class="title-tagline">CRACK THE CODE. MASTER THE ORBS.</div>
+  </div>
+
+  <!-- Bottom buttons -->
+  <div class="title-launch-btns">
+    <button class="launch-main-btn" onclick="showScreen('campaign')">▶ PLAY</button>
+    <div class="launch-row">
+      <button class="launch-side-btn" onclick="showScreen('forge')"><img src="Images/Mind Orb Assets/multi_orb.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;margin-right:4px;">Orb Forge</button>
+      <button class="launch-side-btn" onclick="showScreen('inventory')"><img src="Images/Mind Orb Assets/crystal_ball.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;margin-right:4px;">Orb Stash</button>
+    </div>
+    <div class="launch-row">
+      <button class="launch-side-btn" onclick="showScreen('codex')" style="letter-spacing:1px;">📖 OrbMaster Codex</button>
+    </div>
+  </div>
+</div>
+
+<!-- CAMPAIGN SCREEN -->
+<div id="screen-campaign" class="screen">
+  <div class="game-header">
+    <div class="header-title">⚔️ Campaign</div>
+    <div class="fragment-display"><img src="Images/Mind Orb Assets/multi_orb.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"> <span id="header-frags">0</span> frags</div>
+  </div>
+  <div class="campaign-scroll" id="boss-list"></div>
+  <div class="nav-bar">
+    <button class="nav-btn" onclick="showScreen('title')"><span class="nav-icon">🏠</span>Home</button>
+    <button class="nav-btn active"><span class="nav-icon">⚔️</span>Campaign</button>
+    <button class="nav-btn" onclick="showScreen('forge')"><span class="nav-icon"><img src="Images/Mind Orb Assets/multi_orb.png" style="width:22px;height:22px;object-fit:contain;vertical-align:middle;"></span>Orb Forge</button>
+    <button class="nav-btn" onclick="showScreen('inventory')"><span class="nav-icon"><img src="Images/Mind Orb Assets/crystal_ball.png" style="width:22px;height:22px;object-fit:contain;vertical-align:middle;"></span>Orb Stash</button>
+  </div>
+</div>
+
+<!-- LOADOUT SCREEN -->
+<div id="screen-loadout" class="screen">
+  <div class="game-header">
+    <button class="back-btn" onclick="showScreen('campaign')">← Back</button>
+    <div class="header-title">Pre-Battle Loadout</div>
+    <div class="fragment-display"><img src="Images/Mind Orb Assets/multi_orb.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"> <span id="loadout-frags">0</span></div>
+  </div>
+  <div id="loadout-boss-section" class="loadout-boss-section"></div>
+  <div class="loadout-body">
+    <!-- Section 1: MindBreaker Code Size -->
+    <div class="loadout-section" id="loadout-mindbreaker-section">
+      <div class="section-title"><img src="Images/MindBreaker Icon.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;margin-right:4px;"> MindBreaker Altar</div>
+      <div id="loadout-mindbreaker"></div>
+    </div>
+    <!-- Section 2: Ability Orbs -->
+    <div class="loadout-section">
+      <div class="section-title">✨ Ability Orbs (max 4)</div>
+      <div class="ability-slots-row" id="ability-slots"></div>
+      <div class="orb-roster" id="orb-roster"></div>
+    </div>
+    <!-- Section 3: Unlocked Puzzle Colors -->
+    <div class="loadout-section">
+      <div class="section-title">🎨 Unlocked Colors</div>
+      <div class="unlocked-colors-row" id="loadout-unlocked-colors"></div>
+      <div style="font-size:9px;color:#4c1d95;margin-top:6px;">These colors may appear in the boss's secret orb set sequence.</div>
+    </div>
+  </div>
+  <button class="start-battle-btn" id="start-battle-btn" onclick="startBattle()">⚔️ ENTER BATTLE</button>
+</div>
+
+<!-- BATTLE SCREEN -->
+<div id="screen-battle" class="screen">
+  <div class="battle-content">
+    <div class="battle-boss-banner" id="battle-banner"></div>
+    <div class="orb-abilities" id="orb-abilities"></div>
+    <div class="guess-grid-area" id="guess-grid"></div>
+    <div class="color-picker">
+      <div class="picker-label">SELECT ORB COLOR FOR SLOT <span id="active-slot-num">1</span></div>
+      <div class="picker-orbs" id="picker-orbs"></div>
+    </div>
+    <div class="submit-row">
+      <button class="clear-btn" onclick="clearCurrentGuess()">✕</button>
+      <button class="submit-btn" id="submit-btn" onclick="submitGuess()">SUBMIT GUESS</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULTS SCREEN -->
+<div id="screen-results" class="screen">
+  <div class="results-box" id="results-box"></div>
+</div>
+
+<!-- INVENTORY SCREEN -->
+<div id="screen-inventory" class="screen">
+  <div class="game-header">
+    <div class="header-title"><img src="Images/Mind Orb Assets/crystal_ball.png" style="width:20px;height:20px;object-fit:contain;vertical-align:middle;margin-right:6px;">Orb Stash</div>
+    <div class="fragment-display"><img src="Images/Mind Orb Assets/multi_orb.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"> <span id="inv-frags">0</span> frags</div>
+  </div>
+  <div class="inv-scroll" id="inv-content"></div>
+  <div class="nav-bar">
+    <button class="nav-btn" onclick="showScreen('campaign')"><span class="nav-icon">⚔️</span>Campaign</button>
+    <button class="nav-btn active" onclick="showScreen('inventory')"><span class="nav-icon">🔮</span>Orbs</button>
+  </div>
+</div>
+
+<!-- ORB FORGE SCREEN -->
+<div id="screen-forge" class="screen">
+  <div class="forge-header-banner">
+    <div class="forge-title"><img src="Images/Mind Orb Assets/multi_orb.png" style="width:28px;height:28px;object-fit:contain;vertical-align:middle;margin-right:6px;">ORB FORGE</div>
+    <div class="forge-subtitle">Spend fragments to forge powerful orbs</div>
+    <div class="forge-frags"><img src="Images/Mind Orb Assets/multi_orb.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"> <span id="forge-frags">0</span> fragments available</div>
+  </div>
+  <div class="forge-scroll" id="forge-content"></div>
+  <div class="nav-bar" style="border-top:2px solid #f59e0b;">
+    <button class="nav-btn" onclick="showScreen('title')"><span class="nav-icon">🏠</span>Home</button>
+    <button class="nav-btn active"><span class="nav-icon"><img src="Images/Mind Orb Assets/multi_orb.png" style="width:22px;height:22px;object-fit:contain;vertical-align:middle;"></span>Orb Forge</button>
+    <button class="nav-btn" onclick="showScreen('inventory')"><span class="nav-icon"><img src="Images/Mind Orb Assets/crystal_ball.png" style="width:22px;height:22px;object-fit:contain;vertical-align:middle;"></span>Orb Stash</button>
+  </div>
+</div>
+
+<!-- CODEX SCREEN -->
+<div id="screen-codex" class="screen">
+  <div class="codex-header">
+    <div class="codex-header-icon">📖</div>
+    <div>
+      <div class="codex-header-title">OrbMaster Codex</div>
+      <div class="codex-header-sub">RULES · ORBS · BOSSES · MECHANICS</div>
+    </div>
+    <button class="back-btn" style="margin-left:auto;" onclick="showScreen('title')">← Home</button>
+  </div>
+  <div class="codex-tabs" id="codex-tabs">
+    <button class="codex-tab active" onclick="showCodexTab('howtoplay')">How to Play</button>
+    <button class="codex-tab" onclick="showCodexTab('mindbreaker')">MindBreaker</button>
+    <button class="codex-tab" onclick="showCodexTab('orbs')">Orbs</button>
+    <button class="codex-tab" onclick="showCodexTab('bosses')">Bosses</button>
+    <button class="codex-tab" onclick="showCodexTab('fragments')">Fragments</button>
+    <button class="codex-tab" onclick="showCodexTab('progression')">Progression</button>
+  </div>
+  <div class="codex-body">
+
+    <!-- HOW TO PLAY -->
+    <div class="codex-section active" id="codex-howtoplay">
+      <div class="codex-h1">⚔️ How to Play</div>
+      <div class="codex-p">OrbMaster is a code-breaking RPG. Each boss guards a secret sequence of colored orbs. Your job is to crack the code before you run out of turns.</div>
+      <div class="codex-h2">The Core Loop</div>
+      <div class="codex-rule"><strong>1. Choose your boss</strong> from the Campaign screen.</div>
+      <div class="codex-rule"><strong>2. Set your loadout</strong> — pick your code depth and equip up to 4 ability orbs.</div>
+      <div class="codex-rule"><strong>3. Submit a guess</strong> — place colored orbs in your MindBreaker and tap Submit.</div>
+      <div class="codex-rule"><strong>4. Read the feedback pegs</strong> — they reveal how close your guess was.</div>
+      <div class="codex-rule"><strong>5. Use orb abilities</strong> strategically to gain hints, extra turns, or scramble the boss.</div>
+      <div class="codex-rule"><strong>6. Crack the code</strong> within the turn limit to win orb fragments.</div>
+      <div class="codex-rule"><strong>7. Spend fragments</strong> in the Orb Forge to unlock more powerful orbs.</div>
+      <div class="codex-h2">Win & Loss Conditions</div>
+      <div class="codex-rule"><strong>Win:</strong> Submit a guess where every orb is the correct color in the correct position.</div>
+      <div class="codex-rule"><strong>Lose:</strong> Exhaust all your turns without cracking the code.</div>
+      <div class="codex-h2">Feedback Pegs</div>
+      <div class="codex-peg-row"><div class="codex-peg red"></div><div class="codex-peg-label"><strong style="color:#f87171">Red Peg</strong> — correct color, correct position</div></div>
+      <div class="codex-peg-row"><div class="codex-peg white"></div><div class="codex-peg-label"><strong style="color:#f0f0f0">White Peg</strong> — correct color, wrong position</div></div>
+      <div class="codex-peg-row"><div class="codex-peg empty"></div><div class="codex-peg-label"><strong style="color:#6d28d9">No Peg</strong> — this color is not in the code at all</div></div>
+      <div class="codex-tip">Pegs don't tell you which orb slot they belong to — only the total count of reds and whites.</div>
+      <div class="codex-h2">Turn Limit</div>
+      <div class="codex-rule">Each match starts with <strong>10 turns</strong>. Certain orb abilities can add extra turns. Boss specials can reduce them.</div>
+      <div class="codex-tip">The faster you crack the code, the more orb fragments you earn as a reward.</div>
+    </div>
+
+    <!-- MINDBREAKER -->
+    <div class="codex-section" id="codex-mindbreaker">
+      <div class="codex-h1"><img src="Images/MindBreaker Icon.png" style="width:22px;height:22px;object-fit:contain;vertical-align:middle;"> MindBreaker Altar</div>
+      <div class="codex-p">The MindBreaker Altar is your guess console — a magnificent stone altar with orb slots carved into its face. You place your colored orbs into its slots to submit each guess.</div>
+      <div class="codex-h2">Code Depth (Slots)</div>
+      <div class="codex-rule">The number of orb slots determines how many orbs are in the boss's secret code — and in your guess. More slots means a harder puzzle with bigger rewards.</div>
+      <div class="codex-rule"><strong>4 Slots</strong> — Standard depth. Available from the start.</div>
+      <div class="codex-rule"><strong>5 Slots</strong> — Advanced depth. Requires the Rank 5 upgrade from the Orb Forge.</div>
+      <div class="codex-rule"><strong>6 Slots</strong> — Maximum depth. Requires the Rank 6 upgrade from the Orb Forge.</div>
+      <div class="codex-tip">You choose your code depth before each match on the Loadout screen. Going deeper increases your fragment reward multiplier (×1.3 for 5, ×1.7 for 6).</div>
+      <div class="codex-h2">MindBreaker Rank</div>
+      <div class="codex-rule"><strong>Rank 1</strong> — Starting rank.</div>
+      <div class="codex-rule"><strong>Rank 2</strong> — Earned after defeating Boss 2.</div>
+      <div class="codex-rule"><strong>Rank 3</strong> — Earned after defeating Boss 3.</div>
+      <div class="codex-rule"><strong>Rank 4 — Four Orbs</strong> — Earned after defeating Boss 4. Stays here until upgraded.</div>
+      <div class="codex-rule"><strong>Rank 5 — Five Orbs</strong> — Purchased in the Orb Forge after defeating Boss 5.</div>
+      <div class="codex-rule"><strong>Rank 6 — Six Orbs</strong> — Purchased in the Orb Forge after defeating Boss 7.</div>
+      <div class="codex-h2">Forge Upgrade Costs</div>
+      <div class="codex-rule"><strong>Rank 5:</strong> 150 Orange + 150 Blue + 100 Green + 100 Red fragments</div>
+      <div class="codex-rule"><strong>Rank 6:</strong> 200 Purple + 150 White + 150 Black + 100 Teal fragments</div>
+    </div>
+
+    <!-- ORBS -->
+    <div class="codex-section" id="codex-orbs">
+      <div class="codex-h1">🔮 Mind Orbs</div>
+      <div class="codex-p">There are 12 Mind Orbs. Each orb serves two roles: as a color that appears in the boss's secret code, and as an ability item you can equip in your loadout. Collect orb fragments from victories and forge them into ability orbs at the Orb Forge.</div>
+      <div class="codex-h2">⚪ Common Orbs</div>
+      <div class="codex-orb-entry">
+        <img class="codex-orb-img" src="Images/Mind Orb Assets/red_orb.png">
+        <div class="codex-orb-info">
+          <div class="codex-orb-name">Red Orb</div>
+          <span class="codex-orb-rarity orb-rarity-badge rarity-common">Common</span>
+          <div class="codex-orb-ability">🔥 <strong>Burn</strong> — Reveals a random orb position in the boss's secret code.</div>
+          <div class="codex-orb-unlock">🔓 Available from the start</div>
+          <div class="codex-orb-cost">Forge cost: 90 fragments</div>
+        </div>
+      </div>
+      <div class="codex-orb-entry">
+        <img class="codex-orb-img" src="Images/Mind Orb Assets/blue_orb.png">
+        <div class="codex-orb-info">
+          <div class="codex-orb-name">Blue Orb</div>
+          <span class="codex-orb-rarity orb-rarity-badge rarity-common">Common</span>
+          <div class="codex-orb-ability">🌀 <strong>Submerge</strong> — Scrambles the boss's orb order into a new sequence. Can only be used within the first 5 turns.</div>
+          <div class="codex-orb-unlock">🔓 Available from the start</div>
+          <div class="codex-orb-cost">Forge cost: 50 fragments</div>
+        </div>
+      </div>
+      <div class="codex-orb-entry">
+        <img class="codex-orb-img" src="Images/Mind Orb Assets/yellow_orb.png">
+        <div class="codex-orb-info">
+          <div class="codex-orb-name">Yellow Orb</div>
+          <span class="codex-orb-rarity orb-rarity-badge rarity-common">Common</span>
+          <div class="codex-orb-ability">⚡ <strong>Disable</strong> — Cancels the boss's special ability for the duration of the match.</div>
+          <div class="codex-orb-unlock">🔓 Available from the start</div>
+          <div class="codex-orb-cost">Forge cost: 70 fragments</div>
+        </div>
+      </div>
+      <div class="codex-orb-entry">
+        <img class="codex-orb-img" src="Images/Mind Orb Assets/green_orb.png">
+        <div class="codex-orb-info">
+          <div class="codex-orb-name">Green Orb</div>
+          <span class="codex-orb-rarity orb-rarity-badge rarity-common">Common</span>
+          <div class="codex-orb-ability">🟢 <strong>Reveal Wrong</strong> — Reveals one orb color that is NOT in the boss's secret code.</div>
+          <div class="codex-orb-unlock">🔓 Available from the start</div>
+          <div class="codex-orb-cost">Forge cost: 50 fragments</div>
+        </div>
+      </div>
+      <div class="codex-orb-entry">
+        <img class="codex-orb-img" src="Images/Mind Orb Assets/orange_orb.png">
+        <div class="codex-orb-info">
+          <div class="codex-orb-name">Orange Orb</div>
+          <span class="codex-orb-rarity orb-rarity-badge rarity-common">Common</span>
+          <div class="codex-orb-ability">➕ <strong>+1 Guess</strong> — Adds 1 extra turn to the match without reducing your fragment reward.</div>
+          <div class="codex-orb-unlock">🔓 Available from the start</div>
+          <div class="codex-orb-cost">Forge cost: 60 fragments</div>
+        </div>
+      </div>
+      <div class="codex-h2">🔷 Uncommon Orbs</div>
+      <div class="codex-orb-entry">
+        <img class="codex-orb-img" src="Images/Mind Orb Assets/silver_bar.png">
+        <div class="codex-orb-info">
+          <div class="codex-orb-name">Silver Orb</div>
+          <span class="codex-orb-rarity orb-rarity-badge rarity-uncommon">Uncommon</span>
+          <div class="codex-orb-ability">🪙 <strong>+15% Uncommon Loot</strong> — Passively increases the chance of receiving Uncommon fragments after winning.</div>
+          <div class="codex-orb-unlock">🔓 Unlocks after defeating Boss 3</div>
+          <div class="codex-orb-cost">Forge cost: 50 fragments</div>
+        </div>
+      </div>
+      <div class="codex-orb-entry">
+        <img class="codex-orb-img" src="Images/Mind Orb Assets/gold_bar.png">
+        <div class="codex-orb-info">
+          <div class="codex-orb-name">Gold Orb</div>
+          <span class="codex-orb-rarity orb-rarity-badge rarity-uncommon">Uncommon</span>
+          <div class="codex-orb-ability">✨ <strong>+20% Rare Loot</strong> — Passively increases the chance of receiving Rare fragments after winning.</div>
+          <div class="codex-orb-unlock">🔓 Unlocks after defeating Boss 4</div>
+          <div class="codex-orb-cost">Forge cost: 60 fragments</div>
+        </div>
+      </div>
+      <div class="codex-orb-entry">
+        <img class="codex-orb-img" src="Images/Mind Orb Assets/purple_orb.png">
+        <div class="codex-orb-info">
+          <div class="codex-orb-name">Purple Orb</div>
+          <span class="codex-orb-rarity orb-rarity-badge rarity-uncommon">Uncommon</span>
+          <div class="codex-orb-ability">➕➕ <strong>+2 Guesses</strong> — Adds 2 extra turns to the match without reducing your fragment reward.</div>
+          <div class="codex-orb-unlock">🔓 Unlocks after defeating Boss 5</div>
+          <div class="codex-orb-cost">Forge cost: 100 fragments</div>
+        </div>
+      </div>
+      <div class="codex-h2">🔶 Rare Orbs</div>
+      <div class="codex-orb-entry">
+        <img class="codex-orb-img" src="Images/Mind Orb Assets/black_orb.png">
+        <div class="codex-orb-info">
+          <div class="codex-orb-name">Black Orb</div>
+          <span class="codex-orb-rarity orb-rarity-badge rarity-rare">Rare</span>
+          <div class="codex-orb-ability">🖤 <strong>Hint</strong> — Reveals the exact orb color at a chosen position in the secret code.</div>
+          <div class="codex-orb-unlock">🔓 Unlocks after defeating Boss 6</div>
+          <div class="codex-orb-cost">Forge cost: 130 fragments</div>
+        </div>
+      </div>
+      <div class="codex-orb-entry">
+        <img class="codex-orb-img" src="Images/Mind Orb Assets/white_orb.png">
+        <div class="codex-orb-info">
+          <div class="codex-orb-name">White Orb</div>
+          <span class="codex-orb-rarity orb-rarity-badge rarity-rare">Rare</span>
+          <div class="codex-orb-ability">➕➕➕ <strong>+3 Guesses</strong> — Adds 3 extra turns to the match without reducing your fragment reward.</div>
+          <div class="codex-orb-unlock">🔓 Unlocks after defeating Boss 7</div>
+          <div class="codex-orb-cost">Forge cost: 150 fragments</div>
+        </div>
+      </div>
+      <div class="codex-orb-entry">
+        <img class="codex-orb-img" src="Images/Mind Orb Assets/pink_orb.png">
+        <div class="codex-orb-info">
+          <div class="codex-orb-name">Pink Orb</div>
+          <span class="codex-orb-rarity orb-rarity-badge rarity-rare">Rare</span>
+          <div class="codex-orb-ability">💗 <strong>+75% Reward</strong> — Passively multiplies your orb fragment reward by 1.75× this match.</div>
+          <div class="codex-orb-unlock">🔓 Unlocks after defeating Boss 8</div>
+          <div class="codex-orb-cost">Forge cost: 180 fragments</div>
+        </div>
+      </div>
+      <div class="codex-orb-entry">
+        <img class="codex-orb-img" src="Images/Mind Orb Assets/teal_orb.png">
+        <div class="codex-orb-info">
+          <div class="codex-orb-name">Teal Orb</div>
+          <span class="codex-orb-rarity orb-rarity-badge rarity-rare">Rare</span>
+          <div class="codex-orb-ability">💠 <strong>+125% Reward</strong> — Passively multiplies your orb fragment reward by 2.25× this match. Does not stack with Pink.</div>
+          <div class="codex-orb-unlock">🔓 Unlocks after defeating Boss 9</div>
+          <div class="codex-orb-cost">Forge cost: 300 fragments</div>
+        </div>
+      </div>
+      <div class="codex-tip">Equip up to 4 ability orbs per match from your Loadout screen. Passive orbs (Silver, Gold, Pink, Teal) activate automatically. Active orbs must be tapped during battle.</div>
+    </div>
+
+    <!-- BOSSES -->
+    <div class="codex-section" id="codex-bosses">
+      <div class="codex-h1">👹 Boss Profiles</div>
+      <div class="codex-p">Each boss guards a secret orb code. Defeat them in order to progress the campaign and unlock new colors, ranks, and abilities.</div>
+      <div id="codex-boss-list"></div>
+    </div>
+
+    <!-- FRAGMENTS -->
+    <div class="codex-section" id="codex-fragments">
+      <div class="codex-h1"><img src="Images/Mind Orb Assets/multi_orb.png" style="width:22px;height:22px;object-fit:contain;vertical-align:middle;"> Fragment System</div>
+      <div class="codex-p">Orb Fragments are the currency of OrbMaster. You earn them by winning matches and spend them in the Orb Forge to craft powerful ability orbs.</div>
+      <div class="codex-h2">Earning Fragments</div>
+      <div class="codex-rule">Each match rewards <strong>4 batches</strong> of fragments when you win. The type and amount depend on how quickly you solved the code and the boss's loot table.</div>
+      <div class="codex-rule"><strong>Base reward per orb:</strong> 50 fragments</div>
+      <div class="codex-rule"><strong>Turn penalty:</strong> −5 fragments per orb for every turn used after Turn 1</div>
+      <div class="codex-rule mono"><strong>Formula:</strong> (50 − ((turns_used − 2) × 5)) × code_size × multiplier</div>
+      <div class="codex-tip">Solving in Turn 1 or 2 gives the maximum reward. Using orb abilities that add turns does not reduce your reward.</div>
+      <div class="codex-h2">Reward Multipliers</div>
+      <div class="codex-rule"><strong>5-orb code:</strong> ×1.3 bonus to all fragments earned</div>
+      <div class="codex-rule"><strong>6-orb code:</strong> ×1.7 bonus to all fragments earned</div>
+      <div class="codex-rule"><strong>Pink Orb equipped:</strong> ×1.75 total multiplier</div>
+      <div class="codex-rule"><strong>Teal Orb equipped:</strong> ×2.25 total multiplier (does not stack with Pink)</div>
+      <div class="codex-rule"><strong>Boss 7+:</strong> +20% bonus fragments (late-game economy boost)</div>
+      <div class="codex-h2">Loot Rarity</div>
+      <div class="codex-rule">Each fragment batch is rolled against the boss's loot table to determine its rarity tier — Common, Uncommon, or Rare. Higher rarity means rarer orb types appear in the reward.</div>
+      <div class="codex-rule">Silver Orb (+15% Uncommon) and Gold Orb (+20% Rare) passively shift the loot table in your favor when equipped.</div>
+      <div class="codex-h2">Forging Orbs</div>
+      <div class="codex-rule">Visit the <strong>Orb Forge</strong> to spend fragments and craft ability orbs. Each orb type has its own fragment cost and requires you to have unlocked that color through campaign progression.</div>
+    </div>
+
+    <!-- PROGRESSION -->
+    <div class="codex-section" id="codex-progression">
+      <div class="codex-h1">🗺️ Progression & Unlocks</div>
+      <div class="codex-p">OrbMaster has a full campaign of 10 bosses. Defeating each one unlocks the next and gradually expands your pool of available orb colors and MindBreaker capabilities.</div>
+      <div class="codex-h2">Color Unlock Schedule</div>
+      <div class="codex-rule"><strong>Start:</strong> Red, Blue, Yellow, Green, Orange</div>
+      <div class="codex-rule"><strong>After Boss 3:</strong> Silver unlocked</div>
+      <div class="codex-rule"><strong>After Boss 4:</strong> Gold unlocked</div>
+      <div class="codex-rule"><strong>After Boss 5:</strong> Purple unlocked</div>
+      <div class="codex-rule"><strong>After Boss 6:</strong> Black unlocked</div>
+      <div class="codex-rule"><strong>After Boss 7:</strong> White unlocked</div>
+      <div class="codex-rule"><strong>After Boss 8:</strong> Pink unlocked</div>
+      <div class="codex-rule"><strong>After Boss 9:</strong> Teal unlocked</div>
+      <div class="codex-tip">Boss 10 (Mad Martin) is the only boss whose 6-color code can draw from all 12 orb colors — making him the ultimate challenge.</div>
+      <div class="codex-h2">MindBreaker Rank Progression</div>
+      <div class="codex-rule"><strong>Rank 1:</strong> Starting rank — 4 orb slots</div>
+      <div class="codex-rule"><strong>Rank 2:</strong> Defeat Boss 2 — 4 orb slots</div>
+      <div class="codex-rule"><strong>Rank 3:</strong> Defeat Boss 3 — 4 orb slots</div>
+      <div class="codex-rule"><strong>Rank 4:</strong> Defeat Boss 4 — 4 orb slots (stays here until purchased)</div>
+      <div class="codex-rule"><strong>Rank 5:</strong> Purchase at Orb Forge after Boss 5 — unlocks 5 orb slots</div>
+      <div class="codex-rule"><strong>Rank 6:</strong> Purchase at Orb Forge after Boss 7 — unlocks 6 orb slots</div>
+      <div class="codex-h2">Boss Fragment Requirements</div>
+      <div class="codex-rule">Bosses 6–10 require you to have collected specific fragments before you can challenge them. Check the Campaign screen for exact requirements per boss.</div>
+      <div class="codex-h2">Build Archetypes</div>
+      <div class="codex-rule"><strong>🧠 Solver Build:</strong> Black + Red + Green — maximize information gain per turn.</div>
+      <div class="codex-rule"><strong>💰 Economy Build:</strong> Pink + Gold + Silver — maximize fragment rewards per match.</div>
+      <div class="codex-rule"><strong>🛡️ Control Build:</strong> Yellow + Blue + Purple — manipulate the board and buy extra turns.</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODALS -->
+<!-- Profile Modal -->
+<div class="modal-overlay" id="modal-profile">
+  <div class="modal-box">
+    <div class="modal-title">👤 Player Profile</div>
+    <div class="profile-avatar-large" id="profile-avatar-display">🧙</div>
+    <div class="avatar-grid" id="avatar-grid"></div>
+    <input class="profile-name-input" id="profile-name-input" type="text" placeholder="Enter your name..." maxlength="20">
+    <div id="profile-stats"></div>
+    <button class="modal-btn" onclick="saveProfile()">Save Profile</button>
+    <button class="modal-btn cancel" onclick="closeModal('modal-profile')">Close</button>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="modal-settings">
+  <div class="modal-box">
+    <div class="modal-title">⚙️ Settings</div>
+    <div class="settings-row">
+      <div>
+        <div class="settings-label">Sound Effects</div>
+        <div class="settings-sublabel">UI & ability sounds</div>
+      </div>
+      <button class="toggle-btn on" id="toggle-sfx" onclick="toggleSetting('sfx')"></button>
+    </div>
+    <div class="settings-row">
+      <div>
+        <div class="settings-label">Music</div>
+        <div class="settings-sublabel">Background music</div>
+      </div>
+      <button class="toggle-btn on" id="toggle-music" onclick="toggleSetting('music')"></button>
+    </div>
+    <div class="settings-row">
+      <div>
+        <div class="settings-label">Animations</div>
+        <div class="settings-sublabel">Screen transitions & effects</div>
+      </div>
+      <button class="toggle-btn on" id="toggle-anim" onclick="toggleSetting('anim')"></button>
+    </div>
+    <div class="settings-row">
+      <div>
+        <div class="settings-label">Auto-advance Slot</div>
+        <div class="settings-sublabel">Jump to next slot after picking</div>
+      </div>
+      <button class="toggle-btn on" id="toggle-autoadvance" onclick="toggleSetting('autoadvance')"></button>
+    </div>
+    <div class="settings-row">
+      <div>
+        <div class="settings-label">Difficulty Hints</div>
+        <div class="settings-sublabel">Show boss orb pool in battle</div>
+      </div>
+      <button class="toggle-btn on" id="toggle-hints" onclick="toggleSetting('hints')"></button>
+    </div>
+    <div class="settings-row">
+      <div>
+        <div class="settings-label">Reset All Progress</div>
+        <div class="settings-sublabel">Wipes save data permanently</div>
+      </div>
+      <button class="reset-btn" onclick="confirmReset()">⚠️ Reset</button>
+    </div>
+    <div class="settings-version">OrbMaster v1.0 · BreezyBee Games</div>
+    <button class="modal-btn cancel" style="margin-top:14px;" onclick="closeModal('modal-settings')">Close</button>
+  </div>
+</div>
+
+<!-- Reset Confirm Modal -->
+<div class="modal-overlay" id="modal-reset-confirm">
+  <div class="modal-box">
+    <div class="modal-title">⚠️ Reset Progress?</div>
+    <div class="modal-body">This will permanently delete all your orbs, fragments, and boss progress. This cannot be undone.</div>
+    <button class="modal-btn" style="background:linear-gradient(135deg,#dc2626,#991b1b);" onclick="doReset()">Yes, Reset Everything</button>
+    <button class="modal-btn cancel" onclick="closeModal('modal-reset-confirm')">Cancel</button>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-ability">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-ability-title"></div>
+    <div class="modal-body" id="modal-ability-body"></div>
+    <button class="modal-btn" id="modal-ability-confirm">Use Ability</button>
+    <button class="modal-btn cancel" onclick="closeModal('modal-ability')">Cancel</button>
+  </div>
+</div>
+<div class="modal-overlay" id="modal-boss-locked">
+  <div class="modal-box">
+    <div class="modal-title">🔒 Boss Locked</div>
+    <div class="modal-body" id="modal-locked-body"></div>
+    <button class="modal-btn cancel" onclick="closeModal('modal-boss-locked')">OK</button>
+  </div>
+</div>
+
+<audio id="bg-music"   src="Audio/The_Clockwork_Outcome.mp3"   loop preload="auto" style="display:none;"></audio>
+<audio id="boss-music"                                                         loop preload="none" style="display:none;"></audio>
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════
+//  DATA DEFINITIONS
+// ══════════════════════════════════════════════
+
+const ORB_DEFS = {
+  orange: { name:'Orange', rarity:'common',   img:'Images/Mind Orb Assets/orange_orb.png', abilityKey:'extra1',       abilityDesc:'+1 extra guess this match', cost:60  },
+  blue:   { name:'Blue',   rarity:'common',   img:'Images/Mind Orb Assets/blue_orb.png',   abilityKey:'submerge',     abilityDesc:'Scramble the boss orb order (first 5 turns only)', cost:50 },
+  green:  { name:'Green',  rarity:'common',   img:'Images/Mind Orb Assets/green_orb.png',  abilityKey:'revealWrong',  abilityDesc:'Reveal 1 orb NOT in the boss sequence', cost:50 },
+  silver: { name:'Silver', rarity:'common',   img:'Images/Mind Orb Assets/silver_bar.png', abilityKey:'bonusUncommon',abilityDesc:'+15% Uncommon loot drop chance', cost:50 },
+  red:    { name:'Red',    rarity:'uncommon', img:'Images/Mind Orb Assets/red_orb.png',    abilityKey:'burn',         abilityDesc:'Reveal a random orb position in the sequence', cost:90 },
+  purple: { name:'Purple', rarity:'uncommon', img:'Images/Mind Orb Assets/purple_orb.png', abilityKey:'extra2',       abilityDesc:'+2 extra guesses this match', cost:100},
+  yellow: { name:'Yellow', rarity:'uncommon', img:'Images/Mind Orb Assets/yellow_orb.png', abilityKey:'disable',      abilityDesc:"Disable the boss's special ability for this match", cost:70 },
+  gold:   { name:'Gold',   rarity:'uncommon', img:'Images/Mind Orb Assets/gold_bar.png',   abilityKey:'bonusRare',    abilityDesc:'+20% Rare loot drop chance', cost:60 },
+  pink:   { name:'Pink',   rarity:'rare',     img:'Images/Mind Orb Assets/pink_orb.png',   abilityKey:'mult75',       abilityDesc:'+75% orb fragment reward this match', cost:180},
+  white:  { name:'White',  rarity:'rare',     img:'Images/Mind Orb Assets/white_orb.png',  abilityKey:'extra3',       abilityDesc:'+3 extra guesses this match', cost:150},
+  black:  { name:'Black',  rarity:'rare',     img:'Images/Mind Orb Assets/black_orb.png',  abilityKey:'hint',         abilityDesc:'Choose a position — reveal its orb color', cost:130},
+  teal:   { name:'Teal',   rarity:'rare',     img:'Images/Mind Orb Assets/teal_orb.png',   abilityKey:'mult125',      abilityDesc:'+125% orb fragment reward this match', cost:300},
+};
+
+const ORB_ORDER = ['red','blue','yellow','green','orange','purple','white','black','teal','silver','gold','pink'];
+
+// COLOR_UNLOCK_AFTER[n] = color unlocked after beating boss index n (0-based)
+const COLOR_UNLOCK_AFTER = {
+  2: 'silver',  // after boss 3
+  3: 'gold',    // after boss 4
+  4: 'purple',  // after boss 5
+  5: 'black',   // after boss 6
+  6: 'white',   // after boss 7
+  7: 'pink',    // after boss 8
+  8: 'teal',    // after boss 9
+};
+
+// MindBreaker Altar upgrade definitions
+const MINDBREAKER_UPGRADES = [
+  {
+    rank: 5, slots: 5,
+    name: 'Rank 5 — Five Orbs',
+    desc: 'Expands the MindBreaker Altar to hold 5 orb slots. Unlocks 5-orb guess sequences.',
+    reqBossIdx: 4,
+    reqBossName: 'Natty D (Boss 5)',
+    cost: { orange:150, blue:150, green:100, red:100 },
+  },
+  {
+    rank: 6, slots: 6,
+    name: 'Rank 6 — Six Orbs',
+    desc: 'Expands the MindBreaker Altar to its maximum depth of 6 orb slots. Prestige tier.',
+    reqBossIdx: 6,
+    reqBossName: 'Sir Louie (Boss 7)',
+    cost: { purple:200, white:150, black:150, teal:100 },
+  },
+];
+
+// Boss pool = colors that CAN appear in their secret code (reflects what's unlocked by that point)
+// minCodeSize = minimum code size required (player needs MindBreaker rank for 5+6)
+const BOSS_DEFS = [
+  { id:1,  name:'Lemons',        img:'Images/Boss Character Assets/Boss_1 - Lemons.png',
+    minCodeSize:4, pool:['red','blue','yellow','green','orange'],
+    loot:{common:1.0,uncommon:0,rare:0}, fragReq:{}, special:null, specialDesc:null },
+  { id:2,  name:'Templefrist',   img:'Images/Boss Character Assets/Boss_2 - Templefrist.png',
+    minCodeSize:4, pool:['red','blue','yellow','green','orange'],
+    loot:{common:0.9,uncommon:0.1,rare:0}, fragReq:{}, special:null, specialDesc:null },
+  { id:3,  name:'Bigginsly',     img:'Images/Boss Character Assets/Boss_3 - Bigginsly.png',
+    minCodeSize:4, pool:['red','blue','yellow','green','orange'],
+    loot:{common:0.8,uncommon:0.2,rare:0}, fragReq:{}, special:null, specialDesc:null },
+  { id:4,  name:'Nanomic',       img:'Images/Boss Character Assets/Boss_4 - Nanomic.png',
+    minCodeSize:4, pool:['red','blue','yellow','green','orange','purple'],
+    loot:{common:0.7,uncommon:0.2,rare:0.1}, fragReq:{}, special:null, specialDesc:null },
+  { id:5,  name:'Natty D',       img:'Images/Boss Character Assets/Boss_5 - Natty D.png',
+    minCodeSize:4, pool:['red','blue','yellow','green','orange','purple','white'],
+    loot:{common:0.4,uncommon:0.5,rare:0.1}, fragReq:{}, special:null, specialDesc:null },
+  { id:6,  name:'Pretty Pea',    img:'Images/Boss Character Assets/Boss_6 - Pretty Pea.png',
+    minCodeSize:4, pool:['red','blue','yellow','green','purple','white','black'],
+    loot:{common:0.15,uncommon:0.65,rare:0.2},
+    fragReq:{yellow:150,purple:100,white:75}, special:null, specialDesc:null },
+  { id:7,  name:'Sir Louie',     img:'Images/Boss Character Assets/Boss_7 - Sir Louie.png',
+    minCodeSize:4, pool:['red','blue','yellow','green','purple','white','black','teal'],
+    loot:{common:0.05,uncommon:0.65,rare:0.3},
+    fragReq:{red:100,blue:100,black:75,teal:50}, special:null, specialDesc:null },
+  { id:8,  name:'Queen Asabeth', img:'Images/Boss Character Assets/Boss_8 - Queen Asabeth.png',
+    minCodeSize:5, pool:['red','blue','purple','white','black','teal','silver'],
+    loot:{common:0,uncommon:0.45,rare:0.55},
+    fragReq:{black:100,teal:80,silver:50}, special:'disableBlack',
+    specialDesc:'Disables your Black Orb (Hint)' },
+  { id:9,  name:'Elkgore',       img:'Images/Boss Character Assets/Boss_9 - Elkgore.png',
+    minCodeSize:5, pool:['purple','white','black','teal','silver','gold'],
+    loot:{common:0,uncommon:0.35,rare:0.65},
+    fragReq:{silver:100,gold:50,teal:100}, special:'bossSubmerge',
+    specialDesc:'Scrambles his code once in the first 5 turns' },
+  { id:10, name:'Mad Martin',    img:'Images/Boss Character Assets/Boss_010 - Mad Martin.png',
+    minCodeSize:6, pool:['red','blue','yellow','green','orange','purple','white','black','teal','silver','gold','pink'],
+    loot:{common:0,uncommon:0,rare:1.0},
+    fragReq:{gold:150,pink:100,black:150,teal:150}, special:'penaltyOnDiscover',
+    specialDesc:'Removes 1 guess each time you discover a correct orb position' },
+];
+
+// ══════════════════════════════════════════════
+//  GAME STATE
+// ══════════════════════════════════════════════
+
+let STATE = loadState();
+
+function defaultState() {
+  return {
+    bossProgress:    Array(10).fill(0), // 0=locked,1=unlocked,2=beaten
+    fragments:       { red:0,blue:0,yellow:0,green:0,orange:0,purple:0,white:0,black:0,teal:0,silver:0,gold:0,pink:0 },
+    ownedOrbs:       { red:0,blue:0,yellow:0,green:0,orange:0,purple:0,white:0,black:0,teal:0,silver:0,gold:0,pink:0 },
+    equippedOrbs:    [null,null,null,null], // up to 4 ability orbs per match
+    unlockedColors:  ['red','blue','yellow','green','orange'], // puzzle colors available
+    mindBreakerRank: 1,   // 1-4=4 slots (auto-progress), 5=5 slots, 6=6 slots (purchased)
+    chosenCodeSize:  4,   // player's chosen code size for next match
+    profile:         { name:'Adventurer', avatar:'🧙' },
+    settings:        { sfx:true, music:true, anim:true, autoadvance:true, hints:true },
+  };
+}
+
+function loadState() {
+  try {
+    const s = localStorage.getItem('orbmaster_state');
+    if (s) {
+      const parsed = JSON.parse(s);
+      parsed.bossProgress[0] = Math.max(parsed.bossProgress[0], 1);
+      // Migrate old saves that used unlockedOrbs for puzzle colors
+      if (parsed.unlockedOrbs && !parsed.unlockedColors) {
+        parsed.unlockedColors = ['red','blue','yellow','green','orange'];
+        delete parsed.unlockedOrbs;
+      }
+      if (!parsed.unlockedColors) parsed.unlockedColors = ['red','blue','yellow','green','orange'];
+      if (!parsed.mindBreakerRank) parsed.mindBreakerRank = 1;
+      if (!parsed.chosenCodeSize) parsed.chosenCodeSize = 4;
+      if (!parsed.equippedOrbs) parsed.equippedOrbs = [null,null,null,null];
+      return parsed;
+    }
+  } catch(e){}
+  const s = defaultState();
+  s.bossProgress[0] = 1;
+  return s;
+}
+
+function saveState() {
+  localStorage.setItem('orbmaster_state', JSON.stringify(STATE));
+}
+
+function getTotalFrags() {
+  return Object.values(STATE.fragments).reduce((a,b)=>a+b,0);
+}
+
+// ══════════════════════════════════════════════
+//  BATTLE STATE
+// ══════════════════════════════════════════════
+
+let BATTLE = null;
+
+function newBattle(bossIdx, codeSize) {
+  const boss = BOSS_DEFS[bossIdx];
+  const resolvedSize = codeSize || boss.minCodeSize;
+  // Boss pool intersected with unlocked puzzle colors
+  const availablePool = boss.pool.filter(c => getUnlockedColors().includes(c));
+  const pool = availablePool.length >= 2 ? availablePool : boss.pool;
+  const code = generateCode(pool, resolvedSize);
+  const maxTurns = 10;
+  return {
+    bossIdx,
+    code,
+    pool,
+    codeSize: resolvedSize,
+    guesses: [],
+    currentGuess: Array(resolvedSize).fill(null),
+    activeSlot: 0,
+    maxTurns,
+    turnsLeft: maxTurns,
+    extraTurns: 0,
+    usedAbilities: {},   // abilityKey -> true
+    disabledAbilities: {}, // abilityKey -> true (yellow orb)
+    revealedPositions: {}, // pos -> color (red/burn/black)
+    revealedWrong: [],   // colors not in code (green)
+    multiplier: 1.0,
+    bonusUncommon: 0,
+    bonusRare: 0,
+    bossSpecialUsed: false,
+    bossSpecialDisabled: false,
+    penaltyCount: 0,
+    won: false,
+    lost: false,
+  };
+}
+
+function generateCode(pool, size) {
+  const code = [];
+  const shuffled = [...pool].sort(()=>Math.random()-0.5);
+  for (let i=0; i<size; i++) {
+    code.push(shuffled[i % shuffled.length]);
+  }
+  // allow repeats if pool smaller than size
+  if (pool.length >= size) return code.slice(0, size);
+  // fill with random from pool
+  const result = [];
+  for (let i=0;i<size;i++) result.push(pool[Math.floor(Math.random()*pool.length)]);
+  return result;
+}
+
+// ══════════════════════════════════════════════
+//  SCREEN MANAGEMENT
+// ══════════════════════════════════════════════
+
+// ══════════════════════════════════════════════
+//  CAMPAIGN SCREEN
+// ══════════════════════════════════════════════
+
+function renderCampaign() {
+  document.getElementById('header-frags').textContent = getTotalFrags();
+  const list = document.getElementById('boss-list');
+  list.innerHTML = '';
+
+  BOSS_DEFS.forEach((boss, i) => {
+    const prog = STATE.bossProgress[i];
+    const locked = prog === 0;
+    const beaten = prog === 2;
+
+    const card = document.createElement('div');
+    card.className = 'boss-card ' + (locked?'locked':(beaten?'beaten unlocked':'unlocked'));
+
+    const lootStr = formatLoot(boss.loot);
+    const hasFragReq = Object.keys(boss.fragReq).length > 0;
+    const reqStr = hasFragReq ? '🔐 Requires: ' + Object.entries(boss.fragReq).map(([c,n])=>`${n} ${ORB_DEFS[c].name}`).join(', ') : '';
+
+    // Orb pool preview
+    const orbPreviews = boss.pool.map(c=>`<img class="mini-orb" src="${ORB_DEFS[c].img}" alt="${c}">`).join('');
+
+    card.innerHTML = `
+      <div class="boss-img-wrap">
+        <img class="boss-img" src="${boss.img}" alt="${boss.name}">
+        ${locked?`<div class="boss-img-locked-overlay">🔒</div>`:''}
+        <div class="boss-badge">${beaten?'✅':'⚔️'}</div>
+      </div>
+      <div class="boss-card-body">
+        <div class="boss-info">
+          <div class="boss-name">Boss ${boss.id}: ${boss.name}</div>
+          <div class="boss-level">Orb Set: ${boss.minCodeSize} &nbsp;|&nbsp; Turns: 10</div>
+          <div class="boss-loot">${lootStr}</div>
+          ${reqStr?`<div class="boss-req">${reqStr}</div>`:''}
+          ${boss.specialDesc?`<div style="font-size:10px;color:#fb923c;margin-top:3px;">⚡ ${boss.specialDesc}</div>`:''}
+          <div class="boss-orb-preview">${orbPreviews}</div>
+        </div>
+      </div>
+    `;
+
+    card.addEventListener('click', ()=> onBossClick(i));
+    list.appendChild(card);
+  });
+}
+
+function formatLoot(loot) {
+  const parts = [];
+  if (loot.common > 0) parts.push(`${Math.round(loot.common*100)}% Common`);
+  if (loot.uncommon > 0) parts.push(`${Math.round(loot.uncommon*100)}% Uncommon`);
+  if (loot.rare > 0) parts.push(`${Math.round(loot.rare*100)}% Rare`);
+  return '💰 ' + parts.join(', ');
+}
+
+function onBossClick(idx) {
+  const prog = STATE.bossProgress[idx];
+  if (prog === 0) {
+    // check if previous boss beaten
+    const boss = BOSS_DEFS[idx];
+    const prevBeaten = idx === 0 || STATE.bossProgress[idx-1] >= 1;
+    const body = !prevBeaten
+      ? `Defeat Boss ${idx} first to unlock ${boss.name}!`
+      : `You haven't unlocked this boss yet.`;
+    document.getElementById('modal-locked-body').textContent = body;
+    openModal('modal-boss-locked');
+    return;
+  }
+  // Check frag requirements
+  const boss = BOSS_DEFS[idx];
+  for (const [color, needed] of Object.entries(boss.fragReq)) {
+    if ((STATE.fragments[color]||0) < needed) {
+      document.getElementById('modal-locked-body').innerHTML =
+        `You need <b>${needed} ${ORB_DEFS[color].name}</b> orb fragments to challenge ${boss.name}.<br><br>You have: ${STATE.fragments[color]||0}.`;
+      openModal('modal-boss-locked');
+      return;
+    }
+  }
+  // Go to loadout
+  STATE._selectedBoss = idx;
+  showScreen('loadout');
+}
+
+// ══════════════════════════════════════════════
+//  LOADOUT SCREEN
+// ══════════════════════════════════════════════
+
+function getUnlockedColors() {
+  return STATE.unlockedColors || ['red','blue','yellow','green','orange'];
+}
+
+function renderLoadout() {
+  const idx = STATE._selectedBoss;
+  const boss = BOSS_DEFS[idx];
+  document.getElementById('loadout-frags').textContent = getTotalFrags();
+
+  // Clamp chosen code size to boss minimum and player rank max
+  const maxAllowed = getMindBreakerSlots();
+  STATE.chosenCodeSize = Math.max(boss.minCodeSize, Math.min(maxAllowed, STATE.chosenCodeSize || 4));
+
+
+  // Boss banner
+  const banner = document.getElementById('loadout-boss-section');
+  banner.innerHTML = `
+    <img class="loadout-boss-img" src="${boss.img}" alt="${boss.name}">
+    <div class="loadout-boss-info">
+      <div class="loadout-boss-name">Boss ${boss.id}: ${boss.name}</div>
+      <div class="loadout-boss-loot">${formatLoot(boss.loot)}</div>
+      <div style="font-size:11px;color:#c4b5fd;margin-top:3px;">Orb Set: ${boss.minCodeSize} &nbsp;|&nbsp; Max 10 turns</div>
+      ${boss.specialDesc?`<div class="loadout-boss-special">⚡ ${boss.specialDesc}</div>`:''}
+    </div>
+  `;
+
+  // MindBreaker adjuster
+  renderMindBreakerAdjuster(boss);
+
+  // Ability slots + roster
+  renderAbilitySlots();
+  renderAbilityRoster();
+
+  // Unlocked colors
+  renderUnlockedColors();
+}
+
+function renderMindBreakerAdjuster(boss) {
+  const rank = STATE.mindBreakerRank;
+  const maxSlots = getMindBreakerSlots();
+  const rankLabels = { 1:'Rank 1', 2:'Rank 2', 3:'Rank 3', 4:'Rank 4 — Four Orbs', 5:'Rank 5 — Five Orbs', 6:'Rank 6 — Six Orbs' };
+  const rankLabel = rankLabels[rank] || `Rank ${rank}`;
+  const container = document.getElementById('loadout-mindbreaker');
+
+  let adjusterHtml = `
+    <div class="mindbreaker-altar">
+      <div class="altar-icon"><img src="Images/MindBreaker Icon.png" style="width:36px;height:36px;object-fit:contain;"></div>
+      <div class="altar-info">
+        <div class="altar-name">MindBreaker Altar</div>
+        <div class="altar-rank">${rankLabel} &nbsp;|&nbsp; Max ${maxSlots} orb slots</div>
+      </div>
+    </div>
+    <div style="font-size:10px;color:#a78bfa;margin-bottom:6px;">Choose max orb set for this match. More slots = harder puzzle, bigger rewards.</div>
+    <div class="code-size-adjuster">
+  `;
+
+  [4,5,6].forEach(n => {
+    const isLocked = n > maxSlots;
+    const isBosMin = n < boss.minCodeSize;
+    const isActive = STATE.chosenCodeSize === n && !isLocked && !isBosMin;
+    const isDisabled = isLocked || isBosMin;
+    const label = isLocked ? `🔒 ${n}` : isBosMin ? `⚠️ ${n}` : n;
+    const sublabel = isLocked ? 'Locked' : isBosMin ? 'Boss req.' : n===4?'Standard':n===5?'Advanced':'Maximum';
+    adjusterHtml += `
+      <div style="flex:1;text-align:center;">
+        <div class="code-size-btn ${isActive?'active':''} ${isDisabled?'locked-size':''}"
+          ${!isDisabled?`onclick="setCodeSize(${n})"`:''}>${label}</div>
+        <div class="code-size-label">${sublabel}</div>
+      </div>
+    `;
+  });
+
+  adjusterHtml += `</div>`;
+  container.innerHTML = adjusterHtml;
+}
+
+function setCodeSize(n) {
+  STATE.chosenCodeSize = n;
+  saveState();
+  renderMindBreakerAdjuster(BOSS_DEFS[STATE._selectedBoss]);
+}
+
+function renderAbilitySlots() {
+  const container = document.getElementById('ability-slots');
+  container.innerHTML = '';
+  for (let i = 0; i < 4; i++) {
+    const color = STATE.equippedOrbs[i];
+    const slot = document.createElement('div');
+    slot.className = 'ability-equip-slot ' + (color ? 'filled' : 'empty');
+    if (color) {
+      const def = ORB_DEFS[color];
+      slot.innerHTML = `
+        <img src="${def.img}" alt="${color}">
+        <div class="slot-label">${def.name}</div>
+        <div class="remove-x" onclick="unequipAbility(${i})">✕</div>
+      `;
+    }
+    container.appendChild(slot);
+  }
+}
+
+function renderAbilityRoster() {
+  const container = document.getElementById('orb-roster');
+  container.innerHTML = '';
+  ORB_ORDER.forEach(color => {
+    const def = ORB_DEFS[color];
+    const owned = STATE.ownedOrbs[color];
+    const equipped = STATE.equippedOrbs.includes(color);
+    if (!owned) return; // only show forged ability orbs
+
+    const div = document.createElement('div');
+    div.className = 'roster-orb' + (equipped ? ' equipped-orb' : '');
+    div.innerHTML = `
+      ${equipped ? '<div class="equipped-check">✓</div>' : ''}
+      <img src="${def.img}" alt="${color}">
+      <div class="roster-orb-name">${def.name}</div>
+      <div class="roster-orb-ability">${def.abilityDesc.substring(0,36)}…</div>
+    `;
+    div.addEventListener('click', () => equipped ? unequipAbilityByColor(color) : equipAbility(color));
+    container.appendChild(div);
+  });
+  if (container.children.length === 0) {
+    container.innerHTML = '<div style="grid-column:1/-1;font-size:11px;color:#4c1d95;text-align:center;padding:10px;">No ability orbs forged yet. Visit the Orb Forge!</div>';
+  }
+}
+
+function renderUnlockedColors() {
+  const container = document.getElementById('loadout-unlocked-colors');
+  container.innerHTML = '';
+  const unlocked = getUnlockedColors();
+  ORB_ORDER.forEach(color => {
+    const def = ORB_DEFS[color];
+    const isUnlocked = unlocked.includes(color);
+    const pip = document.createElement('div');
+    pip.className = 'color-pip' + (isUnlocked ? '' : ' locked-pip');
+    pip.innerHTML = `
+      <img src="${def.img}" alt="${color}">
+      <div class="color-pip-name">${def.name}</div>
+      ${!isUnlocked ? '<div class="pip-lock">🔒</div>' : ''}
+    `;
+    container.appendChild(pip);
+  });
+}
+
+function equipAbility(color) {
+  if (STATE.equippedOrbs.includes(color)) { showToast(`${ORB_DEFS[color].name} already equipped!`); return; }
+  const emptyIdx = STATE.equippedOrbs.indexOf(null);
+  if (emptyIdx === -1) { showToast('All 4 ability slots full. Remove one first.'); return; }
+  STATE.equippedOrbs[emptyIdx] = color;
+  saveState(); renderAbilitySlots(); renderAbilityRoster();
+}
+
+function unequipAbility(idx) {
+  STATE.equippedOrbs[idx] = null;
+  saveState(); renderAbilitySlots(); renderAbilityRoster();
+}
+
+function unequipAbilityByColor(color) {
+  const idx = STATE.equippedOrbs.indexOf(color);
+  if (idx !== -1) unequipAbility(idx);
+}
+
+function startBattle() {
+  const idx = STATE._selectedBoss;
+  const boss = BOSS_DEFS[idx];
+  const codeSize = Math.max(boss.minCodeSize, STATE.chosenCodeSize || 4);
+
+  BATTLE = newBattle(idx, codeSize);
+
+  // Apply passive orb effects
+  STATE.equippedOrbs.filter(Boolean).forEach(color => {
+    const def = ORB_DEFS[color];
+    if (!def) return;
+    if (def.abilityKey === 'bonusUncommon') BATTLE.bonusUncommon += 0.15;
+    if (def.abilityKey === 'bonusRare')     BATTLE.bonusRare    += 0.20;
+    if (def.abilityKey === 'mult75')  BATTLE.multiplier = Math.max(BATTLE.multiplier, 1.75);
+    if (def.abilityKey === 'mult125') BATTLE.multiplier = Math.max(BATTLE.multiplier, 2.25);
+  });
+
+  // Larger code = bigger reward multiplier
+  if (codeSize === 5) BATTLE.multiplier *= 1.3;
+  if (codeSize === 6) BATTLE.multiplier *= 1.7;
+
+  if (boss.special === 'disableBlack') BATTLE.disabledAbilities['hint'] = true;
+  if (boss.special === 'bossSubmerge') BATTLE.bossSubmergeTurn = Math.floor(Math.random()*5)+1;
+
+  // Play boss-specific track if one exists, otherwise use main music
+  if (BOSS_TRACKS[idx]) {
+    AUDIO.playBossTrack(BOSS_TRACKS[idx]);
+  }
+
+  showScreen('battle');
+  renderBattle();
+}
+
+// ══════════════════════════════════════════════
+//  BATTLE SCREEN
+// ══════════════════════════════════════════════
+
+function renderBattle() {
+  const b = BATTLE;
+  const boss = BOSS_DEFS[b.bossIdx];
+  const turnsUsed = b.maxTurns + b.extraTurns - b.turnsLeft;
+  const totalTurns = b.maxTurns + b.extraTurns;
+
+  // Banner
+  document.getElementById('battle-banner').innerHTML = `
+    <img class="battle-boss-img" src="${boss.img}" alt="${boss.name}">
+    <div class="battle-boss-info">
+      <div>
+        <div class="battle-boss-name">Boss ${boss.id}: ${boss.name}</div>
+        ${boss.specialDesc&&!b.bossSpecialDisabled?`<div class="battle-boss-special">⚡ ${boss.specialDesc}</div>`:''}
+        ${b.bossSpecialDisabled?`<div style="font-size:10px;color:#34d399;">✅ Boss ability disabled!</div>`:''}
+      </div>
+      <div class="turns-left">⏱ ${b.turnsLeft} / ${totalTurns}</div>
+    </div>
+  `;
+
+  // Abilities
+  const abRow = document.getElementById('orb-abilities');
+  abRow.innerHTML = '';
+  const equipped = STATE.equippedOrbs.filter(Boolean);
+  if (equipped.length === 0) {
+    abRow.innerHTML = '<div style="color:#6d28d9;font-size:12px;width:100%;text-align:center;">No orbs equipped</div>';
+  }
+  equipped.forEach(color => {
+    const def = ORB_DEFS[color];
+    const isPassive = ['bonusUncommon','bonusRare','mult75','mult125'].includes(def.abilityKey);
+    const used = b.usedAbilities[def.abilityKey];
+    const disabled = b.disabledAbilities[def.abilityKey];
+    const btn = document.createElement('div');
+    btn.className = 'ability-btn' + (used||isPassive?' used':'') + (disabled?' disabled-orb':'');
+    btn.innerHTML = `<img src="${def.img}" alt="${color}"><div class="ability-name">${def.name}<br>${isPassive?'(passive)':used?'(used)':disabled?'(blocked)':'tap'}</div>`;
+    if (!used && !isPassive && !disabled) {
+      btn.addEventListener('click', ()=> onAbilityTap(def.abilityKey, color));
+    }
+    abRow.appendChild(btn);
+  });
+
+  // Guess grid
+  renderGuessGrid();
+
+  // Picker
+  renderPicker();
+}
+
+function buildGuessRow(rowIdx, isPast, isCurrent) {
+  const b = BATTLE;
+  const rowEl = document.createElement('div');
+  rowEl.className = 'guess-row' + (isCurrent ? ' current' : ' past');
+  rowEl.dataset.row = rowIdx;
+
+  const rowNum = document.createElement('div');
+  rowNum.className = 'row-num';
+  rowNum.textContent = rowIdx + 1;
+  rowEl.appendChild(rowNum);
+
+  const orbsEl = document.createElement('div');
+  orbsEl.className = 'guess-orbs';
+
+  for (let col = 0; col < b.codeSize; col++) {
+    const slot = document.createElement('div');
+    slot.className = 'guess-orb-slot';
+
+    let color = null;
+    if (isPast) {
+      color = b.guesses[rowIdx].guess[col];
+    } else if (isCurrent) {
+      if (b.revealedPositions[col] !== undefined) {
+        color = b.revealedPositions[col];
+        slot.classList.add('revealed');
+      } else {
+        color = b.currentGuess[col];
+      }
+    }
+
+    if (color) slot.innerHTML = `<img src="${ORB_DEFS[color].img}" alt="${color}">`;
+
+    if (isCurrent && b.revealedPositions[col] === undefined) {
+      slot.style.cursor = 'pointer';
+      slot.addEventListener('click', () => setActiveSlot(col));
+      if (col === b.activeSlot) {
+        slot.style.borderColor = '#a855f7';
+        slot.style.background = 'rgba(88,28,220,0.4)';
+      }
+    }
+    orbsEl.appendChild(slot);
+  }
+  rowEl.appendChild(orbsEl);
+
+  // Pegs (only for past rows)
+  const pegSection = document.createElement('div');
+  pegSection.className = 'peg-section';
+  if (isPast) {
+    const { reds, whites } = b.guesses[rowIdx].feedback;
+    for (let p = 0; p < b.codeSize; p++) {
+      const peg = document.createElement('div');
+      peg.className = 'peg ' + (p < reds ? 'red' : p < reds + whites ? 'white' : 'empty');
+      pegSection.appendChild(peg);
+    }
+  }
+  rowEl.appendChild(pegSection);
+  return rowEl;
+}
+
+function renderGuessGrid() {
+  const b = BATTLE;
+  const grid = document.getElementById('guess-grid');
+  grid.innerHTML = '';
+
+  // Render only completed past rows
+  b.guesses.forEach((_, i) => grid.appendChild(buildGuessRow(i, true, false)));
+
+  // Add the single active row (unless game is over)
+  if (!b.won && !b.lost) {
+    grid.appendChild(buildGuessRow(b.guesses.length, false, true));
+  }
+
+  // Always scroll so the active row is visible at the bottom
+  grid.scrollTop = grid.scrollHeight;
+}
+
+// After submission: append the just-submitted row with pegs, then add a fresh current row
+function appendSubmittedRow() {
+  const b = BATTLE;
+  const grid = document.getElementById('guess-grid');
+  const rowIdx = b.guesses.length - 1;
+
+  // Replace the old current row with the completed past row
+  const oldCurrent = grid.querySelector('.guess-row.current');
+  if (oldCurrent) {
+    const pastRow = buildGuessRow(rowIdx, true, false);
+    // Animate in
+    pastRow.style.opacity = '0';
+    grid.replaceChild(pastRow, oldCurrent);
+    requestAnimationFrame(() => { pastRow.style.transition = 'opacity 0.3s'; pastRow.style.opacity = '1'; });
+  }
+
+  // Add fresh current row if game continues
+  if (!b.won && !b.lost) {
+    const newRow = buildGuessRow(b.guesses.length, false, true);
+    newRow.style.opacity = '0';
+    grid.appendChild(newRow);
+    requestAnimationFrame(() => { newRow.style.transition = 'opacity 0.3s'; newRow.style.opacity = '1'; });
+  }
+
+  grid.scrollTop = grid.scrollHeight;
+}
+
+function renderPicker() {
+  const b = BATTLE;
+  document.getElementById('active-slot-num').textContent = b.activeSlot + 1;
+  const container = document.getElementById('picker-orbs');
+  container.innerHTML = '';
+  // Show all orb colors that could be in the boss pool (player knows this)
+  const visiblePool = b.pool;
+  visiblePool.forEach(color => {
+    const def = ORB_DEFS[color];
+    const btn = document.createElement('div');
+    btn.className = 'picker-orb' + (b.currentGuess[b.activeSlot]===color?' selected':'');
+    btn.innerHTML = `<img src="${def.img}" alt="${color}">`;
+    // Strikethrough if revealed as wrong
+    if (b.revealedWrong.includes(color)) {
+      btn.style.opacity = '0.25';
+      btn.title = 'Not in sequence';
+    }
+    btn.addEventListener('click', ()=> pickColor(color));
+    container.appendChild(btn);
+  });
+}
+
+function setActiveSlot(col) {
+  if (BATTLE.revealedPositions[col] !== undefined) return;
+  BATTLE.activeSlot = col;
+  renderGuessGrid();
+  renderPicker();
+}
+
+function pickColor(color) {
+  const b = BATTLE;
+  if (b.revealedPositions[b.activeSlot] !== undefined) return;
+  AUDIO.sfx.orbPick();
+  b.currentGuess[b.activeSlot] = color;
+  // Auto-advance to next unfilled slot
+  for (let i = 1; i <= b.codeSize; i++) {
+    const next = (b.activeSlot + i) % b.codeSize;
+    if (b.revealedPositions[next] === undefined) { b.activeSlot = next; break; }
+  }
+  refreshCurrentRow();
+  renderPicker();
+}
+
+function clearCurrentGuess() {
+  const b = BATTLE;
+  for (let i = 0; i < b.codeSize; i++) {
+    if (b.revealedPositions[i] === undefined) b.currentGuess[i] = null;
+  }
+  b.activeSlot = 0;
+  while (b.activeSlot < b.codeSize && b.revealedPositions[b.activeSlot] !== undefined) b.activeSlot++;
+  refreshCurrentRow();
+  renderPicker();
+}
+
+// Replace only the active row in the DOM without touching past rows
+function refreshCurrentRow() {
+  const b = BATTLE;
+  const grid = document.getElementById('guess-grid');
+  const oldCurrent = grid.querySelector('.guess-row.current');
+  const newCurrent = buildGuessRow(b.guesses.length, false, true);
+  if (oldCurrent) {
+    grid.replaceChild(newCurrent, oldCurrent);
+  } else {
+    grid.appendChild(newCurrent);
+  }
+}
+
+function submitGuess() {
+  const b = BATTLE;
+  if (b.won || b.lost) return;
+
+  // Validate all slots filled
+  for (let i=0;i<b.codeSize;i++) {
+    const val = b.revealedPositions[i] !== undefined ? b.revealedPositions[i] : b.currentGuess[i];
+    if (!val) { showToast('Fill all orb slots first!'); return; }
+  }
+
+  // Build full guess
+  const guess = [];
+  for (let i=0;i<b.codeSize;i++) {
+    guess.push(b.revealedPositions[i] !== undefined ? b.revealedPositions[i] : b.currentGuess[i]);
+  }
+
+  // Boss special: penaltyOnDiscover - count newly discovered correct positions
+  let penalty = 0;
+  if (BOSS_DEFS[b.bossIdx].special === 'penaltyOnDiscover' && !b.bossSpecialDisabled) {
+    guess.forEach((c,i)=>{ if(c===b.code[i] && !b.revealedPositions[i]) penalty++; });
+  }
+
+  // Calculate feedback
+  const feedback = calcFeedback(guess, b.code);
+  b.guesses.push({guess:[...guess], feedback});
+  AUDIO.sfx.submit();
+  setTimeout(() => {
+    if (feedback.reds > 0) AUDIO.sfx.redPeg();
+    else if (feedback.whites > 0) AUDIO.sfx.whitePeg();
+  }, 200);
+  b.turnsLeft--;
+  if (penalty > 0) { b.turnsLeft -= penalty; b.penaltyCount += penalty; }
+
+  // Reset current guess (keeping revealed positions)
+  b.currentGuess = Array(b.codeSize).fill(null);
+  b.activeSlot = 0;
+  while(b.activeSlot < b.codeSize && b.revealedPositions[b.activeSlot] !== undefined) b.activeSlot++;
+
+  // Check win
+  if (feedback.reds === b.codeSize) {
+    b.won = true;
+    setTimeout(() => AUDIO.sfx.win(), 300);
+    showBattleResult(true);
+    return;
+  }
+
+  // Check loss
+  if (b.turnsLeft <= 0) {
+    b.lost = true;
+    setTimeout(() => AUDIO.sfx.lose(), 300);
+    showBattleResult(false);
+    return;
+  }
+
+  // Boss submerge at specific turn
+  const turnNum = b.maxTurns + b.extraTurns - b.turnsLeft;
+  if (BOSS_DEFS[b.bossIdx].special === 'bossSubmerge' && !b.bossSpecialUsed && !b.bossSpecialDisabled && turnNum === b.bossSubmergeTurn) {
+    scrambleBossCode();
+    b.bossSpecialUsed = true;
+    showToast('⚡ Elkgore scrambled the orbs!');
+  }
+
+  // Update turn counter and append rows incrementally — no full re-render
+  updateBattleBanner();
+  appendSubmittedRow();
+  renderPicker();
+}
+
+function updateBattleBanner() {
+  const b = BATTLE;
+  const boss = BOSS_DEFS[b.bossIdx];
+  const totalTurns = b.maxTurns + b.extraTurns;
+  document.getElementById('battle-banner').innerHTML = `
+    <img class="battle-boss-img" src="${boss.img}" alt="${boss.name}">
+    <div class="battle-boss-info">
+      <div>
+        <div class="battle-boss-name">Boss ${boss.id}: ${boss.name}</div>
+        ${boss.specialDesc&&!b.bossSpecialDisabled?`<div class="battle-boss-special">⚡ ${boss.specialDesc}</div>`:''}
+        ${b.bossSpecialDisabled?`<div style="font-size:10px;color:#34d399;">✅ Boss ability disabled!</div>`:''}
+      </div>
+      <div class="turns-left">⏱ ${b.turnsLeft} / ${totalTurns}</div>
+    </div>
+  `;
+}
+
+function calcFeedback(guess, code) {
+  let reds = 0, whites = 0;
+  const codeLeft = [...code];
+  const guessLeft = [...guess];
+  // First pass: reds
+  for (let i=0;i<code.length;i++) {
+    if (guess[i] === code[i]) { reds++; codeLeft[i]=null; guessLeft[i]=null; }
+  }
+  // Second pass: whites
+  for (let i=0;i<code.length;i++) {
+    if (guessLeft[i] === null) continue;
+    const j = codeLeft.indexOf(guessLeft[i]);
+    if (j !== -1) { whites++; codeLeft[j]=null; }
+  }
+  return { reds, whites };
+}
+
+function scrambleBossCode() {
+  const b = BATTLE;
+  const shuffled = [...b.code].sort(()=>Math.random()-0.5);
+  b.code = shuffled;
+  // Invalidate any revealed position hints (they're now wrong)
+  b.revealedPositions = {};
+}
+
+// ── ABILITIES ──
+function onAbilityTap(abilityKey, color) {
+  const b = BATTLE;
+  const def = ORB_DEFS[color];
+  const title = `Use ${def.name} Orb`;
+  const body = def.abilityDesc;
+
+  document.getElementById('modal-ability-title').textContent = title;
+  document.getElementById('modal-ability-body').textContent = body;
+  document.getElementById('modal-ability-confirm').onclick = ()=> {
+    closeModal('modal-ability');
+    activateAbility(abilityKey);
+  };
+  openModal('modal-ability');
+}
+
+function activateAbility(abilityKey) {
+  const b = BATTLE;
+  b.usedAbilities[abilityKey] = true;
+  AUDIO.sfx.ability();
+
+  if (abilityKey === 'extra1') {
+    b.extraTurns += 1; b.turnsLeft += 1;
+    showToast('+1 extra turn!');
+  } else if (abilityKey === 'extra2') {
+    b.extraTurns += 2; b.turnsLeft += 2;
+    showToast('+2 extra turns!');
+  } else if (abilityKey === 'extra3') {
+    b.extraTurns += 3; b.turnsLeft += 3;
+    showToast('+3 extra turns!');
+  } else if (abilityKey === 'submerge') {
+    const turnNum = b.maxTurns + b.extraTurns - b.turnsLeft;
+    if (turnNum >= 5) { showToast('Blue Orb only works in first 5 turns!'); b.usedAbilities[abilityKey]=false; return; }
+    scrambleBossCode();
+    showToast('🌀 Submerge! Boss orbs scrambled.');
+  } else if (abilityKey === 'revealWrong') {
+    // Reveal an orb NOT in the code, from the unlocked puzzle colors
+    const allColors = getUnlockedColors();
+    const notIn = allColors.filter(c=>!b.code.includes(c));
+    if (notIn.length > 0) {
+      const pick = notIn[Math.floor(Math.random()*notIn.length)];
+      b.revealedWrong.push(pick);
+      showToast(`🟢 ${ORB_DEFS[pick].name} is NOT in the code!`);
+    } else {
+      showToast('No orbs left to reveal.');
+    }
+  } else if (abilityKey === 'burn') {
+    // Reveal a random unrevealed position
+    const unrevealed = [];
+    for (let i=0;i<b.codeSize;i++) if(b.revealedPositions[i]===undefined) unrevealed.push(i);
+    if (unrevealed.length === 0) { showToast('All positions already revealed!'); return; }
+    const pos = unrevealed[Math.floor(Math.random()*unrevealed.length)];
+    b.revealedPositions[pos] = b.code[pos];
+    showToast(`🔥 Burn! Position ${pos+1} = ${ORB_DEFS[b.code[pos]].name}`);
+  } else if (abilityKey === 'disable') {
+    b.bossSpecialDisabled = true;
+    showToast('⚡ Boss special ability disabled!');
+  } else if (abilityKey === 'hint') {
+    if (b.disabledAbilities['hint']) { showToast("Queen Asabeth blocked your Black Orb!"); return; }
+    // Let player pick a position to reveal
+    const unrevealed = [];
+    for(let i=0;i<b.codeSize;i++) if(b.revealedPositions[i]===undefined) unrevealed.push(i);
+    if (unrevealed.length === 0) { showToast('Nothing left to reveal.'); return; }
+    // Auto-reveal first unrevealed (could add UI to pick)
+    const pos = unrevealed[0];
+    b.revealedPositions[pos] = b.code[pos];
+    showToast(`🖤 Hint! Position ${pos+1} = ${ORB_DEFS[b.code[pos]].name}`);
+  }
+
+  // Lightweight refresh: update abilities row + current guess row only
+  renderBattle();  // abilities may change (used state), keep full re-render here
+  // renderBattle already calls renderGuessGrid which rebuilds — that's fine for ability use (rare action)
+}
+
+// ══════════════════════════════════════════════
+//  RESULTS
+// ══════════════════════════════════════════════
+
+function showBattleResult(won) {
+  const b = BATTLE;
+  const boss = BOSS_DEFS[b.bossIdx];
+  let rewards = {};
+  let totalFrags = 0;
+
+  if (won) {
+    // Calculate turns used
+    const turnsUsed = b.guesses.length;
+    const nonCountedTurns = 2;
+    const penalty = 5;
+    const basePoints = 50;
+    const codeSize = b.codeSize || 4;
+    const multiplier = isFinite(b.multiplier) && b.multiplier > 0 ? b.multiplier : 1;
+    const penaltyPts = Math.max(0, (turnsUsed - nonCountedTurns) * penalty);
+    const earnedPerOrb = Math.max(5, basePoints - penaltyPts);
+    let rawFrags = earnedPerOrb * codeSize;
+    rawFrags = Math.round(rawFrags * multiplier);
+    // Boss 7+ bonus
+    if (b.bossIdx >= 6) rawFrags = Math.round(rawFrags * 1.2);
+    totalFrags = rawFrags;
+
+    // Loot distribution — determine which orb type each fragment reward is
+    // Generate reward breakdown
+    const loot = { ...boss.loot };
+    loot.uncommon = Math.min(1, loot.uncommon + b.bonusUncommon);
+    loot.rare = Math.min(1, loot.rare + b.bonusRare);
+    const total = loot.common + loot.uncommon + loot.rare;
+    if (total > 0) { loot.common /= total; loot.uncommon /= total; loot.rare /= total; }
+
+    const unlocked = getUnlockedColors();
+    const orbsByRarity = {
+      common:   ORB_ORDER.filter(c=>ORB_DEFS[c].rarity==='common'   && (boss.pool.includes(c)||unlocked.includes(c))),
+      uncommon: ORB_ORDER.filter(c=>ORB_DEFS[c].rarity==='uncommon' && unlocked.includes(c)),
+      rare:     ORB_ORDER.filter(c=>ORB_DEFS[c].rarity==='rare'     && unlocked.includes(c)),
+    };
+
+    // Distribute fragments across 4 orb types
+    const drops = [];
+    for (let i=0;i<4;i++) {
+      const r = Math.random();
+      let rarity = r < loot.rare ? 'rare' : r < loot.rare+loot.uncommon ? 'uncommon' : 'common';
+      const pool = orbsByRarity[rarity];
+      if (!pool || pool.length === 0) { rarity='common'; }
+      const pool2 = orbsByRarity[rarity];
+      if (!pool2||pool2.length===0) continue;
+      const color = pool2[Math.floor(Math.random()*pool2.length)];
+      const amt = Math.max(5, Math.round(rawFrags/4));
+      drops.push({color, amt});
+      rewards[color] = (rewards[color]||0) + amt;
+    }
+
+    // Apply to state
+    for (const [color, amt] of Object.entries(rewards)) {
+      STATE.fragments[color] = (STATE.fragments[color]||0) + amt;
+    }
+
+    // Unlock next boss
+    if (STATE.bossProgress[b.bossIdx] < 2) STATE.bossProgress[b.bossIdx] = 2;
+    if (b.bossIdx+1 < 10 && STATE.bossProgress[b.bossIdx+1] < 1) {
+      STATE.bossProgress[b.bossIdx+1] = 1;
+    }
+
+    // Unlock new puzzle color + auto-advance MindBreaker rank
+    applyColorUnlocks();
+    applyMindBreakerRank();
+
+    saveState();
+  }
+
+  AUDIO.stopBossTrack();
+  showScreen('results');
+
+  const box = document.getElementById('results-box');
+  const secretOrbsHtml = b.code.map(c=>`<img src="${ORB_DEFS[c].img}" alt="${c}">`).join('');
+  const rewardHtml = Object.entries(rewards).map(([c,a])=>
+    `<div class="reward-item"><img src="${ORB_DEFS[c].img}" alt="${c}"><span>+${a}</span></div>`
+  ).join('');
+
+  box.innerHTML = `
+    <img class="results-boss-img" src="${boss.img}" alt="${boss.name}">
+    <div class="results-outcome ${won?'win':'lose'}">${won?'VICTORY!':'DEFEATED'}</div>
+    <div class="results-boss-name">vs Boss ${boss.id}: ${boss.name}</div>
+    <div class="results-secret">
+      <div class="secret-label">The secret code was:</div>
+      <div class="secret-orbs">${secretOrbsHtml}</div>
+    </div>
+    ${won ? `
+      <div class="results-reward">
+        <div class="reward-title">⚗️ Orb Fragments Earned (${b.guesses.length} turns)</div>
+        <div class="reward-items">${rewardHtml}</div>
+      </div>
+      <div class="results-total">Total: ${Object.values(rewards).reduce((a,b)=>a+b,0)} fragments</div>
+      ${b.bossIdx+1 < 10 && STATE.bossProgress[b.bossIdx+1] >= 1 ? `<div style="color:#fbbf24;font-size:12px;margin-bottom:6px;">🔓 Boss ${b.bossIdx+2} unlocked!</div>`:``}
+      ${COLOR_UNLOCK_AFTER[b.bossIdx] ? `<div style="color:#a855f7;font-size:12px;margin-bottom:12px;">🎨 ${ORB_DEFS[COLOR_UNLOCK_AFTER[b.bossIdx]].name} Orb color unlocked!</div>` : ''}
+    ` : `<div style="color:#f87171;margin-bottom:16px;font-size:13px;">Better luck next time! Study the boss's orb pool and adjust your loadout.</div>`}
+    <button class="results-btn" onclick="rematch()">⚔️ Rematch</button>
+    <button class="results-btn secondary" onclick="showScreen('campaign')">🗺️ Campaign</button>
+  `;
+}
+
+function rematch() {
+  showScreen('loadout');
+}
+
+// ══════════════════════════════════════════════
+//  INVENTORY SCREEN
+// ══════════════════════════════════════════════
+
+function renderInventory() {
+  document.getElementById('inv-frags').textContent = getTotalFrags();
+  const content = document.getElementById('inv-content');
+
+  const rarities = ['common','uncommon','rare'];
+  const rarityLabel = {common:'Common Orbs',uncommon:'Uncommon Orbs',rare:'Rare Orbs'};
+
+  let html = `<div style="text-align:center;margin-bottom:6px;font-size:12px;color:#a78bfa;">Collect fragments → buy orbs → unlock power</div>`;
+
+  rarities.forEach(rarity => {
+    html += `<div class="inv-section-title">${rarityLabel[rarity]}</div><div class="orb-grid">`;
+    ORB_ORDER.filter(c=>ORB_DEFS[c].rarity===rarity).forEach(color => {
+      const def = ORB_DEFS[color];
+      const unlocked = STATE.unlockedOrbs.includes(color);
+      const owned = STATE.ownedOrbs[color];
+      const frags = STATE.fragments[color] || 0;
+      const canBuy = unlocked && !owned && frags >= def.cost;
+      html += `
+        <div class="orb-card ${!unlocked?'locked-card':''}">
+          <img src="${def.img}" alt="${color}">
+          <div class="orb-card-name">${def.name}</div>
+          <div class="orb-card-count">${unlocked?frags+' frags':'🔒'}</div>
+          <div class="orb-card-ability">${def.abilityDesc}</div>
+          <span class="orb-rarity-badge rarity-${rarity}">${rarity}</span>
+          ${unlocked && owned ? `<div class="owned-badge">✅ Owned</div>` : ''}
+          ${unlocked && !owned ? `
+            <div style="font-size:10px;color:#fbbf24;margin-top:3px;">Cost: ${def.cost} frags</div>
+            <div class="shop-btn-row">
+              <button class="buy-orb-btn" ${canBuy?'':'disabled'} onclick="buyOrb('${color}')">
+                ${canBuy?'Buy':'Need '+(def.cost-frags)+' more'}
+              </button>
+            </div>
+          ` : ''}
+        </div>
+      `;
+    });
+    html += '</div>';
+  });
+
+  content.innerHTML = html;
+}
+
+function buyOrb(color) {
+  const def = ORB_DEFS[color];
+  if ((STATE.fragments[color]||0) < def.cost) { showToast('Not enough fragments!'); return; }
+  STATE.fragments[color] -= def.cost;
+  STATE.ownedOrbs[color] = 1;
+  saveState();
+  showToast(`${def.name} Orb purchased!`);
+  renderInventory();
+}
+
+// ══════════════════════════════════════════════
+//  MODALS & TOAST
+// ══════════════════════════════════════════════
+
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+let toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2500);
+}
+
+// ══════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════
+
+// ══════════════════════════════════════════════
+//  PROFILE
+// ══════════════════════════════════════════════
+
+const AVATARS = ['🧙','🧝','🧛','🧟','🧜','🧚','🐉','🦁','🐺','🦊','👾','🤖','💀','🔮','⚗️','🌟','🌙','🔥','💎','🦋'];
+
+function openProfileModal() {
+  const name = STATE.profile?.name || '';
+  const avatar = STATE.profile?.avatar || '🧙';
+  document.getElementById('profile-name-input').value = name;
+  document.getElementById('profile-avatar-display').textContent = avatar;
+
+  const grid = document.getElementById('avatar-grid');
+  grid.innerHTML = '';
+  AVATARS.forEach(em => {
+    const div = document.createElement('div');
+    div.className = 'avatar-option' + (em === avatar ? ' selected' : '');
+    div.textContent = em;
+    div.onclick = () => {
+      document.querySelectorAll('.avatar-option').forEach(a=>a.classList.remove('selected'));
+      div.classList.add('selected');
+      document.getElementById('profile-avatar-display').textContent = em;
+    };
+    grid.appendChild(div);
+  });
+
+  // Stats
+  const beaten = STATE.bossProgress.filter(p=>p>=2).length;
+  const totalFrags = getTotalFrags();
+  const ownedCount = Object.values(STATE.ownedOrbs).filter(Boolean).length;
+  document.getElementById('profile-stats').innerHTML = `
+    <div class="profile-stat-row"><span class="profile-stat-label">Bosses Defeated</span><span class="profile-stat-value">${beaten} / 10</span></div>
+    <div class="profile-stat-row"><span class="profile-stat-label">Total Fragments</span><span class="profile-stat-value">${totalFrags}</span></div>
+    <div class="profile-stat-row"><span class="profile-stat-label">Orbs Owned</span><span class="profile-stat-value">${ownedCount} / ${ORB_ORDER.length}</span></div>
+    <div class="profile-stat-row"><span class="profile-stat-label">Orbs Unlocked</span><span class="profile-stat-value">${STATE.unlockedOrbs.length} / ${ORB_ORDER.length}</span></div>
+  `;
+  openModal('modal-profile');
+}
+
+function saveProfile() {
+  const name = document.getElementById('profile-name-input').value.trim() || 'Adventurer';
+  const avatar = document.getElementById('profile-avatar-display').textContent;
+  if (!STATE.profile) STATE.profile = {};
+  STATE.profile.name = name;
+  STATE.profile.avatar = avatar;
+  document.getElementById('title-avatar').textContent = avatar;
+  saveState();
+  closeModal('modal-profile');
+  showToast(`Profile saved — ${name}!`);
+}
+
+function initProfile() {
+  const avatar = STATE.profile?.avatar || '🧙';
+  document.getElementById('title-avatar').textContent = avatar;
+}
+
+// Override openModal for profile to wire up stats
+const _origOpenModal = openModal;
+
+// ══════════════════════════════════════════════
+//  PROGRESSION UNLOCKS
+// ══════════════════════════════════════════════
+
+function applyColorUnlocks() {
+  const beaten = STATE.bossProgress.filter(p => p >= 2).length;
+  Object.entries(COLOR_UNLOCK_AFTER).forEach(([bossIdx, color]) => {
+    if (beaten > parseInt(bossIdx) && !STATE.unlockedColors.includes(color)) {
+      STATE.unlockedColors.push(color);
+    }
+  });
+}
+
+// Ranks 1–4 auto-progress with boss victories (all use 4 slots).
+// Ranks 5 and 6 are purchased upgrades that add extra slots.
+function applyMindBreakerRank() {
+  if (STATE.mindBreakerRank >= 5) return; // purchased upgrade — never downgrade
+  const beaten = STATE.bossProgress.filter(p => p >= 2).length;
+  const autoRank = beaten >= 4 ? 4 : beaten >= 3 ? 3 : beaten >= 2 ? 2 : 1;
+  STATE.mindBreakerRank = Math.max(STATE.mindBreakerRank, autoRank);
+}
+
+// Actual orb slot count from current rank
+function getMindBreakerSlots() {
+  return STATE.mindBreakerRank >= 6 ? 6 : STATE.mindBreakerRank >= 5 ? 5 : 4;
+}
+
+// ══════════════════════════════════════════════
+//  ORB FORGE
+// ══════════════════════════════════════════════
+
+function renderForge() {
+  document.getElementById('forge-frags').textContent = getTotalFrags();
+  const content = document.getElementById('forge-content');
+  const unlocked = getUnlockedColors();
+  const beaten = STATE.bossProgress.filter(p => p >= 2).length;
+
+  // ── MindBreaker Altar ──
+  let altarHtml = `<div class="forge-altar-banner">
+    <div class="forge-altar-header">
+      <div class="forge-altar-icon"><img src="Images/MindBreaker Icon.png" style="width:48px;height:48px;object-fit:contain;"></div>
+      <div>
+        <div class="forge-altar-title">MindBreaker Altar</div>
+        <div class="forge-altar-subtitle">Upgrade your MindBreaker console to unlock more complex code sequences for your guesses</div>
+      </div>
+      <div class="forge-altar-rank-badge">Rank ${STATE.mindBreakerRank}</div>
+    </div>
+    <div class="forge-altar-upgrades">`;
+
+  MINDBREAKER_UPGRADES.forEach(upg => {
+    const alreadyOwned = STATE.mindBreakerRank >= upg.rank;
+    const bossUnlocked = beaten > upg.reqBossIdx;
+    const costMet = Object.entries(upg.cost).every(([c,n]) => (STATE.fragments[c]||0) >= n);
+    const canBuy = bossUnlocked && costMet && !alreadyOwned;
+    const costStr = Object.entries(upg.cost).map(([c,n])=>`${n} ${ORB_DEFS[c].name}`).join(', ');
+    const cardClass = alreadyOwned ? 'altar-upgrade-card purchased' : canBuy ? 'altar-upgrade-card available' : bossUnlocked ? 'altar-upgrade-card' : 'altar-upgrade-card locked';
+    const btnClass = alreadyOwned ? 'altar-upgrade-btn done' : canBuy ? 'altar-upgrade-btn buy' : 'altar-upgrade-btn locked';
+    const btnLabel = alreadyOwned ? '✅ Purchased' : canBuy ? '🔥 Upgrade' : bossUnlocked ? 'Need Frags' : `🔒 Beat ${upg.reqBossName}`;
+
+    altarHtml += `<div class="${cardClass}">
+      <div class="altar-upgrade-icon">${upg.rank===2?'🔵':'🟣'}</div>
+      <div class="altar-upgrade-info">
+        <div class="altar-upgrade-name">${upg.name}</div>
+        <div class="altar-upgrade-desc">${upg.desc}</div>
+        <div class="altar-upgrade-cost">Cost: ${costStr}</div>
+      </div>
+      <button class="${btnClass}" ${canBuy?`onclick="buyMindBreakerUpgrade(${upg.rank})"`:''} ${(!canBuy&&!alreadyOwned)?'disabled':''}>${btnLabel}</button>
+    </div>`;
+  });
+
+  altarHtml += `</div></div>`;
+
+  // ── Ability Orbs ──
+  const rarities = ['common','uncommon','rare'];
+  const rarityLabel = { common:'⚪ Common Ability Orbs', uncommon:'🔷 Uncommon Ability Orbs', rare:'🔶 Rare Ability Orbs' };
+
+  let orbHtml = `<div style="font-size:11px;color:#a78bfa;text-align:center;margin-bottom:12px;">
+    Collect orb fragments by winning matches. Use them here to forge Orbs with powerful abilities for your loadout.
+  </div>`;
+
+  rarities.forEach(rarity => {
+    const orbsInRarity = ORB_ORDER.filter(c=>ORB_DEFS[c].rarity===rarity);
+    orbHtml += `<div class="forge-section-title">${rarityLabel[rarity]}</div><div class="forge-grid">`;
+    orbsInRarity.forEach(color => {
+      const def = ORB_DEFS[color];
+      const colorUnlocked = unlocked.includes(color);
+      const owned = STATE.ownedOrbs[color];
+      const frags = STATE.fragments[color] || 0;
+      const canBuy = colorUnlocked && !owned && frags >= def.cost;
+      const cardClass = owned ? 'forge-card owned-card' : canBuy ? 'forge-card affordable' : 'forge-card';
+
+      orbHtml += `<div class="${cardClass}">
+        ${!colorUnlocked ? '<div class="forge-locked-badge">🔒</div>' : ''}
+        <img src="${def.img}" alt="${color}" style="${!colorUnlocked?'filter:grayscale(1);opacity:0.35':''}">
+        <div class="forge-card-name">${def.name}</div>
+        <div class="forge-card-ability">${def.abilityDesc}</div>
+        <span class="forge-card-rarity orb-rarity-badge rarity-${rarity}">${rarity}</span>
+        ${colorUnlocked ? `
+          <div class="forge-card-frags">Cost: ${def.cost} frags</div>
+          <div class="forge-card-have">You have: ${frags}</div>
+          <button class="forge-buy-btn ${owned?'owned-btn':''}"
+            ${(!canBuy&&!owned)?'disabled':''}
+            ${owned?'':canBuy?`onclick="forgeBuy('${color}')"`:''}
+          >${owned?'✅ Forged':canBuy?'🔥 Forge':`Need ${def.cost-frags} more`}</button>`
+        : `<div style="font-size:10px;color:#6d28d9;margin-top:6px;">Win more battles to unlock</div>`}
+      </div>`;
+    });
+    orbHtml += '</div>';
+  });
+
+  content.innerHTML = altarHtml + orbHtml;
+}
+
+function buyMindBreakerUpgrade(rank) {
+  const upg = MINDBREAKER_UPGRADES.find(u => u.rank === rank);
+  if (!upg) return;
+  if (STATE.mindBreakerRank >= rank) { showToast('Already purchased!'); return; }
+  const beaten = STATE.bossProgress.filter(p => p >= 2).length;
+  if (beaten <= upg.reqBossIdx) { showToast(`Defeat ${upg.reqBossName} first!`); return; }
+  for (const [c,n] of Object.entries(upg.cost)) {
+    if ((STATE.fragments[c]||0) < n) { showToast(`Not enough ${ORB_DEFS[c].name} fragments!`); return; }
+  }
+  for (const [c,n] of Object.entries(upg.cost)) STATE.fragments[c] -= n;
+  STATE.mindBreakerRank = rank;
+  saveState();
+  AUDIO.sfx.unlock();
+  showToast(`🪨 MindBreaker Altar upgraded to Rank ${rank} — ${upg.slots} orb slots!`);
+  renderForge();
+}
+
+function forgeBuy(color) {
+  const def = ORB_DEFS[color];
+  if ((STATE.fragments[color]||0) < def.cost) { showToast('Not enough fragments!'); return; }
+  STATE.fragments[color] -= def.cost;
+  STATE.ownedOrbs[color] = 1;
+  saveState();
+  AUDIO.sfx.forge();
+  showToast(`🔥 ${def.name} Orb forged!`);
+  renderForge();
+}
+
+// ══════════════════════════════════════════════
+//  SETTINGS
+// ══════════════════════════════════════════════
+
+function initSettings() {
+  if (!STATE.settings) STATE.settings = { sfx:true, music:true, anim:true, autoadvance:true, hints:true };
+  Object.entries(STATE.settings).forEach(([key, val]) => {
+    const btn = document.getElementById('toggle-'+key);
+    if (btn) { btn.className = 'toggle-btn ' + (val?'on':'off'); }
+  });
+}
+
+function toggleSetting(key) {
+  if (!STATE.settings) STATE.settings = {};
+  STATE.settings[key] = !STATE.settings[key];
+  const btn = document.getElementById('toggle-'+key);
+  if (btn) btn.className = 'toggle-btn ' + (STATE.settings[key]?'on':'off');
+  saveState();
+  AUDIO.applySettings();
+  if (key === 'music' && STATE.settings[key]) AUDIO.startMusic();
+}
+
+function confirmReset() {
+  closeModal('modal-settings');
+  openModal('modal-reset-confirm');
+}
+
+function doReset() {
+  localStorage.removeItem('orbmaster_state');
+  closeModal('modal-reset-confirm');
+  location.reload();
+}
+
+// ══════════════════════════════════════════════
+//  SCREEN OVERRIDE — add forge + title
+// ══════════════════════════════════════════════
+
+const _baseShowScreen = showScreen;
+// Patch showScreen to handle forge and title
+function showScreen(name) {
+  AUDIO.sfx.navigate();
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  if (name === 'campaign') renderCampaign();
+  if (name === 'inventory') renderInventory();
+  if (name === 'loadout') renderLoadout();
+  if (name === 'forge') renderForge();
+  if (name === 'title') initProfile();
+  if (name === 'codex') { showCodexTab('howtoplay'); }
+}
+
+// Patch openModal to handle profile
+function openModal(id) {
+  document.getElementById(id).classList.add('show');
+  if (id === 'modal-profile') openProfileModal();
+  if (id === 'modal-settings') initSettings();
+}
+
+// ══════════════════════════════════════════════
+//  CODEX
+// ══════════════════════════════════════════════
+
+function showCodexTab(tabId) {
+  document.querySelectorAll('.codex-tab').forEach((t,i) => t.classList.remove('active'));
+  document.querySelectorAll('.codex-section').forEach(s => s.classList.remove('active'));
+  document.getElementById('codex-' + tabId).classList.add('active');
+  // Highlight the clicked tab button
+  const tabs = document.querySelectorAll('.codex-tab');
+  tabs.forEach(t => { if (t.getAttribute('onclick').includes(tabId)) t.classList.add('active'); });
+  // Render boss list on demand
+  if (tabId === 'bosses') renderCodexBosses();
+}
+
+function renderCodexBosses() {
+  const container = document.getElementById('codex-boss-list');
+  if (container.children.length > 0) return; // already rendered
+  BOSS_DEFS.forEach(boss => {
+    const beaten = STATE.bossProgress[boss.id - 1] >= 2;
+    const unlocked = STATE.bossProgress[boss.id - 1] >= 1;
+    const poolImgs = boss.pool.map(c =>
+      `<img src="${ORB_DEFS[c].img}" style="width:16px;height:16px;object-fit:contain;" title="${ORB_DEFS[c].name}">`
+    ).join('');
+    const lootStr = formatLoot(boss.loot);
+    const el = document.createElement('div');
+    el.className = 'codex-boss-entry';
+    el.style.opacity = unlocked ? '1' : '0.45';
+    el.innerHTML = `
+      <img class="codex-boss-img" src="${boss.img}" alt="${boss.name}">
+      <div class="codex-boss-info">
+        <div class="codex-boss-name">${unlocked ? '' : '🔒 '}Boss ${boss.id}: ${boss.name} ${beaten ? '✅' : ''}</div>
+        <div class="codex-boss-loot">${lootStr}</div>
+        <div class="codex-boss-pool">Color pool: ${poolImgs}</div>
+        <div style="font-size:10px;color:#c4b5fd;margin-top:2px;">Orb Set: ${boss.minCodeSize}</div>
+        ${boss.specialDesc ? `<div class="codex-boss-special">⚡ ${boss.specialDesc}</div>` : '<div style="font-size:10px;color:#6d28d9;margin-top:2px;">No special ability</div>'}
+      </div>
+    `;
+    container.appendChild(el);
+  });
+}
+
+// ══════════════════════════════════════════════
+//  AUDIO ENGINE
+// ══════════════════════════════════════════════
+
+const AUDIO = {
+  ctx: null,
+  bgMusic: null,
+  bgGain: null,
+  sfxGain: null,
+  started: false,
+
+  init() {
+    if (this.ctx) return;
+    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    // Master gains
+    this.bgGain  = this.ctx.createGain();
+    this.sfxGain = this.ctx.createGain();
+    this.bgGain.connect(this.ctx.destination);
+    this.sfxGain.connect(this.ctx.destination);
+    this.applySettings();
+    this.loadMusic();
+  },
+
+  applySettings() {
+    if (!this.ctx) return;
+    const s = STATE.settings || {};
+    this.bgGain.gain.setTargetAtTime(s.music  !== false ? 0.35 : 0, this.ctx.currentTime, 0.1);
+    this.sfxGain.gain.setTargetAtTime(s.sfx !== false ? 1.0  : 0, this.ctx.currentTime, 0.1);
+  },
+
+  loadMusic() {
+    if (this.bgMusic) return;
+    const el = document.getElementById('bg-music');
+    const src = this.ctx.createMediaElementSource(el);
+    src.connect(this.bgGain);
+    this.bgMusic = el;
+    el.loop = true;
+    el.volume = 1;
+
+    // Wire boss music element through the same bg gain
+    const bossEl = document.getElementById('boss-music');
+    const bossSrc = this.ctx.createMediaElementSource(bossEl);
+    bossSrc.connect(this.bgGain);
+    this.bossMusic = bossEl;
+    bossEl.loop = true;
+    bossEl.volume = 1;
+  },
+
+  startMusic() {
+    if (!this.bgMusic) return;
+    if (this.bgMusic.paused) this.bgMusic.play().catch(()=>{});
+  },
+
+  playBossTrack(src) {
+    if (!this.bossMusic) return;
+    this.bgMusic.pause();
+    this.bossMusic.src = src;
+    this.bossMusic.currentTime = 0;
+    this.bossMusic.play().catch(()=>{});
+  },
+
+  stopBossTrack() {
+    if (!this.bossMusic) return;
+    this.bossMusic.pause();
+    this.bossMusic.src = '';
+    if (STATE.settings?.music !== false) this.startMusic();
+  },
+
+  // Procedural SFX via Web Audio API
+  _osc(freq, type, duration, gainVal, delay = 0) {
+    if (!this.ctx || (STATE.settings && STATE.settings.sfx === false)) return;
+    const t = this.ctx.currentTime + delay;
+    const osc = this.ctx.createOscillator();
+    const g   = this.ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, t);
+    g.gain.setValueAtTime(gainVal, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + duration);
+    osc.connect(g);
+    g.connect(this.sfxGain);
+    osc.start(t);
+    osc.stop(t + duration + 0.01);
+  },
+
+  sfx: {
+    click()     { AUDIO._osc(600, 'sine',     0.08, 0.3); },
+    orbPick()   { AUDIO._osc(880, 'sine',     0.12, 0.25); AUDIO._osc(1100,'sine',0.06,0.15,0.06); },
+    submit()    { AUDIO._osc(400, 'square',   0.05, 0.2); AUDIO._osc(500,'square',0.05,0.2,0.06); AUDIO._osc(650,'square',0.08,0.2,0.12); },
+    redPeg()    { AUDIO._osc(1200,'sine',     0.15, 0.3); AUDIO._osc(1500,'sine',0.1,0.2,0.08); },
+    whitePeg()  { AUDIO._osc(700, 'sine',     0.12, 0.2); },
+    ability()   { AUDIO._osc(300, 'sawtooth', 0.08, 0.3); AUDIO._osc(600,'sawtooth',0.06,0.2,0.1); AUDIO._osc(900,'sawtooth',0.04,0.15,0.2); },
+    win() {
+      [523,659,784,1047].forEach((f,i) => AUDIO._osc(f,'sine',0.3,0.4,i*0.12));
+      AUDIO._osc(1047,'sine',0.6,0.5,0.5);
+    },
+    lose() {
+      [400,350,300,220].forEach((f,i) => AUDIO._osc(f,'sawtooth',0.25,0.3,i*0.15));
+    },
+    unlock()    { [440,550,660,880].forEach((f,i)=>AUDIO._osc(f,'sine',0.2,0.35,i*0.1)); },
+    forge()     { AUDIO._osc(200,'sawtooth',0.1,0.4); AUDIO._osc(400,'sine',0.15,0.4,0.1); AUDIO._osc(800,'sine',0.2,0.5,0.2); },
+    navigate()  { AUDIO._osc(500,'sine',0.06,0.15); },
+  }
+};
+
+// Boss-specific battle tracks (keyed by boss index 0-based)
+const BOSS_TRACKS = {
+  0: 'Audio/Boss 1 - Lemon_Zest_Fury.mp3',
+};
+
+// Register service worker for offline play
+function ensureAudio() {
+  if (AUDIO.started) return;
+  AUDIO.started = true;
+  AUDIO.init();
+  AUDIO.startMusic();
+}
+document.addEventListener('touchstart', ensureAudio, { once: true });
+document.addEventListener('click',      ensureAudio, { once: true });
+
+// Register service worker for offline play
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  });
+}
+
+// Init boss progress
+if (STATE.bossProgress[0] < 1) STATE.bossProgress[0] = 1;
+
+// Ensure starting colors are unlocked
+['red','blue','yellow','green','orange'].forEach(c => {
+  if (!STATE.unlockedColors.includes(c)) STATE.unlockedColors.push(c);
+});
+
+// Apply any unlocks earned from past boss victories
+applyColorUnlocks();
+applyMindBreakerRank();
+
+// Ensure equippedOrbs has 4 slots
+while (STATE.equippedOrbs.length < 4) STATE.equippedOrbs.push(null);
+
+// Init profile + settings
+initProfile();
+initSettings();
+
+saveState();
+</script>
+</body>
+</html>

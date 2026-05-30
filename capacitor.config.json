@@ -1,0 +1,11 @@
+{
+  "appId": "com.breezybee.orbmaster",
+  "appName": "OrbMaster",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "backgroundColor": "#1a0a2e"
+  }
+}

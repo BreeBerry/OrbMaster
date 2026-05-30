@@ -1,0 +1,26 @@
+{
+  "name": "OrbMaster",
+  "short_name": "OrbMaster",
+  "description": "Crack the code. Master the Orbs. A Mastermind-style RPG puzzle game.",
+  "start_url": "./OrbMaster.html",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#1a0a2e",
+  "theme_color": "#7c3aed",
+  "icons": [
+    {
+      "src": "Images/OrbMaster title trans.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "Images/OrbMaster blank.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["games", "puzzle"],
+  "lang": "en-US"
+}
