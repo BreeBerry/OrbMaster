@@ -981,13 +981,13 @@
   <!-- Bottom buttons -->
   <div class="title-launch-btns">
     <button class="launch-main-btn" id="title-play-btn" onclick="showScreen('campaign')">START CAMPAIGN</button>
+    <button class="launch-main-btn" onclick="showScreen('multiplayer')" style="background:linear-gradient(135deg,#0f766e,#0d9488);box-shadow:0 0 24px rgba(20,184,166,0.5);margin-top:10px;">PLAY ONLINE</button>
     <div class="launch-row">
       <button class="launch-side-btn" onclick="showScreen('forge')"><img src="Images/Mind Orb Assets/multi_orb.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;margin-right:4px;">Orb Forge</button>
       <button class="launch-side-btn" onclick="showScreen('inventory')"><img src="Images/Mind Orb Assets/crystal_ball.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;margin-right:4px;">Orb Stash</button>
     </div>
     <div class="launch-row">
       <button class="launch-side-btn" onclick="showScreen('codex')" style="letter-spacing:1px;">📖 OrbMaster Codex</button>
-      <button class="launch-side-btn" onclick="showScreen('multiplayer')" style="letter-spacing:1px;">⚔️ Multiplayer</button>
     </div>
   </div>
 </div>
@@ -1016,22 +1016,11 @@
   </div>
   <div id="loadout-boss-section" class="loadout-boss-section"></div>
   <div class="loadout-body">
-    <!-- Section 1: MindBreaker Code Size -->
-    <div class="loadout-section" id="loadout-mindbreaker-section">
-      <div class="section-title"><img src="Images/MindBreaker Icon.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;margin-right:4px;"> MindBreaker Altar</div>
-      <div id="loadout-mindbreaker"></div>
-    </div>
-    <!-- Section 2: Ability Orbs -->
+    <!-- Section 1: Ability Orbs -->
     <div class="loadout-section">
       <div class="section-title">✨ Ability Orbs (max 4)</div>
       <div class="ability-slots-row" id="ability-slots"></div>
       <div class="orb-roster" id="orb-roster"></div>
-    </div>
-    <!-- Section 3: Unlocked Puzzle Colors -->
-    <div class="loadout-section">
-      <div class="section-title">🎨 Unlocked Colors</div>
-      <div class="unlocked-colors-row" id="loadout-unlocked-colors"></div>
-      <div style="font-size:9px;color:#4c1d95;margin-top:6px;">These colors may appear in the boss's secret orb set sequence.</div>
     </div>
   </div>
   <button class="start-battle-btn" id="start-battle-btn" onclick="startBattle()">⚔️ ENTER BATTLE</button>
@@ -1408,13 +1397,6 @@
     </div>
     <div class="settings-row">
       <div>
-        <div class="settings-label">Game Rules</div>
-        <div class="settings-sublabel">View full rules & mechanics</div>
-      </div>
-      <button class="reset-btn" style="background:linear-gradient(135deg,#3b1fa0,#1e0a4a);border:1px solid #7c3aed;" onclick="closeModal('modal-settings');showScreen('codex');">📖 Rules</button>
-    </div>
-    <div class="settings-row">
-      <div>
         <div class="settings-label">Reset All Progress</div>
         <div class="settings-sublabel">Wipes save data permanently</div>
       </div>
@@ -1473,6 +1455,11 @@
       <div class="mp-section">
         <div class="mp-title">Challenge a Friend</div>
         <div class="mp-subtitle">Set each other's code — race to crack it first</div>
+        <!-- MindBreaker code size selector -->
+        <div style="margin-bottom:14px;">
+          <div style="font-size:10px;color:#a78bfa;margin-bottom:8px;letter-spacing:1px;">CODE SIZE (host sets for both players)</div>
+          <div style="display:flex;gap:8px;" id="mp-codesize-btns"></div>
+        </div>
         <button class="mp-btn primary" onclick="mpCreateRoom()">🎲 Create Room</button>
         <button class="mp-btn secondary" onclick="mpShowJoin()">🔗 Join Room</button>
       </div>
@@ -1608,8 +1595,8 @@ const MINDBREAKER_UPGRADES = [
   },
 ];
 
-// Boss pool = colors that CAN appear in their secret code (reflects what's unlocked by that point)
-// minCodeSize = minimum code size required (player needs MindBreaker rank for 5+6)
+// Boss pool = colors that CAN appear in their secret code
+// Pools expand progressively — the player sees exactly these orbs in battle
 const BOSS_DEFS = [
   { id:1,  name:'Lemons',        img:'Images/Boss Character Assets/Boss_1 - Lemons.png',
     minCodeSize:4, pool:['red','blue','yellow','green','orange'],
@@ -1621,31 +1608,31 @@ const BOSS_DEFS = [
     minCodeSize:4, pool:['red','blue','yellow','green','orange'],
     loot:{common:0.8,uncommon:0.2,rare:0}, fragReq:{}, special:null, specialDesc:null },
   { id:4,  name:'Nanomic',       img:'Images/Boss Character Assets/Boss_4 - Nanomic.png',
-    minCodeSize:4, pool:['red','blue','yellow','green','orange','purple'],
+    minCodeSize:4, pool:['red','blue','yellow','green','orange','silver'],
     loot:{common:0.7,uncommon:0.2,rare:0.1}, fragReq:{}, special:null, specialDesc:null },
   { id:5,  name:'Natty D',       img:'Images/Boss Character Assets/Boss_5 - Natty D.png',
-    minCodeSize:4, pool:['red','blue','yellow','green','orange','purple','white'],
+    minCodeSize:4, pool:['red','blue','yellow','green','orange','silver','gold'],
     loot:{common:0.4,uncommon:0.5,rare:0.1}, fragReq:{}, special:null, specialDesc:null },
   { id:6,  name:'Pretty Pea',    img:'Images/Boss Character Assets/Boss_6 - Pretty Pea.png',
-    minCodeSize:4, pool:['red','blue','yellow','green','purple','white','black'],
+    minCodeSize:4, pool:['red','blue','yellow','green','orange','silver','gold','purple'],
     loot:{common:0.15,uncommon:0.65,rare:0.2},
     fragReq:{}, special:null, specialDesc:null },
   { id:7,  name:'Sir Louie',     img:'Images/Boss Character Assets/Boss_7 - Sir Louie.png',
-    minCodeSize:4, pool:['red','blue','yellow','green','purple','white','black','teal'],
+    minCodeSize:4, pool:['red','blue','yellow','green','orange','silver','gold','purple','black'],
     loot:{common:0.05,uncommon:0.65,rare:0.3},
     fragReq:{}, special:null, specialDesc:null },
   { id:8,  name:'Queen Asabeth', img:'Images/Boss Character Assets/Boss_8 - Queen Asabeth.png',
-    minCodeSize:5, pool:['red','blue','purple','white','black','teal','silver'],
+    minCodeSize:5, pool:['red','blue','yellow','green','orange','silver','gold','purple','black','white'],
     loot:{common:0,uncommon:0.45,rare:0.55},
     fragReq:{}, special:'disableBlack',
     specialDesc:'Disables your Black Orb (Hint)' },
   { id:9,  name:'Elkgore',       img:'Images/Boss Character Assets/Boss_9 - Elkgore.png',
-    minCodeSize:5, pool:['purple','white','black','teal','silver','gold'],
+    minCodeSize:5, pool:['red','blue','yellow','green','orange','silver','gold','purple','black','white','pink'],
     loot:{common:0,uncommon:0.35,rare:0.65},
     fragReq:{}, special:'bossSubmerge',
     specialDesc:'Scrambles his code once in the first 5 turns' },
   { id:10, name:'Mad Martin',    img:'Images/Boss Character Assets/Boss_010 - Mad Martin.png',
-    minCodeSize:6, pool:['red','blue','yellow','green','orange','purple','white','black','teal','silver','gold','pink'],
+    minCodeSize:6, pool:['red','blue','yellow','green','orange','silver','gold','purple','black','white','pink','teal'],
     loot:{common:0,uncommon:0,rare:1.0},
     fragReq:{}, special:'penaltyOnDiscover',
     specialDesc:'Removes 1 guess each time you discover a correct orb position' },
@@ -1711,9 +1698,8 @@ let BATTLE = null;
 function newBattle(bossIdx, codeSize) {
   const boss = BOSS_DEFS[bossIdx];
   const resolvedSize = codeSize || boss.minCodeSize;
-  // Boss pool intersected with unlocked puzzle colors
-  const availablePool = boss.pool.filter(c => getUnlockedColors().includes(c));
-  const pool = availablePool.length >= 2 ? availablePool : boss.pool;
+  // Use boss's defined pool directly — it dictates exactly which colors may appear
+  const pool = boss.pool;
   const code = generateCode(pool, resolvedSize);
   const maxTurns = 10;
   return {
@@ -1861,6 +1847,9 @@ function renderLoadout() {
 
 
   // Boss banner
+  const poolImgs = boss.pool.map(c =>
+    `<img src="${ORB_DEFS[c].img}" alt="${c}" title="${ORB_DEFS[c].name}" style="width:28px;height:28px;object-fit:contain;">`
+  ).join('');
   const banner = document.getElementById('loadout-boss-section');
   banner.innerHTML = `
     <img class="loadout-boss-img" src="${boss.img}" alt="${boss.name}">
@@ -1868,19 +1857,15 @@ function renderLoadout() {
       <div class="loadout-boss-name">Boss ${boss.id}: ${boss.name}</div>
       <div class="loadout-boss-loot">${formatLoot(boss.loot)}</div>
       <div style="font-size:11px;color:#c4b5fd;margin-top:3px;">Orb Set: ${boss.minCodeSize} &nbsp;|&nbsp; Max 10 turns</div>
-      ${boss.specialDesc?`<div class="loadout-boss-special">⚡ ${boss.specialDesc}</div>`:''}
+      <div style="font-size:9px;color:#a78bfa;margin-top:5px;margin-bottom:3px;">ORB POOL</div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;">${poolImgs}</div>
+      ${boss.specialDesc?`<div class="loadout-boss-special" style="margin-top:6px;">⚡ ${boss.specialDesc}</div>`:''}
     </div>
   `;
-
-  // MindBreaker adjuster
-  renderMindBreakerAdjuster(boss);
 
   // Ability slots + roster
   renderAbilitySlots();
   renderAbilityRoster();
-
-  // Unlocked colors
-  renderUnlockedColors();
 }
 
 function renderMindBreakerAdjuster(boss) {
@@ -3207,7 +3192,6 @@ function mpSubscribeChannel(code) {
     document.getElementById('mp-wait-status').textContent = 'Opponent connected! Starting…';
     // Host picks code size and tells both to move to setcode
     if (MP.isHost) {
-      MP.codeSize = Math.max(STATE.chosenCodeSize || 4, 4);
       ch.send({ type:'broadcast', event:'start_setcode', payload:{ codeSize: MP.codeSize } });
       mpStartSetCode(MP.codeSize);
     }
@@ -3215,8 +3199,23 @@ function mpSubscribeChannel(code) {
 
   ch.on('broadcast', { event: 'start_setcode' }, ({ payload }) => {
     if (MP.isHost) return; // host already handled it
-    MP.codeSize = payload.codeSize;
+    const needed = payload.codeSize;
+    const mySlots = getMindBreakerSlots();
+    if (needed > mySlots) {
+      // Notify host and show error
+      ch.send({ type:'broadcast', event:'rank_mismatch', payload:{ id: MP.myId, need: needed, have: mySlots } });
+      document.getElementById('mp-wait-status').textContent =
+        `⚠️ Host chose ${needed}-orb code but your MindBreaker Altar only supports ${mySlots}. Ask them to switch to ${mySlots} orbs.`;
+      return;
+    }
+    MP.codeSize = needed;
     mpStartSetCode(MP.codeSize);
+  });
+
+  ch.on('broadcast', { event: 'rank_mismatch' }, ({ payload }) => {
+    if (payload.id === MP.myId) return;
+    document.getElementById('mp-wait-status').textContent =
+      `⚠️ Opponent's MindBreaker Altar only supports ${payload.have} orb slots. Please change your loadout to ${payload.have} orbs, then reconnect.`;
   });
 
   ch.on('broadcast', { event: 'code_locked' }, ({ payload }) => {
@@ -3515,16 +3514,6 @@ function mpEndGame(won, reason) {
   `;
 }
 
-// Wire multiplayer into showScreen
-const _origShowScreen = showScreen;
-showScreen = function(name) {
-  _origShowScreen(name);
-  if (name === 'multiplayer') {
-    mpReset();
-    mpPhase('lobby');
-    document.getElementById('mp-join-panel').style.display = 'none';
-  }
-};
-</script>
-</body>
-</html>
+function mpRenderCodeSizePicker() {
+  const maxSlots = getMindBreakerSlots();
+  MP.codeSize = Math.min(MP.codeSize || 4, m
