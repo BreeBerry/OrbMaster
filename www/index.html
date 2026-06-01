@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>OrbMaster</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 
 <!-- PWA / Android App -->
 <link rel="manifest" href="manifest.json">
@@ -609,8 +612,9 @@
   .launch-main-btn {
     background: linear-gradient(135deg,#7c3aed,#4f46e5);
     border: none; border-radius: 30px;
-    color: white; font-size: 16px; font-weight: bold;
-    padding: 14px 48px; cursor: pointer; letter-spacing: 2px;
+    color: white; font-size: 10px; font-weight: normal;
+    font-family: 'Press Start 2P', monospace;
+    padding: 12px 48px; cursor: pointer; letter-spacing: 3px;
     box-shadow: 0 0 24px rgba(124,58,237,0.6);
     animation: pulse 1.4s infinite;
   }
@@ -619,7 +623,8 @@
     background: rgba(45,27,105,0.8);
     border: 1px solid #7c3aed;
     border-radius: 20px; color: #e9d5ff;
-    font-size: 13px; padding: 10px 22px; cursor: pointer;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px; padding: 10px 22px; cursor: pointer;
     backdrop-filter: blur(6px); letter-spacing: 1px;
     transition: background 0.15s;
   }
@@ -878,6 +883,81 @@
     white-space: nowrap;
   }
   .toast.show { opacity: 1; }
+
+  /* ── MULTIPLAYER ── */
+  #screen-multiplayer {
+    background: url('Images/stone wall.png') center/cover fixed;
+  }
+  #screen-multiplayer::before {
+    content: ''; position: fixed; inset: 0;
+    background: rgba(5,0,20,0.7); pointer-events: none;
+  }
+  .mp-scroll { flex:1; overflow-y:auto; padding:16px; position:relative; }
+  .mp-section {
+    background: linear-gradient(135deg,rgba(45,27,105,0.95),rgba(15,5,40,0.95));
+    border:1px solid #7c3aed; border-radius:16px; padding:20px; margin-bottom:16px;
+  }
+  .mp-title { font-size:20px; color:#e9d5ff; font-weight:bold; margin-bottom:6px; text-align:center; }
+  .mp-subtitle { font-size:11px; color:#a78bfa; text-align:center; margin-bottom:18px; }
+  .mp-btn {
+    display:block; width:100%; padding:14px; border-radius:12px; border:none;
+    font-size:15px; font-weight:bold; cursor:pointer; margin-bottom:10px;
+    letter-spacing:1px; transition: opacity 0.15s;
+  }
+  .mp-btn:active { opacity:0.8; }
+  .mp-btn.primary { background:linear-gradient(135deg,#7c3aed,#4f46e5); color:white; }
+  .mp-btn.secondary { background:rgba(45,27,105,0.8); border:1px solid #7c3aed; color:#e9d5ff; }
+  .mp-btn:disabled { opacity:0.4; cursor:not-allowed; }
+  .mp-input {
+    width:100%; padding:12px; background:#1e0a3c; border:1px solid #7c3aed;
+    border-radius:10px; color:#e9d5ff; font-size:18px; letter-spacing:6px;
+    text-align:center; font-weight:bold; margin-bottom:12px; outline:none;
+    text-transform:uppercase;
+  }
+  .mp-room-code {
+    font-size:36px; font-weight:bold; color:#a855f7; letter-spacing:10px;
+    text-align:center; padding:16px; background:#0d0020; border-radius:12px;
+    border:2px solid #7c3aed; margin:12px 0;
+    font-family:'Press Start 2P', monospace;
+  }
+  .mp-status {
+    text-align:center; font-size:12px; color:#a78bfa; margin:10px 0;
+    min-height:20px;
+  }
+  .mp-status.good { color:#34d399; }
+  .mp-status.bad  { color:#f87171; }
+  .mp-players { display:flex; gap:10px; margin:12px 0; }
+  .mp-player-slot {
+    flex:1; padding:10px; border-radius:10px; text-align:center;
+    border:1px solid #4c1d95; background:#1e0a3c;
+  }
+  .mp-player-slot.connected { border-color:#10b981; }
+  .mp-player-name { font-size:12px; color:#e9d5ff; font-weight:bold; }
+  .mp-player-status { font-size:10px; color:#6d28d9; margin-top:3px; }
+  .mp-player-slot.connected .mp-player-status { color:#10b981; }
+  /* Code-setting phase */
+  .mp-code-slots { display:flex; gap:8px; justify-content:center; margin:16px 0; }
+  .mp-code-slot {
+    width:48px; height:48px; border-radius:50%; border:2px dashed #4c1d95;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    transition: border-color 0.2s;
+  }
+  .mp-code-slot.filled { border-color:#7c3aed; border-style:solid; }
+  .mp-code-slot img { width:38px; height:38px; object-fit:contain; }
+  /* Battle phase */
+  .mp-battle-boards { display:flex; flex-direction:column; gap:14px; }
+  .mp-board-label {
+    font-size:11px; color:#a78bfa; margin-bottom:6px; font-weight:bold;
+    letter-spacing:1px; text-transform:uppercase;
+  }
+  .mp-opponent-progress {
+    background:#1e0a3c; border:1px solid #4c1d95; border-radius:10px;
+    padding:10px 14px;
+  }
+  .mp-opp-bar-wrap { background:#0d0020; border-radius:6px; height:10px; margin-top:6px; overflow:hidden; }
+  .mp-opp-bar { height:100%; background:linear-gradient(90deg,#7c3aed,#a855f7); border-radius:6px; transition:width 0.4s; }
+  .mp-opp-turns { font-size:10px; color:#6d28d9; margin-top:4px; }
+  .mp-opp-solved { font-size:13px; color:#f87171; font-weight:bold; text-align:center; margin-top:6px; }
 </style>
 </head>
 <body>
@@ -900,13 +980,14 @@
 
   <!-- Bottom buttons -->
   <div class="title-launch-btns">
-    <button class="launch-main-btn" onclick="showScreen('campaign')">▶ PLAY</button>
+    <button class="launch-main-btn" id="title-play-btn" onclick="showScreen('campaign')">START CAMPAIGN</button>
     <div class="launch-row">
       <button class="launch-side-btn" onclick="showScreen('forge')"><img src="Images/Mind Orb Assets/multi_orb.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;margin-right:4px;">Orb Forge</button>
       <button class="launch-side-btn" onclick="showScreen('inventory')"><img src="Images/Mind Orb Assets/crystal_ball.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;margin-right:4px;">Orb Stash</button>
     </div>
     <div class="launch-row">
       <button class="launch-side-btn" onclick="showScreen('codex')" style="letter-spacing:1px;">📖 OrbMaster Codex</button>
+      <button class="launch-side-btn" onclick="showScreen('multiplayer')" style="letter-spacing:1px;">⚔️ Multiplayer</button>
     </div>
   </div>
 </div>
@@ -1255,7 +1336,7 @@
       <div class="codex-rule"><strong>Rank 5:</strong> Purchase at Orb Forge after Boss 5 — unlocks 5 orb slots</div>
       <div class="codex-rule"><strong>Rank 6:</strong> Purchase at Orb Forge after Boss 7 — unlocks 6 orb slots</div>
       <div class="codex-h2">Boss Fragment Requirements</div>
-      <div class="codex-rule">Bosses 6–10 require you to have collected specific fragments before you can challenge them. Check the Campaign screen for exact requirements per boss.</div>
+      <div class="codex-rule">Defeat each boss in order to unlock the next. No fragment requirements — just beat the previous boss to advance.</div>
       <div class="codex-h2">Build Archetypes</div>
       <div class="codex-rule"><strong>🧠 Solver Build:</strong> Black + Red + Green — maximize information gain per turn.</div>
       <div class="codex-rule"><strong>💰 Economy Build:</strong> Pink + Gold + Silver — maximize fragment rewards per match.</div>
@@ -1320,6 +1401,20 @@
     </div>
     <div class="settings-row">
       <div>
+        <div class="settings-label">Duplicate Colors</div>
+        <div class="settings-sublabel">Allow repeated colors in secret codes</div>
+      </div>
+      <button class="toggle-btn on" id="toggle-allowDuplicates" onclick="toggleSetting('allowDuplicates')"></button>
+    </div>
+    <div class="settings-row">
+      <div>
+        <div class="settings-label">Game Rules</div>
+        <div class="settings-sublabel">View full rules & mechanics</div>
+      </div>
+      <button class="reset-btn" style="background:linear-gradient(135deg,#3b1fa0,#1e0a4a);border:1px solid #7c3aed;" onclick="closeModal('modal-settings');showScreen('codex');">📖 Rules</button>
+    </div>
+    <div class="settings-row">
+      <div>
         <div class="settings-label">Reset All Progress</div>
         <div class="settings-sublabel">Wipes save data permanently</div>
       </div>
@@ -1360,6 +1455,105 @@
 <audio id="bg-music"   src="Audio/The_Clockwork_Outcome.mp3"   loop preload="auto" style="display:none;"></audio>
 <audio id="boss-music"                                                         loop preload="none" style="display:none;"></audio>
 <div class="toast" id="toast"></div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!--  MULTIPLAYER SCREEN                                  -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div id="screen-multiplayer" class="screen">
+  <div class="game-header">
+    <button class="back-btn" onclick="mpExit()">← Home</button>
+    <div class="header-title">⚔️ MULTIPLAYER</div>
+    <div style="width:60px;"></div>
+  </div>
+
+  <div class="mp-scroll">
+
+    <!-- LOBBY -->
+    <div id="mp-phase-lobby">
+      <div class="mp-section">
+        <div class="mp-title">Challenge a Friend</div>
+        <div class="mp-subtitle">Set each other's code — race to crack it first</div>
+        <button class="mp-btn primary" onclick="mpCreateRoom()">🎲 Create Room</button>
+        <button class="mp-btn secondary" onclick="mpShowJoin()">🔗 Join Room</button>
+      </div>
+      <div id="mp-join-panel" style="display:none;">
+        <div class="mp-section">
+          <div class="mp-title" style="font-size:15px;">Enter Room Code</div>
+          <input class="mp-input" id="mp-join-code" maxlength="6" placeholder="XXXXXX" oninput="this.value=this.value.toUpperCase()">
+          <button class="mp-btn primary" onclick="mpJoinRoom()">Join</button>
+          <div class="mp-status" id="mp-join-status"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WAITING FOR OPPONENT -->
+    <div id="mp-phase-waiting" style="display:none;">
+      <div class="mp-section">
+        <div class="mp-title">Waiting for Opponent</div>
+        <div class="mp-subtitle">Share this code with your opponent</div>
+        <div class="mp-room-code" id="mp-display-code">------</div>
+        <div class="mp-status" id="mp-wait-status">Waiting for player 2…</div>
+        <div class="mp-players">
+          <div class="mp-player-slot connected" id="mp-slot-p1">
+            <div class="mp-player-name" id="mp-name-p1">You</div>
+            <div class="mp-player-status">✅ Connected</div>
+          </div>
+          <div class="mp-player-slot" id="mp-slot-p2">
+            <div class="mp-player-name">Opponent</div>
+            <div class="mp-player-status" id="mp-status-p2">Waiting…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CODE SETTING PHASE -->
+    <div id="mp-phase-setcode" style="display:none;">
+      <div class="mp-section">
+        <div class="mp-title">Set Your Opponent's Code</div>
+        <div class="mp-subtitle">Pick <span id="mp-code-size-label">4</span> orb colors — your opponent will try to crack it!</div>
+        <div class="mp-code-slots" id="mp-code-slots"></div>
+        <div class="mp-status" id="mp-setcode-status">Tap a slot then pick a color below</div>
+        <!-- Color picker -->
+        <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:12px 0;" id="mp-color-picker"></div>
+        <button class="mp-btn primary" id="mp-confirm-code-btn" onclick="mpConfirmCode()" disabled>✅ Lock In Code</button>
+        <div class="mp-status" id="mp-setcode-wait"></div>
+      </div>
+    </div>
+
+    <!-- BATTLE PHASE -->
+    <div id="mp-phase-battle" style="display:none;">
+      <div class="mp-section">
+        <div class="mp-board-label">🔵 Your Progress</div>
+        <!-- Opponent's progress bar -->
+        <div class="mp-opponent-progress" id="mp-opp-progress">
+          <div class="mp-board-label" style="color:#f87171;">🔴 Opponent's Progress</div>
+          <div class="mp-opp-bar-wrap"><div class="mp-opp-bar" id="mp-opp-bar" style="width:0%"></div></div>
+          <div class="mp-opp-turns" id="mp-opp-turns">0 / 10 turns used</div>
+          <div class="mp-opp-solved" id="mp-opp-solved" style="display:none;"></div>
+        </div>
+      </div>
+      <!-- The actual battle board is rendered in the existing battle screen area and mirrored here -->
+      <div class="mp-section">
+        <div class="mp-board-label">Your Guess Board</div>
+        <div id="mp-battle-board"></div>
+        <div id="mp-battle-picker" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:12px;"></div>
+        <div style="display:flex;gap:8px;margin-top:12px;">
+          <button class="mp-btn secondary" style="flex:1;" onclick="mpClearGuess()">Clear</button>
+          <button class="mp-btn primary" style="flex:2;" id="mp-submit-btn" onclick="mpSubmitGuess()">Submit Guess</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESULTS -->
+    <div id="mp-phase-results" style="display:none;">
+      <div class="mp-section" id="mp-results-box" style="text-align:center;">
+      </div>
+      <button class="mp-btn primary" onclick="showScreen('multiplayer')">Play Again</button>
+      <button class="mp-btn secondary" onclick="mpExit()">← Home</button>
+    </div>
+
+  </div>
+</div>
 
 <script>
 // ══════════════════════════════════════════════
@@ -1435,25 +1629,25 @@ const BOSS_DEFS = [
   { id:6,  name:'Pretty Pea',    img:'Images/Boss Character Assets/Boss_6 - Pretty Pea.png',
     minCodeSize:4, pool:['red','blue','yellow','green','purple','white','black'],
     loot:{common:0.15,uncommon:0.65,rare:0.2},
-    fragReq:{yellow:150,purple:100,white:75}, special:null, specialDesc:null },
+    fragReq:{}, special:null, specialDesc:null },
   { id:7,  name:'Sir Louie',     img:'Images/Boss Character Assets/Boss_7 - Sir Louie.png',
     minCodeSize:4, pool:['red','blue','yellow','green','purple','white','black','teal'],
     loot:{common:0.05,uncommon:0.65,rare:0.3},
-    fragReq:{red:100,blue:100,black:75,teal:50}, special:null, specialDesc:null },
+    fragReq:{}, special:null, specialDesc:null },
   { id:8,  name:'Queen Asabeth', img:'Images/Boss Character Assets/Boss_8 - Queen Asabeth.png',
     minCodeSize:5, pool:['red','blue','purple','white','black','teal','silver'],
     loot:{common:0,uncommon:0.45,rare:0.55},
-    fragReq:{black:100,teal:80,silver:50}, special:'disableBlack',
+    fragReq:{}, special:'disableBlack',
     specialDesc:'Disables your Black Orb (Hint)' },
   { id:9,  name:'Elkgore',       img:'Images/Boss Character Assets/Boss_9 - Elkgore.png',
     minCodeSize:5, pool:['purple','white','black','teal','silver','gold'],
     loot:{common:0,uncommon:0.35,rare:0.65},
-    fragReq:{silver:100,gold:50,teal:100}, special:'bossSubmerge',
+    fragReq:{}, special:'bossSubmerge',
     specialDesc:'Scrambles his code once in the first 5 turns' },
   { id:10, name:'Mad Martin',    img:'Images/Boss Character Assets/Boss_010 - Mad Martin.png',
     minCodeSize:6, pool:['red','blue','yellow','green','orange','purple','white','black','teal','silver','gold','pink'],
     loot:{common:0,uncommon:0,rare:1.0},
-    fragReq:{gold:150,pink:100,black:150,teal:150}, special:'penaltyOnDiscover',
+    fragReq:{}, special:'penaltyOnDiscover',
     specialDesc:'Removes 1 guess each time you discover a correct orb position' },
 ];
 
@@ -1549,16 +1743,15 @@ function newBattle(bossIdx, codeSize) {
 }
 
 function generateCode(pool, size) {
-  const code = [];
-  const shuffled = [...pool].sort(()=>Math.random()-0.5);
-  for (let i=0; i<size; i++) {
-    code.push(shuffled[i % shuffled.length]);
+  const allowDups = !STATE.settings || STATE.settings.allowDuplicates !== false;
+  if (!allowDups && pool.length >= size) {
+    // No duplicates: shuffle and slice
+    const shuffled = [...pool].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, size);
   }
-  // allow repeats if pool smaller than size
-  if (pool.length >= size) return code.slice(0, size);
-  // fill with random from pool
+  // Duplicates allowed (or pool too small to avoid them)
   const result = [];
-  for (let i=0;i<size;i++) result.push(pool[Math.floor(Math.random()*pool.length)]);
+  for (let i = 0; i < size; i++) result.push(pool[Math.floor(Math.random() * pool.length)]);
   return result;
 }
 
@@ -2346,12 +2539,12 @@ function showBattleResult(won) {
     </div>
     ${won ? `
       <div class="results-reward">
-        <div class="reward-title">⚗️ Orb Fragments Earned (${b.guesses.length} turns)</div>
+        <div class="reward-title"><img src="Images/Mind Orb Assets/multi_orb.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;margin-right:4px;">Orb Fragments Earned (${b.guesses.length} turns)</div>
         <div class="reward-items">${rewardHtml}</div>
       </div>
       <div class="results-total">Total: ${Object.values(rewards).reduce((a,b)=>a+b,0)} fragments</div>
       ${b.bossIdx+1 < 10 && STATE.bossProgress[b.bossIdx+1] >= 1 ? `<div style="color:#fbbf24;font-size:12px;margin-bottom:6px;">🔓 Boss ${b.bossIdx+2} unlocked!</div>`:``}
-      ${COLOR_UNLOCK_AFTER[b.bossIdx] ? `<div style="color:#a855f7;font-size:12px;margin-bottom:12px;">🎨 ${ORB_DEFS[COLOR_UNLOCK_AFTER[b.bossIdx]].name} Orb color unlocked!</div>` : ''}
+      ${COLOR_UNLOCK_AFTER[b.bossIdx] ? `<div style="color:#a855f7;font-size:13px;margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:8px;"><img src="${ORB_DEFS[COLOR_UNLOCK_AFTER[b.bossIdx]].img}" style="width:28px;height:28px;object-fit:contain;filter:drop-shadow(0 0 6px #a855f7);"> <span>✨ ${ORB_DEFS[COLOR_UNLOCK_AFTER[b.bossIdx]].name} Orb color unlocked!</span></div>` : ''}
     ` : `<div style="color:#f87171;margin-bottom:16px;font-size:13px;">Better luck next time! Study the boss's orb pool and adjust your loadout.</div>`}
     <button class="results-btn" onclick="rematch()">⚔️ Rematch</button>
     <button class="results-btn secondary" onclick="showScreen('campaign')">🗺️ Campaign</button>
@@ -2423,20 +2616,25 @@ function renderInventory() {
 
   // ── Section 3: Fragment Wallet ──
   const unlockedColors = STATE.unlockedColors || ['red','blue','yellow','green','orange'];
-  let fragsHtml = `<div class="inv-section-title">💎 Fragment Wallet</div><div class="orb-grid">`;
-  ORB_ORDER.forEach(color => {
-    const def = ORB_DEFS[color];
-    const isUnlocked = unlockedColors.includes(color);
-    const frags = STATE.fragments[color] || 0;
-    fragsHtml += `
-      <div class="orb-card ${!isUnlocked ? 'locked-card' : ''}">
-        <img src="${def.img}" alt="${color}" style="${!isUnlocked ? 'filter:grayscale(1);opacity:0.35' : ''}">
-        <div class="orb-card-name">${def.name}</div>
-        <div class="orb-card-count" style="color:#fbbf24;">${isUnlocked ? frags + ' frags' : '🔒'}</div>
-        <span class="orb-rarity-badge rarity-${def.rarity}">${def.rarity}</span>
-      </div>`;
-  });
-  fragsHtml += `</div>`;
+  const walletColors = ORB_ORDER.filter(color => unlockedColors.includes(color) && (STATE.fragments[color] || 0) > 0);
+  let fragsHtml = `<div class="inv-section-title"><img src="Images/Mind Orb Assets/multi_orb.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;margin-right:5px;">Fragment Wallet</div>`;
+  if (walletColors.length === 0) {
+    fragsHtml += `<div style="text-align:center;color:#6d28d9;font-size:12px;padding:16px 0;">No fragments yet — defeat bosses to earn them!</div>`;
+  } else {
+    fragsHtml += `<div class="orb-grid">`;
+    walletColors.forEach(color => {
+      const def = ORB_DEFS[color];
+      const frags = STATE.fragments[color];
+      fragsHtml += `
+        <div class="orb-card">
+          <img src="${def.img}" alt="${color}">
+          <div class="orb-card-name">${def.name}</div>
+          <div class="orb-card-count" style="color:#fbbf24;">${frags} frags</div>
+          <span class="orb-rarity-badge rarity-${def.rarity}">${def.rarity}</span>
+        </div>`;
+    });
+    fragsHtml += `</div>`;
+  }
 
   content.innerHTML = orbsHtml + upgradesHtml + fragsHtml;
 }
@@ -2509,6 +2707,12 @@ function saveProfile() {
   saveState();
   closeModal('modal-profile');
   showToast(`Profile saved — ${name}!`);
+}
+
+function updateTitlePlayBtn() {
+  const hasProgress = STATE.bossProgress.some(p => p >= 2);
+  const btn = document.getElementById('title-play-btn');
+  if (btn) btn.textContent = hasProgress ? 'CONTINUE CAMPAIGN' : 'START CAMPAIGN';
 }
 
 function initProfile() {
@@ -2617,8 +2821,8 @@ function renderForge() {
         <div class="forge-card-ability">${def.abilityDesc}</div>
         <span class="forge-card-rarity orb-rarity-badge rarity-${rarity}">${rarity}</span>
         ${colorUnlocked ? `
-          <div class="forge-card-frags">Cost: ${def.cost} frags</div>
-          <div class="forge-card-have">You have: ${frags}</div>
+          <div class="forge-card-frags"><img src="Images/Mind Orb Assets/multi_orb.png" style="width:13px;height:13px;object-fit:contain;vertical-align:middle;margin-right:3px;">Cost: ${def.cost}</div>
+          <div class="forge-card-have"><img src="Images/Mind Orb Assets/multi_orb.png" style="width:11px;height:11px;object-fit:contain;vertical-align:middle;margin-right:3px;">You have: ${frags}</div>
           <button class="forge-buy-btn ${owned?'owned-btn':''}"
             ${(!canBuy&&!owned)?'disabled':''}
             ${owned?'':canBuy?`onclick="forgeBuy('${color}')"`:''}
@@ -2665,7 +2869,7 @@ function forgeBuy(color) {
 // ══════════════════════════════════════════════
 
 function initSettings() {
-  if (!STATE.settings) STATE.settings = { sfx:true, music:true, anim:true, autoadvance:true, hints:true };
+  if (!STATE.settings) STATE.settings = { sfx:true, music:true, anim:true, autoadvance:true, hints:true, allowDuplicates:true };
   Object.entries(STATE.settings).forEach(([key, val]) => {
     const btn = document.getElementById('toggle-'+key);
     if (btn) { btn.className = 'toggle-btn ' + (val?'on':'off'); }
@@ -2707,7 +2911,7 @@ function showScreen(name) {
   if (name === 'inventory') renderInventory();
   if (name === 'loadout') renderLoadout();
   if (name === 'forge') renderForge();
-  if (name === 'title') initProfile();
+  if (name === 'title') { initProfile(); updateTitlePlayBtn(); }
   if (name === 'codex') { showCodexTab('howtoplay'); }
 }
 
@@ -2856,4 +3060,471 @@ const AUDIO = {
       AUDIO._osc(1047,'sine',0.6,0.5,0.5);
     },
     lose() {
-      [400,350,300,220].forEach((
+      [400,350,300,220].forEach((f,i) => AUDIO._osc(f,'sawtooth',0.25,0.3,i*0.15));
+    },
+    unlock()    { [440,550,660,880].forEach((f,i)=>AUDIO._osc(f,'sine',0.2,0.35,i*0.1)); },
+    forge()     { AUDIO._osc(200,'sawtooth',0.1,0.4); AUDIO._osc(400,'sine',0.15,0.4,0.1); AUDIO._osc(800,'sine',0.2,0.5,0.2); },
+    navigate()  { AUDIO._osc(500,'sine',0.06,0.15); },
+  }
+};
+
+// Boss-specific battle tracks (keyed by boss index 0-based)
+const BOSS_TRACKS = {
+  0: 'Audio/Boss 1 - Lemon_Zest_Fury.mp3',             // Lemons
+  1: 'Audio/Boss 2 - Gears_of_the_Glacial_Throne.mp3', // Templefrist
+  2: 'Audio/Boss 3 - The_Conductor_s_Gambit.mp3',      // Bigginsly
+  3: 'Audio/Boss 4 - Laboratory_Logic.mp3',             // Nanomic
+  4: 'Audio/Boss 5 - High_Stakes_Ballroom.mp3',         // Natty D
+  5: 'Audio/Boss 6 - Petal_Punch_Velocity.mp3',         // Pretty Pea
+  6: 'Audio/Boss 7 - Titan_s_Threshold.mp3',            // Sir Louie
+  7: 'Audio/Boss 8 - Sovereign_s_Last_Decree.mp3',      // Queen Asabeth
+  8: 'Audio/Boss 9 - Titan_Beneath_the_Bough.mp3',      // Elkgore
+  9: 'Audio/Boss 10 - Mad_Martin_s_Last_Beat.mp3',      // Mad Martin
+};
+
+// Register service worker for offline play
+function ensureAudio() {
+  if (AUDIO.started) return;
+  AUDIO.started = true;
+  AUDIO.init();
+  AUDIO.startMusic();
+}
+document.addEventListener('touchstart', ensureAudio, { once: true });
+document.addEventListener('click',      ensureAudio, { once: true });
+
+// Register service worker for offline play
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  });
+}
+
+// Init boss progress
+if (STATE.bossProgress[0] < 1) STATE.bossProgress[0] = 1;
+
+// Ensure starting colors are unlocked
+['red','blue','yellow','green','orange'].forEach(c => {
+  if (!STATE.unlockedColors.includes(c)) STATE.unlockedColors.push(c);
+});
+
+// Apply any unlocks earned from past boss victories
+applyColorUnlocks();
+applyMindBreakerRank();
+
+// Ensure equippedOrbs has 4 slots
+while (STATE.equippedOrbs.length < 4) STATE.equippedOrbs.push(null);
+
+// Init profile + settings
+initProfile();
+initSettings();
+updateTitlePlayBtn();
+
+saveState();
+
+// ══════════════════════════════════════════════════════════════
+//  MULTIPLAYER ENGINE (Supabase Realtime)
+//  ─────────────────────────────────────────────────────────────
+//  Setup: Create a free Supabase project at https://supabase.com
+//  Copy your project URL and anon key into the two lines below.
+// ══════════════════════════════════════════════════════════════
+
+const SUPABASE_URL  = 'https://vmuthzemeiztttzzgfju.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZtdXRoemVtZWl6dHR0enpnZmp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyNzUzMzMsImV4cCI6MjA5NTg1MTMzM30.YlNgc7kANXHG1go56EoShTVevNjtAY1L6KB5dva2NcQ';
+
+let _sbClient = null;
+function getSB() {
+  if (!_sbClient) _sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  return _sbClient;
+}
+
+// ── MP State ──
+let MP = {
+  roomCode: null,
+  isHost: false,
+  myId: null,
+  opponentId: null,
+  channel: null,
+  myCode: [],       // code I set for opponent
+  opponentCode: [],  // code opponent set for me (received on battle start)
+  codeSize: 4,
+  myGuesses: [],
+  currentGuess: [],
+  activeSlot: 0,
+  oppTurnsUsed: 0,
+  oppSolved: false,
+  gameOver: false,
+  codeLocked: false,
+  oppCodeLocked: false,
+};
+
+function mpReset() {
+  if (MP.channel) { getSB().removeChannel(MP.channel); MP.channel = null; }
+  MP = { roomCode:null, isHost:false, myId:null, opponentId:null, channel:null,
+    myCode:[], opponentCode:[], codeSize:4, myGuesses:[], currentGuess:[],
+    activeSlot:0, oppTurnsUsed:0, oppSolved:false, gameOver:false,
+    codeLocked:false, oppCodeLocked:false };
+}
+
+function mpPhase(name) {
+  ['lobby','waiting','setcode','battle','results'].forEach(p => {
+    const el = document.getElementById('mp-phase-'+p);
+    if (el) el.style.display = p === name ? '' : 'none';
+  });
+}
+
+function mpExit() {
+  mpReset();
+  showScreen('title');
+}
+
+function mpShowJoin() {
+  document.getElementById('mp-join-panel').style.display = '';
+}
+
+function mpSupabaseConfigured() {
+  return SUPABASE_URL !== 'YOUR_SUPABASE_URL' && SUPABASE_ANON !== 'YOUR_SUPABASE_ANON_KEY';
+}
+
+function mpGenCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
+
+function mpSubscribeChannel(code) {
+  const sb = getSB();
+  const ch = sb.channel('orbmaster-room-' + code, {
+    config: { broadcast: { self: false } }
+  });
+
+  ch.on('broadcast', { event: 'player_join' }, ({ payload }) => {
+    if (payload.id === MP.myId) return;
+    MP.opponentId = payload.id;
+    // Update UI
+    const slot2 = document.getElementById('mp-slot-p2');
+    if (slot2) { slot2.classList.add('connected'); document.getElementById('mp-status-p2').textContent = '✅ Connected'; }
+    document.getElementById('mp-wait-status').textContent = 'Opponent connected! Starting…';
+    // Host picks code size and tells both to move to setcode
+    if (MP.isHost) {
+      MP.codeSize = Math.max(STATE.chosenCodeSize || 4, 4);
+      ch.send({ type:'broadcast', event:'start_setcode', payload:{ codeSize: MP.codeSize } });
+      mpStartSetCode(MP.codeSize);
+    }
+  });
+
+  ch.on('broadcast', { event: 'start_setcode' }, ({ payload }) => {
+    if (MP.isHost) return; // host already handled it
+    MP.codeSize = payload.codeSize;
+    mpStartSetCode(MP.codeSize);
+  });
+
+  ch.on('broadcast', { event: 'code_locked' }, ({ payload }) => {
+    if (payload.id === MP.myId) return;
+    MP.opponentCode = payload.code;
+    MP.oppCodeLocked = true;
+    document.getElementById('mp-setcode-wait').textContent = '✅ Opponent locked their code!';
+    if (MP.codeLocked) mpStartBattle();
+  });
+
+  ch.on('broadcast', { event: 'guess_result' }, ({ payload }) => {
+    if (payload.id === MP.myId) return;
+    MP.oppTurnsUsed = payload.turnsUsed;
+    const pct = Math.min(100, (payload.turnsUsed / 10) * 100);
+    const bar = document.getElementById('mp-opp-bar');
+    const turns = document.getElementById('mp-opp-turns');
+    if (bar) bar.style.width = pct + '%';
+    if (turns) turns.textContent = payload.turnsUsed + ' / 10 turns used';
+    if (payload.solved) {
+      MP.oppSolved = true;
+      const solved = document.getElementById('mp-opp-solved');
+      if (solved) { solved.style.display = ''; solved.textContent = '🔴 Opponent cracked your code!'; }
+      if (!MP.gameOver) mpEndGame(false, 'opponent_first');
+    }
+  });
+
+  ch.on('broadcast', { event: 'game_over' }, ({ payload }) => {
+    // handled via guess_result solved flag
+  });
+
+  ch.subscribe((status) => {
+    if (status === 'SUBSCRIBED') {
+      ch.send({ type:'broadcast', event:'player_join', payload:{ id: MP.myId } });
+    }
+  });
+
+  MP.channel = ch;
+  return ch;
+}
+
+async function mpCreateRoom() {
+  if (!mpSupabaseConfigured()) {
+    showToast('Supabase not configured — see setup instructions in index.html');
+    return;
+  }
+  mpReset();
+  MP.isHost = true;
+  MP.myId = 'p1_' + Date.now();
+  MP.roomCode = mpGenCode();
+
+  mpPhase('waiting');
+  document.getElementById('mp-display-code').textContent = MP.roomCode;
+  document.getElementById('mp-name-p1').textContent = STATE.profile?.name || 'You';
+  document.getElementById('mp-wait-status').textContent = 'Waiting for player 2…';
+
+  mpSubscribeChannel(MP.roomCode);
+}
+
+async function mpJoinRoom() {
+  if (!mpSupabaseConfigured()) {
+    showToast('Supabase not configured — see setup instructions in index.html');
+    return;
+  }
+  const code = document.getElementById('mp-join-code').value.trim().toUpperCase();
+  if (code.length !== 6) {
+    document.getElementById('mp-join-status').textContent = 'Enter a 6-character room code.';
+    return;
+  }
+  mpReset();
+  MP.isHost = false;
+  MP.myId = 'p2_' + Date.now();
+  MP.roomCode = code;
+
+  document.getElementById('mp-join-status').textContent = 'Connecting…';
+  mpSubscribeChannel(MP.roomCode);
+
+  // Show waiting UI briefly
+  setTimeout(() => {
+    mpPhase('waiting');
+    document.getElementById('mp-display-code').textContent = MP.roomCode;
+    document.getElementById('mp-slot-p1').classList.add('connected');
+    document.getElementById('mp-status-p2').textContent = '✅ Connected';
+    document.getElementById('mp-wait-status').textContent = 'Connected! Waiting for host…';
+    const slot2 = document.getElementById('mp-slot-p2');
+    if (slot2) slot2.classList.add('connected');
+  }, 800);
+}
+
+function mpStartSetCode(codeSize) {
+  MP.codeSize = codeSize;
+  MP.myCode = [];
+  MP.activeSlot = 0;
+  mpPhase('setcode');
+
+  document.getElementById('mp-code-size-label').textContent = codeSize;
+
+  // Render code slots
+  const slotsEl = document.getElementById('mp-code-slots');
+  slotsEl.innerHTML = '';
+  for (let i = 0; i < codeSize; i++) {
+    const slot = document.createElement('div');
+    slot.className = 'mp-code-slot';
+    slot.id = 'mp-cslot-' + i;
+    slot.onclick = () => { MP.activeSlot = i; mpHighlightCodeSlot(); };
+    slotsEl.appendChild(slot);
+  }
+  mpHighlightCodeSlot();
+
+  // Render color picker (unlocked colors only)
+  const pickerEl = document.getElementById('mp-color-picker');
+  pickerEl.innerHTML = '';
+  const colors = STATE.unlockedColors || ['red','blue','yellow','green','orange'];
+  colors.forEach(c => {
+    const def = ORB_DEFS[c];
+    const img = document.createElement('img');
+    img.src = def.img;
+    img.alt = c;
+    img.style.cssText = 'width:40px;height:40px;object-fit:contain;cursor:pointer;border-radius:50%;border:2px solid transparent;';
+    img.onclick = () => mpPickCodeColor(c);
+    pickerEl.appendChild(img);
+  });
+}
+
+function mpHighlightCodeSlot() {
+  for (let i = 0; i < MP.codeSize; i++) {
+    const slot = document.getElementById('mp-cslot-' + i);
+    if (!slot) continue;
+    slot.style.boxShadow = i === MP.activeSlot ? '0 0 10px #a855f7' : 'none';
+  }
+}
+
+function mpPickCodeColor(color) {
+  if (MP.codeLocked) return;
+  MP.myCode[MP.activeSlot] = color;
+  const slot = document.getElementById('mp-cslot-' + MP.activeSlot);
+  const def = ORB_DEFS[color];
+  slot.innerHTML = `<img src="${def.img}" alt="${color}" style="width:38px;height:38px;object-fit:contain;">`;
+  slot.classList.add('filled');
+  if (MP.activeSlot < MP.codeSize - 1) { MP.activeSlot++; mpHighlightCodeSlot(); }
+
+  const confirmBtn = document.getElementById('mp-confirm-code-btn');
+  if (MP.myCode.filter(Boolean).length === MP.codeSize) {
+    confirmBtn.disabled = false;
+  }
+}
+
+function mpConfirmCode() {
+  if (MP.myCode.filter(Boolean).length < MP.codeSize) return;
+  MP.codeLocked = true;
+  document.getElementById('mp-confirm-code-btn').disabled = true;
+  document.getElementById('mp-setcode-status').textContent = '✅ Code locked in!';
+  document.getElementById('mp-setcode-wait').textContent = MP.oppCodeLocked
+    ? '✅ Both codes locked — starting battle!' : 'Waiting for opponent to lock their code…';
+
+  // Broadcast code to opponent
+  MP.channel.send({ type:'broadcast', event:'code_locked', payload:{ id: MP.myId, code: MP.myCode } });
+
+  if (MP.oppCodeLocked) mpStartBattle();
+}
+
+function mpStartBattle() {
+  MP.myGuesses = [];
+  MP.currentGuess = Array(MP.codeSize).fill(null);
+  MP.activeSlot = 0;
+  MP.gameOver = false;
+  mpPhase('battle');
+  mpRenderBattleBoard();
+  mpRenderBattlePicker();
+}
+
+function mpRenderBattleBoard() {
+  const board = document.getElementById('mp-battle-board');
+  const maxTurns = 10;
+  let html = '';
+  for (let t = 0; t < maxTurns; t++) {
+    const guess = MP.myGuesses[t];
+    html += `<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+      <div style="width:20px;font-size:10px;color:#6d28d9;text-align:right;">${t+1}</div>
+      <div style="display:flex;gap:4px;">`;
+    for (let s = 0; s < MP.codeSize; s++) {
+      const color = guess ? guess.guess[s] : (t === MP.myGuesses.length && MP.currentGuess[s] ? MP.currentGuess[s] : null);
+      const def = color ? ORB_DEFS[color] : null;
+      const isCurrent = !guess && t === MP.myGuesses.length;
+      const isActive = isCurrent && s === MP.activeSlot;
+      html += `<div onclick="${isCurrent ? `mpBoardSlotClick(${s})` : ''}" style="
+        width:36px;height:36px;border-radius:50%;border:2px solid ${isActive ? '#a855f7' : (isCurrent ? '#4c1d95' : '#1e0a3c')};
+        display:flex;align-items:center;justify-content:center;cursor:${isCurrent?'pointer':'default'};
+        background:${isCurrent ? 'rgba(76,29,149,0.3)' : '#0d0020'};box-shadow:${isActive?'0 0 8px #a855f7':'none'};">
+        ${def ? `<img src="${def.img}" style="width:28px;height:28px;object-fit:contain;">` : ''}
+      </div>`;
+    }
+    html += `</div>`;
+    if (guess) {
+      // Pegs
+      html += `<div style="display:flex;gap:2px;flex-wrap:wrap;width:44px;">`;
+      for (let p = 0; p < guess.black; p++) html += `<div style="width:10px;height:10px;border-radius:50%;background:#1f2937;border:1px solid #f9fafb;"></div>`;
+      for (let p = 0; p < guess.white; p++) html += `<div style="width:10px;height:10px;border-radius:50%;background:white;border:1px solid #9ca3af;"></div>`;
+      html += `</div>`;
+    }
+    html += `</div>`;
+  }
+  board.innerHTML = html;
+}
+
+function mpRenderBattlePicker() {
+  const picker = document.getElementById('mp-battle-picker');
+  const colors = STATE.unlockedColors || ['red','blue','yellow','green','orange'];
+  picker.innerHTML = '';
+  colors.forEach(c => {
+    const def = ORB_DEFS[c];
+    const img = document.createElement('img');
+    img.src = def.img;
+    img.style.cssText = 'width:44px;height:44px;object-fit:contain;cursor:pointer;border-radius:50%;border:2px solid transparent;';
+    img.onclick = () => mpPickBattleColor(c);
+    picker.appendChild(img);
+  });
+}
+
+function mpBoardSlotClick(slot) {
+  MP.activeSlot = slot;
+  mpRenderBattleBoard();
+}
+
+function mpPickBattleColor(color) {
+  if (MP.gameOver) return;
+  MP.currentGuess[MP.activeSlot] = color;
+  if (MP.activeSlot < MP.codeSize - 1) MP.activeSlot++;
+  mpRenderBattleBoard();
+}
+
+function mpClearGuess() {
+  MP.currentGuess = Array(MP.codeSize).fill(null);
+  MP.activeSlot = 0;
+  mpRenderBattleBoard();
+}
+
+function mpScoreGuess(guess, code) {
+  let black = 0, white = 0;
+  const gLeft = [], cLeft = [];
+  for (let i = 0; i < code.length; i++) {
+    if (guess[i] === code[i]) black++;
+    else { gLeft.push(guess[i]); cLeft.push(code[i]); }
+  }
+  gLeft.forEach(g => {
+    const idx = cLeft.indexOf(g);
+    if (idx !== -1) { white++; cLeft.splice(idx, 1); }
+  });
+  return { black, white };
+}
+
+function mpSubmitGuess() {
+  if (MP.gameOver) return;
+  if (MP.currentGuess.filter(Boolean).length < MP.codeSize) {
+    showToast('Fill all ' + MP.codeSize + ' slots first!');
+    return;
+  }
+  const guess = [...MP.currentGuess];
+  const { black, white } = mpScoreGuess(guess, MP.opponentCode);
+  MP.myGuesses.push({ guess, black, white });
+  MP.currentGuess = Array(MP.codeSize).fill(null);
+  MP.activeSlot = 0;
+
+  const turnsUsed = MP.myGuesses.length;
+  const solved = black === MP.codeSize;
+
+  // Broadcast progress to opponent
+  MP.channel.send({ type:'broadcast', event:'guess_result', payload:{
+    id: MP.myId, turnsUsed, solved
+  }});
+
+  mpRenderBattleBoard();
+
+  if (solved) {
+    mpEndGame(true, 'solved');
+  } else if (turnsUsed >= 10) {
+    mpEndGame(false, 'out_of_turns');
+  }
+}
+
+function mpEndGame(won, reason) {
+  if (MP.gameOver) return;
+  MP.gameOver = true;
+  mpPhase('results');
+
+  const codeHtml = MP.opponentCode.map(c => `<img src="${ORB_DEFS[c].img}" style="width:36px;height:36px;object-fit:contain;">`).join('');
+  let headline = '', msg = '';
+  if (won && reason === 'solved')          { headline = '🏆 YOU WIN!'; msg = `You cracked the code in ${MP.myGuesses.length} turn${MP.myGuesses.length!==1?'s':''}!`; }
+  else if (!won && reason === 'opponent_first') { headline = '💀 YOU LOSE'; msg = 'Your opponent cracked their code first!'; }
+  else if (!won && reason === 'out_of_turns')   { headline = '💀 OUT OF TURNS'; msg = 'You ran out of guesses!'; }
+
+  document.getElementById('mp-results-box').innerHTML = `
+    <div style="font-size:28px;font-weight:bold;color:${won?'#34d399':'#f87171'};margin-bottom:10px;">${headline}</div>
+    <div style="font-size:13px;color:#a78bfa;margin-bottom:16px;">${msg}</div>
+    <div style="font-size:11px;color:#6d28d9;margin-bottom:6px;">The code was:</div>
+    <div style="display:flex;justify-content:center;gap:8px;margin-bottom:16px;">${codeHtml}</div>
+  `;
+}
+
+// Wire multiplayer into showScreen
+const _origShowScreen = showScreen;
+showScreen = function(name) {
+  _origShowScreen(name);
+  if (name === 'multiplayer') {
+    mpReset();
+    mpPhase('lobby');
+    document.getElementById('mp-join-panel').style.display = 'none';
+  }
+};
+</script>
+</body>
+</html>
