@@ -6,7 +6,7 @@
 <title>OrbMaster</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
 
 <!-- PWA / Android App -->
 <link rel="manifest" href="manifest.json">
@@ -15,7 +15,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="OrbMaster">
-<link rel="apple-touch-icon" href="Images/OrbMaster title trans.png">
+<link rel="apple-touch-icon" href="Images/OrbMaster app icon.png">
+<link rel="icon" type="image/png" href="Images/OrbMaster app icon.png">
 <meta name="description" content="Crack the code. Master the Orbs.">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; touch-action: manipulation; }
@@ -95,28 +96,35 @@
     background: #1a0a2e;
     color: #f0e6d3;
     min-height: 100vh;
+    min-height: 100dvh;
     overflow-x: hidden;
     max-width: 480px;
     margin: 0 auto;
   }
-  .screen { display: none; min-height: 100vh; flex-direction: column; }
+  .screen { display: none; min-height: 100vh; min-height: 100dvh; flex-direction: column; }
   .screen.active { display: flex; }
 
   /* ── TITLE SCREEN ── */
   #screen-title {
-    background: url('Images/OrbMaster blank.png') center/cover;
+    background: var(--title-bg, url('Images/orbmaster_bg_4.png')) center/cover;
     align-items: center;
     justify-content: center;
     flex-direction: column;
     position: relative;
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    max-height: 100vh;
+    max-height: 100dvh;
+    overflow: hidden;
   }
   #screen-title::before {
     content: '';
     position: absolute; inset: 0;
     background: rgba(10,0,30,0.55);
   }
-  .title-content { position: relative; text-align: center; padding: 20px; margin-top: -18vh; }
-  .title-logo { width: 85%; max-width: 340px; filter: drop-shadow(0 0 20px #a855f7); }
+  .title-content { position: relative; text-align: center; padding: 20px; margin-top: calc(-32dvh + env(safe-area-inset-top)); }
+  .title-logo { width: 95%; max-width: 420px; filter: drop-shadow(0 0 20px #a855f7); }
   .press-start-img { width: 70%; max-width: 280px; margin-top: 30px; animation: pulse 1.4s infinite; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
   .title-tagline { font-size: 12px; color: #c4b5fd; margin-top: 16px; letter-spacing: 2px; }
@@ -153,6 +161,19 @@
   }
   .nav-btn.active, .nav-btn:active { background: #2d1b69; color: #e9d5ff; }
   .nav-icon { font-size: 20px; display: block; margin-bottom: 2px; }
+  .nav-icon-home {
+    display: block;
+    width: 28px; height: 28px;
+    margin: 0 auto 2px;
+    background: url('Images/home icon.png') no-repeat;
+    background-size: auto 28px;
+    background-position: 0px 0px;
+    image-rendering: auto;
+  }
+  .nav-btn:active .nav-icon-home,
+  .nav-btn.active .nav-icon-home {
+    background-position: -28px 0px; /* frame 2 */
+  }
 
   /* ── CAMPAIGN SCREEN ── */
   #screen-campaign {
@@ -207,20 +228,24 @@
   .boss-code-size { font-size: 10px; color: #f9a8d4; }
 
   /* ── LOADOUT SCREEN ── */
-  #screen-loadout { background: linear-gradient(180deg, #1a0a2e, #0f0520); }
+  #screen-loadout {
+    background: linear-gradient(180deg, #1a0a2e, #0f0520);
+    flex-direction: column; height: 100vh; height: 100dvh;
+    min-height: 0; max-height: 100vh; max-height: 100dvh; overflow: hidden;
+  }
   .loadout-boss-section {
     background: linear-gradient(180deg,#1a0a2e,#2d1b69);
     border-bottom: 2px solid #7c3aed;
     display: flex; flex-direction: column; align-items: center;
-    position: relative;
+    position: relative; flex-shrink: 0;
   }
   .loadout-boss-img {
-    width: 100%; height: 220px;
-    object-fit: contain; object-position: center bottom;
+    width: 100%; height: auto;
+    object-fit: contain; object-position: center top;
     display: block;
   }
   .loadout-boss-info {
-    width: 100%; padding: 10px 14px 12px;
+    width: 100%; padding: 8px 14px 10px;
     background: linear-gradient(0deg, rgba(15,5,40,0.95) 0%, transparent 100%);
   }
   .loadout-boss-name { font-size: 20px; color: #e9d5ff; font-weight: bold; }
@@ -228,7 +253,7 @@
   .loadout-boss-special { font-size: 10px; color: #fb923c; margin-top: 3px; }
 
   /* ── LOADOUT REDESIGN ── */
-  .loadout-body { flex: 1; overflow-y: auto; }
+  .loadout-body { flex: 1; overflow-y: auto; min-height: 0; }
   .loadout-section {
     padding: 12px 14px;
     border-bottom: 1px solid rgba(124,58,237,0.25);
@@ -312,18 +337,49 @@
   .color-pip .pip-lock { font-size: 9px; color: #4c1d95; }
 
   .start-battle-btn {
-    display: block; width: calc(100% - 28px); margin: 0 14px 14px;
+    display: block; width: calc(100% - 28px); margin: 8px 14px 10px;
     background: linear-gradient(135deg, #7c3aed, #4f46e5);
     color: white; border: none; border-radius: 12px;
-    padding: 14px; font-size: 16px; font-weight: bold;
+    padding: 13px; font-size: 16px; font-weight: bold;
     cursor: pointer; letter-spacing: 1px;
+    flex-shrink: 0;
   }
   .start-battle-btn:active { opacity: 0.85; }
   .start-battle-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
+  /* ── BOSS DIALOGUE ── */
+  .boss-quip-overlay {
+    position: absolute; inset: 0; z-index: 60;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(5,0,20,0.72); padding: 24px;
+    animation: quipFade 0.18s ease-out;
+  }
+  @keyframes quipFade { from { opacity: 0; } to { opacity: 1; } }
+  .boss-quip-card {
+    max-width: 320px; width: 100%;
+    background: linear-gradient(135deg,#2d1b69,#1a0a2e);
+    border: 2px solid #a855f7; border-radius: 16px;
+    padding: 18px 18px 14px; text-align: center;
+    box-shadow: 0 10px 34px rgba(0,0,0,0.7);
+  }
+  .boss-quip-img {
+    width: 100%; height: 120px; object-fit: contain; object-position: center top;
+    display: block; margin-bottom: 6px; filter: drop-shadow(0 0 10px rgba(168,85,247,0.6));
+  }
+  .boss-quip-name { font-size: 13px; color: #fbbf24; font-weight: bold; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; }
+  .boss-quip-text { font-size: 15px; color: #f3e8ff; line-height: 1.5; font-style: italic; }
+  .boss-quip-tap { font-size: 10px; color: #a78bfa; letter-spacing: 1.5px; margin-top: 14px; animation: pulse 1.4s infinite; }
+  .results-boss-quote {
+    font-style: italic; color: #e9d5ff; font-size: 14px; line-height: 1.5;
+    margin: 2px 16px 14px; padding: 10px 14px;
+    border-left: 3px solid #a855f7; border-radius: 0 10px 10px 0;
+    background: rgba(124,58,237,0.14); text-align: left;
+  }
+
   /* ── BATTLE SCREEN ── */
   #screen-battle {
     background: url('Images/OrbMaster blank.png') center/cover;
+    position: relative;
   }
   #screen-battle::before {
     content: ''; position: fixed; inset: 0;
@@ -473,7 +529,7 @@
   .results-btn.secondary { background: #3b1fa0; border: 1px solid #7c3aed; }
 
   /* ── INVENTORY SCREEN ── */
-  #screen-inventory { background: linear-gradient(180deg,#1a0a2e,#0f0520); }
+  #screen-inventory { background: linear-gradient(180deg,#1a0a2e,#0f0520); height: 100vh; max-height: 100vh; overflow: hidden; flex-direction: column; }
   .inv-scroll { flex: 1; overflow-y: auto; padding: 14px; }
   .inv-section-title { font-size: 12px; color: #a78bfa; letter-spacing: 1px; margin: 14px 0 8px; }
   .orb-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
@@ -604,16 +660,15 @@
   .avatar-btn:active { border-color: #e9d5ff; transform: scale(0.93); }
   .avatar-emoji { font-size: 26px; }
   .title-launch-btns {
-    position: absolute; bottom: 40px; left: 0; right: 0;
-    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    position: absolute; bottom: max(24px, env(safe-area-inset-bottom, 24px)); left: 0; right: 0;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
     z-index: 2;
-    padding-bottom: env(safe-area-inset-bottom);
   }
   .launch-main-btn {
     background: linear-gradient(135deg,#7c3aed,#4f46e5);
     border: none; border-radius: 30px;
-    color: white; font-size: 10px; font-weight: normal;
-    font-family: 'Press Start 2P', monospace;
+    color: white; font-size: 14px; font-weight: 700;
+    font-family: 'Roboto Mono', monospace;
     padding: 12px 48px; cursor: pointer; letter-spacing: 3px;
     box-shadow: 0 0 24px rgba(124,58,237,0.6);
     animation: pulse 1.4s infinite;
@@ -623,8 +678,8 @@
     background: rgba(45,27,105,0.8);
     border: 1px solid #7c3aed;
     border-radius: 20px; color: #e9d5ff;
-    font-family: 'Press Start 2P', monospace;
-    font-size: 8px; padding: 10px 22px; cursor: pointer;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 11px; padding: 10px 22px; cursor: pointer;
     backdrop-filter: blur(6px); letter-spacing: 1px;
     transition: background 0.15s;
   }
@@ -694,6 +749,7 @@
   .forge-card img { width: 56px; height: 56px; object-fit: contain; }
   .forge-card-name { font-size: 13px; color: #e9d5ff; font-weight: bold; margin-top: 6px; }
   .forge-card-ability { font-size: 9px; color: #86efac; margin-top: 3px; line-height: 1.3; }
+  .forge-card-mp { font-size: 9px; color: #5eead4; margin-top: 4px; line-height: 1.3; border-top: 1px solid rgba(13,148,136,0.3); padding-top: 4px; }
   .forge-card-rarity { font-size: 8px; margin-top: 4px; padding: 2px 6px; border-radius: 8px; display: inline-block; }
   .forge-card-frags { font-size: 12px; color: #fbbf24; margin-top: 6px; font-weight: bold; }
   .forge-card-have { font-size: 10px; color: #a78bfa; margin-top: 2px; }
@@ -741,6 +797,35 @@
   }
   .reset-btn:active { background: #991b1b; }
   .settings-version { text-align: center; font-size: 10px; color: #4c1d95; margin-top: 14px; }
+  .bg-carousel { width: 100%; margin-top: 10px; }
+  .bg-carousel-img {
+    width: 160px; height: 90px; border-radius: 10px; margin: 0 auto;
+    background-size: contain; background-position: center; background-repeat: no-repeat;
+    background-color: #0d0020;
+    border: 2px solid #a855f7; box-shadow: 0 0 10px rgba(168,85,247,0.5);
+    position: relative; overflow: hidden;
+  }
+  .bg-carousel-label {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    font-size: 10px; color: white; text-align: center;
+    background: rgba(0,0,0,0.6); padding: 4px 0; font-weight: bold; letter-spacing: 1px;
+  }
+  .bg-carousel-controls {
+    display: flex; align-items: center; justify-content: space-between; margin-top: 8px;
+  }
+  .bg-carousel-btn {
+    background: #3b1fa0; border: 1px solid #7c3aed; color: #e9d5ff;
+    width: 36px; height: 36px; border-radius: 50%; font-size: 18px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s;
+  }
+  .bg-carousel-btn:active { background: #5b21b6; }
+  .bg-carousel-dots { display: flex; gap: 6px; }
+  .bg-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #4c1d95; cursor: pointer; transition: background 0.2s;
+  }
+  .bg-dot.active { background: #a855f7; }
 
   /* ── MINDBREAKER ALTAR (FORGE) ── */
   .forge-altar-banner {
@@ -884,6 +969,71 @@
   }
   .toast.show { opacity: 1; }
 
+  /* ── ORB LOCK SYSTEM ── */
+  .guess-orb-slot.locked-in {
+    border-color: #f59e0b !important;
+    box-shadow: 0 0 8px rgba(245,158,11,0.8) !important;
+  }
+  .guess-orb-slot.locked-in::after {
+    content: '🔒';
+    position: absolute; bottom: -2px; right: -2px;
+    font-size: 8px; line-height: 1;
+  }
+  .guess-orb-slot { position: relative; }
+  .picker-orb.locked-out {
+    opacity: 0.3;
+    filter: grayscale(1);
+  }
+  .picker-orb.locked-out::after {
+    content: '✕';
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    font-size: 18px; color: #f87171; font-weight: bold; pointer-events: none;
+  }
+  .picker-orb { position: relative; }
+  .hint-mode-active .guess-orb-slot:not(.revealed):not(.locked-in) {
+    animation: hint-pulse 0.8s infinite alternate;
+    cursor: crosshair !important;
+  }
+  @keyframes hint-pulse {
+    from { border-color: #1f2937; }
+    to   { border-color: #7c3aed; box-shadow: 0 0 10px rgba(124,58,237,0.7); }
+  }
+
+  /* ── TUTORIAL ── */
+  #tutorial-overlay {
+    display: none; position: fixed; inset: 0; z-index: 900;
+    pointer-events: none;
+  }
+  #tutorial-overlay.active { display: block; }
+  #tutorial-backdrop {
+    position: absolute; inset: 0;
+    background: rgba(5, 0, 20, 0.75);
+    pointer-events: all;
+  }
+  #tutorial-box {
+    position: absolute; left: 50%; transform: translateX(-50%);
+    width: calc(100% - 32px); max-width: 420px;
+    background: linear-gradient(135deg, #1e0a4a, #0d0020);
+    border: 2px solid #a855f7; border-radius: 16px;
+    padding: 20px; pointer-events: all;
+    box-shadow: 0 0 30px rgba(168,85,247,0.4);
+    z-index: 901;
+  }
+  #tutorial-box.pos-top    { top: 16px; }
+  #tutorial-box.pos-bottom { bottom: 16px; }
+  #tutorial-box.pos-center { top: 50%; transform: translate(-50%,-50%); }
+  .tut-label  { font-size:10px; color:#7c3aed; letter-spacing:2px; text-transform:uppercase; margin-bottom:6px; }
+  .tut-title  { font-size:18px; font-weight:bold; color:#e9d5ff; margin-bottom:10px; }
+  .tut-text   { font-size:13px; color:#c4b5fd; line-height:1.6; margin-bottom:16px; white-space:pre-line; }
+  .tut-peg-row { display:flex; align-items:center; gap:10px; margin-bottom:8px; font-size:13px; color:#c4b5fd; }
+  .tut-peg { width:18px; height:18px; border-radius:50%; flex-shrink:0; }
+  .tut-peg.red   { background:#1f2937; border:2px solid #f9fafb; }
+  .tut-peg.white { background:white; border:2px solid #9ca3af; }
+  .tut-peg.empty { background:#1a0a2e; border:2px solid #4c1d95; }
+  .tut-btns { display:flex; gap:10px; }
+  .tut-next { flex:1; padding:12px; background:linear-gradient(135deg,#7c3aed,#4f46e5); border:none; border-radius:10px; color:white; font-size:14px; font-weight:bold; cursor:pointer; }
+  .tut-skip { padding:12px 16px; background:transparent; border:1px solid #4c1d95; border-radius:10px; color:#6d28d9; font-size:13px; cursor:pointer; }
+
   /* ── MULTIPLAYER ── */
   #screen-multiplayer {
     background: url('Images/stone wall.png') center/cover fixed;
@@ -956,8 +1106,44 @@
   }
   .mp-opp-bar-wrap { background:#0d0020; border-radius:6px; height:10px; margin-top:6px; overflow:hidden; }
   .mp-opp-bar { height:100%; background:linear-gradient(90deg,#7c3aed,#a855f7); border-radius:6px; transition:width 0.4s; }
-  .mp-opp-turns { font-size:10px; color:#6d28d9; margin-top:4px; }
+  .mp-opp-turns { font-size:11px; color:#a78bfa; margin-top:4px; }
   .mp-opp-solved { font-size:13px; color:#f87171; font-weight:bold; text-align:center; margin-top:6px; }
+  .mp-pool-info { font-size:10px; color:#a78bfa; display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
+  .mp-pool-info img { width:18px; height:18px; object-fit:contain; }
+  .mp-pool-info .pool-tag { letter-spacing:1px; text-transform:uppercase; color:#5eead4; font-weight:bold; }
+  .mp-ai-abilities { display:flex; flex-wrap:wrap; gap:6px; justify-content:flex-end; margin-top:6px; }
+  .mp-ai-ability {
+    width:34px; height:34px; border-radius:8px; position:relative;
+    border:1px solid #0d9488; background:rgba(13,148,136,0.18);
+    display:flex; align-items:center; justify-content:center; cursor:default;
+  }
+  .mp-ai-ability img { width:24px; height:24px; object-fit:contain; }
+  .mp-ai-ability.spent { opacity:0.32; filter:grayscale(0.85); }
+  .mp-ai-ability.targetable { cursor:pointer; border-color:#fbbf24; box-shadow:0 0 8px rgba(251,191,36,0.55); }
+  .mp-ai-ability.targetable:active { transform:scale(0.92); }
+  .mp-ai-ability .ai-ability-x { position:absolute; top:-4px; right:-4px; width:15px; height:15px; border-radius:50%; background:#dc2626; color:#fff; font-size:10px; line-height:15px; text-align:center; }
+  .mp-ability-bar { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:8px; }
+  .mp-ability-orb {
+    display:flex; flex-direction:column; align-items:center; gap:2px;
+    background:rgba(45,27,105,0.5); border:1px solid #7c3aed; border-radius:10px;
+    padding:6px 10px; cursor:pointer; color:#c4b5fd; font-size:9px; font-weight:500;
+    transition:border-color 0.15s, transform 0.1s;
+  }
+  .mp-ability-orb img { width:30px; height:30px; object-fit:contain; }
+  .mp-ability-orb:not(:disabled):active { transform:scale(0.94); border-color:#a855f7; }
+  .mp-ability-orb.used, .mp-ability-orb:disabled { opacity:0.35; cursor:not-allowed; filter:grayscale(0.7); }
+  .mp-ability-orb.arming { border-color:#fbbf24; box-shadow:0 0 10px rgba(251,191,36,0.6); }
+  .mp-countdown-badge {
+    display:inline-block; min-width:70px;
+    font-family: var(--font-mono); font-size:30px; font-weight:bold;
+    color:#fff; background:linear-gradient(135deg,#dc2626,#7f1d1d);
+    border:2px solid #fca5a5; border-radius:14px; padding:8px 18px;
+    animation: mpCountPulse 1s ease-in-out infinite;
+  }
+  @keyframes mpCountPulse {
+    0%,100% { box-shadow:0 0 8px 2px rgba(239,68,68,0.6); transform:scale(1); }
+    50%     { box-shadow:0 0 22px 6px rgba(239,68,68,0.95); transform:scale(1.06); }
+  }
 </style>
 </head>
 <body>
@@ -976,6 +1162,7 @@
   <div class="title-content">
     <img src="Images/OrbMaster title trans.png" alt="OrbMaster" class="title-logo">
     <div class="title-tagline">CRACK THE CODE. MASTER THE ORBS.</div>
+    <div class="title-tagline" style="margin-top:8px;font-style:italic;color:#e9d5ff;">The Mindbreaker is waiting...</div>
   </div>
 
   <!-- Bottom buttons -->
@@ -988,6 +1175,7 @@
     </div>
     <div class="launch-row">
       <button class="launch-side-btn" onclick="showScreen('codex')" style="letter-spacing:1px;">📖 OrbMaster Codex</button>
+      <button class="launch-side-btn" onclick="tutStart();showScreen('campaign');" style="letter-spacing:1px;">🎓 Tutorial</button>
     </div>
   </div>
 </div>
@@ -1000,7 +1188,7 @@
   </div>
   <div class="campaign-scroll" id="boss-list"></div>
   <div class="nav-bar">
-    <button class="nav-btn" onclick="showScreen('title')"><span class="nav-icon">🏠</span>Home</button>
+    <button class="nav-btn" onclick="showScreen('title')"><span class="nav-icon-home"></span>Home</button>
     <button class="nav-btn active"><span class="nav-icon">⚔️</span>Campaign</button>
     <button class="nav-btn" onclick="showScreen('forge')"><span class="nav-icon"><img src="Images/Mind Orb Assets/multi_orb.png" style="width:22px;height:22px;object-fit:contain;vertical-align:middle;"></span>Orb Forge</button>
     <button class="nav-btn" onclick="showScreen('inventory')"><span class="nav-icon"><img src="Images/Mind Orb Assets/crystal_ball.png" style="width:22px;height:22px;object-fit:contain;vertical-align:middle;"></span>Orb Stash</button>
@@ -1070,7 +1258,7 @@
   </div>
   <div class="forge-scroll" id="forge-content"></div>
   <div class="nav-bar" style="border-top:2px solid #f59e0b;">
-    <button class="nav-btn" onclick="showScreen('title')"><span class="nav-icon">🏠</span>Home</button>
+    <button class="nav-btn" onclick="showScreen('title')"><span class="nav-icon-home"></span>Home</button>
     <button class="nav-btn active"><span class="nav-icon"><img src="Images/Mind Orb Assets/multi_orb.png" style="width:22px;height:22px;object-fit:contain;vertical-align:middle;"></span>Orb Forge</button>
     <button class="nav-btn" onclick="showScreen('inventory')"><span class="nav-icon"><img src="Images/Mind Orb Assets/crystal_ball.png" style="width:22px;height:22px;object-fit:contain;vertical-align:middle;"></span>Orb Stash</button>
   </div>
@@ -1099,61 +1287,63 @@
     <!-- HOW TO PLAY -->
     <div class="codex-section active" id="codex-howtoplay">
       <div class="codex-h1">⚔️ How to Play</div>
-      <div class="codex-p">OrbMaster is a code-breaking RPG. Each boss guards a secret sequence of colored orbs. Your job is to crack the code before you run out of turns.</div>
+      <div class="codex-p">OrbMaster is a code-breaking RPG. Each boss guards a secret sequence of colored orbs — crack the code before you run out of turns.</div>
       <div class="codex-h2">The Core Loop</div>
-      <div class="codex-rule"><strong>1. Choose your boss</strong> from the Campaign screen.</div>
-      <div class="codex-rule"><strong>2. Set your loadout</strong> — pick your code depth and equip up to 4 ability orbs.</div>
-      <div class="codex-rule"><strong>3. Submit a guess</strong> — place colored orbs in your MindBreaker and tap Submit.</div>
-      <div class="codex-rule"><strong>4. Read the feedback pegs</strong> — they reveal how close your guess was.</div>
-      <div class="codex-rule"><strong>5. Use orb abilities</strong> strategically to gain hints, extra turns, or scramble the boss.</div>
-      <div class="codex-rule"><strong>6. Crack the code</strong> within the turn limit to win orb fragments.</div>
-      <div class="codex-rule"><strong>7. Spend fragments</strong> in the Orb Forge to unlock more powerful orbs.</div>
-      <div class="codex-h2">Win & Loss Conditions</div>
-      <div class="codex-rule"><strong>Win:</strong> Submit a guess where every orb is the correct color in the correct position.</div>
-      <div class="codex-rule"><strong>Lose:</strong> Exhaust all your turns without cracking the code.</div>
+      <div class="codex-rule"><strong>1. Choose your boss</strong> from the Campaign screen. Bosses unlock in order as you defeat each one.</div>
+      <div class="codex-rule"><strong>2. Set your loadout</strong> — equip up to 4 ability orbs from your stash before entering battle.</div>
+      <div class="codex-rule"><strong>3. Study the Orb Pool</strong> — each boss has a fixed set of colors their code is drawn from, shown in the pre-battle loadout.</div>
+      <div class="codex-rule"><strong>4. Submit a guess</strong> — place colored orbs into the slots and tap Submit.</div>
+      <div class="codex-rule"><strong>5. Read the feedback pegs</strong> — they tell you how close your guess was.</div>
+      <div class="codex-rule"><strong>6. Use orb abilities</strong> strategically to gain hints, extra turns, or eliminate colors.</div>
+      <div class="codex-rule"><strong>7. Crack the code</strong> within the turn limit to earn orb fragments.</div>
+      <div class="codex-rule"><strong>8. Spend fragments</strong> in the Orb Forge to craft powerful ability orbs.</div>
+      <div class="codex-h2">Win & Loss</div>
+      <div class="codex-rule"><strong>Win:</strong> Every orb in your guess is the correct color in the correct position.</div>
+      <div class="codex-rule"><strong>Lose:</strong> Run out of turns without cracking the code.</div>
       <div class="codex-h2">Feedback Pegs</div>
       <div class="codex-peg-row"><div class="codex-peg red"></div><div class="codex-peg-label"><strong style="color:#f87171">Red Peg</strong> — correct color, correct position</div></div>
       <div class="codex-peg-row"><div class="codex-peg white"></div><div class="codex-peg-label"><strong style="color:#f0f0f0">White Peg</strong> — correct color, wrong position</div></div>
-      <div class="codex-peg-row"><div class="codex-peg empty"></div><div class="codex-peg-label"><strong style="color:#6d28d9">No Peg</strong> — this color is not in the code at all</div></div>
-      <div class="codex-tip">Pegs don't tell you which orb slot they belong to — only the total count of reds and whites.</div>
+      <div class="codex-peg-row"><div class="codex-peg empty"></div><div class="codex-peg-label"><strong style="color:#6d28d9">No Peg</strong> — color not in the code at all</div></div>
+      <div class="codex-tip">Pegs show only the total count of reds and whites — not which slot each peg belongs to.</div>
       <div class="codex-h2">Turn Limit</div>
-      <div class="codex-rule">Each match starts with <strong>10 turns</strong>. Certain orb abilities can add extra turns. Boss specials can reduce them.</div>
-      <div class="codex-tip">The faster you crack the code, the more orb fragments you earn as a reward.</div>
+      <div class="codex-rule">Each match starts with <strong>10 turns</strong>. Orb abilities can add extra turns. Some boss specials can remove them.</div>
+      <div class="codex-tip">The faster you crack the code, the more fragments you earn.</div>
+      <div class="codex-h2">🔒 Orb Locking</div>
+      <div class="codex-rule"><strong>Double-tap a guess slot</strong> to lock that color to that position. Locked orbs carry forward into every future guess automatically. A gold glow marks locked slots. Double-tap again to unlock.</div>
+      <div class="codex-h2">✕ Color Elimination</div>
+      <div class="codex-rule"><strong>Triple-tap a color in the picker</strong> to eliminate it — graying it out when you're confident it's not in the sequence. Double-tap a grayed color to restore it.</div>
+      <div class="codex-tip">Locked and eliminated colors are automatically filtered out by orb abilities — so hints and reveals focus on orbs you haven't figured out yet.</div>
     </div>
 
     <!-- MINDBREAKER -->
     <div class="codex-section" id="codex-mindbreaker">
       <div class="codex-h1"><img src="Images/MindBreaker Icon.png" style="width:22px;height:22px;object-fit:contain;vertical-align:middle;"> MindBreaker Altar</div>
-      <div class="codex-p">The MindBreaker Altar is your guess console — a magnificent stone altar with orb slots carved into its face. You place your colored orbs into its slots to submit each guess.</div>
-      <div class="codex-h2">Code Depth (Slots)</div>
-      <div class="codex-rule">The number of orb slots determines how many orbs are in the boss's secret code — and in your guess. More slots means a harder puzzle with bigger rewards.</div>
-      <div class="codex-rule"><strong>4 Slots</strong> — Standard depth. Available from the start.</div>
-      <div class="codex-rule"><strong>5 Slots</strong> — Advanced depth. Requires the Rank 5 upgrade from the Orb Forge.</div>
-      <div class="codex-rule"><strong>6 Slots</strong> — Maximum depth. Requires the Rank 6 upgrade from the Orb Forge.</div>
-      <div class="codex-tip">You choose your code depth before each match on the Loadout screen. Going deeper increases your fragment reward multiplier (×1.3 for 5, ×1.7 for 6).</div>
-      <div class="codex-h2">MindBreaker Rank</div>
-      <div class="codex-rule"><strong>Rank 1</strong> — Starting rank.</div>
-      <div class="codex-rule"><strong>Rank 2</strong> — Earned after defeating Boss 2.</div>
-      <div class="codex-rule"><strong>Rank 3</strong> — Earned after defeating Boss 3.</div>
-      <div class="codex-rule"><strong>Rank 4 — Four Orbs</strong> — Earned after defeating Boss 4. Stays here until upgraded.</div>
-      <div class="codex-rule"><strong>Rank 5 — Five Orbs</strong> — Purchased in the Orb Forge after defeating Boss 5.</div>
-      <div class="codex-rule"><strong>Rank 6 — Six Orbs</strong> — Purchased in the Orb Forge after defeating Boss 7.</div>
-      <div class="codex-h2">Forge Upgrade Costs</div>
-      <div class="codex-rule"><strong>Rank 5:</strong> 150 Orange + 150 Blue + 100 Green + 100 Red fragments</div>
-      <div class="codex-rule"><strong>Rank 6:</strong> 200 Purple + 150 White + 150 Black + 100 Teal fragments</div>
+      <div class="codex-p">The MindBreaker Altar is your guess console — a stone altar with orb slots carved into its face. It determines how many orb slots you can use per guess.</div>
+      <div class="codex-h2">Campaign Mode</div>
+      <div class="codex-rule">In Campaign, each boss sets the code size automatically based on their difficulty. Bosses 1–7 use 4-orb codes, Bosses 8–9 use 5-orb codes, and Boss 10 uses a 6-orb code. The MindBreaker rank does not affect Campaign matches.</div>
+      <div class="codex-h2">Multiplayer Mode</div>
+      <div class="codex-rule">In Play Online (Multiplayer), the host chooses the code size — 4, 5, or 6 orbs. Both players must use the same code size. Your MindBreaker rank determines which sizes you can access.</div>
+      <div class="codex-rule"><strong>4 Slots</strong> — Available from the start.</div>
+      <div class="codex-rule"><strong>5 Slots</strong> — Requires Rank 5 upgrade from the Orb Forge.</div>
+      <div class="codex-rule"><strong>6 Slots</strong> — Requires Rank 6 upgrade from the Orb Forge.</div>
+      <div class="codex-tip">If your opponent's chosen code size exceeds your rank, you'll see a warning. Ask them to lower the size or upgrade your altar first.</div>
+      <div class="codex-h2">Upgrade Costs</div>
+      <div class="codex-rule"><strong>Rank 5 (5 slots):</strong> 150 Orange + 150 Blue + 100 Green + 100 Red fragments. Requires beating Boss 5.</div>
+      <div class="codex-rule"><strong>Rank 6 (6 slots):</strong> 200 Purple + 150 White + 150 Black + 100 Teal fragments. Requires beating Boss 7.</div>
+      <div class="codex-tip">Deeper codes earn bigger fragment rewards — ×1.3 for 5 slots, ×1.7 for 6 slots.</div>
     </div>
 
     <!-- ORBS -->
     <div class="codex-section" id="codex-orbs">
       <div class="codex-h1">🔮 Mind Orbs</div>
-      <div class="codex-p">There are 12 Mind Orbs. Each orb serves two roles: as a color that appears in the boss's secret code, and as an ability item you can equip in your loadout. Collect orb fragments from victories and forge them into ability orbs at the Orb Forge.</div>
+      <div class="codex-p">There are 12 Mind Orbs. Each orb is both a puzzle color (appearing in boss codes) and a forgeable ability item you can equip. New colors enter the boss pool as you progress through the campaign — each boss beyond the third introduces one new orb into the mix.</div>
       <div class="codex-h2">⚪ Common Orbs</div>
       <div class="codex-orb-entry">
         <img class="codex-orb-img" src="Images/Mind Orb Assets/red_orb.png">
         <div class="codex-orb-info">
           <div class="codex-orb-name">Red Orb</div>
           <span class="codex-orb-rarity orb-rarity-badge rarity-common">Common</span>
-          <div class="codex-orb-ability">🔥 <strong>Burn</strong> — Reveals a random orb position in the boss's secret code.</div>
+          <div class="codex-orb-ability">🔥 <strong>Burn</strong> — Reveals a random unrevealed position in the boss's code. Automatically skips slots you've already locked in.</div>
           <div class="codex-orb-unlock">🔓 Available from the start</div>
           <div class="codex-orb-cost">Forge cost: 90 fragments</div>
         </div>
@@ -1183,7 +1373,7 @@
         <div class="codex-orb-info">
           <div class="codex-orb-name">Green Orb</div>
           <span class="codex-orb-rarity orb-rarity-badge rarity-common">Common</span>
-          <div class="codex-orb-ability">🟢 <strong>Reveal Wrong</strong> — Reveals one orb color that is NOT in the boss's secret code.</div>
+          <div class="codex-orb-ability">🟢 <strong>Reveal Wrong</strong> — Reveals one orb color not in the boss's code. Automatically skips colors you've already eliminated.</div>
           <div class="codex-orb-unlock">🔓 Available from the start</div>
           <div class="codex-orb-cost">Forge cost: 50 fragments</div>
         </div>
@@ -1205,7 +1395,7 @@
           <div class="codex-orb-name">Silver Orb</div>
           <span class="codex-orb-rarity orb-rarity-badge rarity-uncommon">Uncommon</span>
           <div class="codex-orb-ability">🪙 <strong>+15% Uncommon Loot</strong> — Passively increases the chance of receiving Uncommon fragments after winning.</div>
-          <div class="codex-orb-unlock">🔓 Unlocks after defeating Boss 3</div>
+          <div class="codex-orb-unlock">🔓 Enters boss pool after defeating Boss 3</div>
           <div class="codex-orb-cost">Forge cost: 50 fragments</div>
         </div>
       </div>
@@ -1215,7 +1405,7 @@
           <div class="codex-orb-name">Gold Orb</div>
           <span class="codex-orb-rarity orb-rarity-badge rarity-uncommon">Uncommon</span>
           <div class="codex-orb-ability">✨ <strong>+20% Rare Loot</strong> — Passively increases the chance of receiving Rare fragments after winning.</div>
-          <div class="codex-orb-unlock">🔓 Unlocks after defeating Boss 4</div>
+          <div class="codex-orb-unlock">🔓 Enters boss pool after defeating Boss 4</div>
           <div class="codex-orb-cost">Forge cost: 60 fragments</div>
         </div>
       </div>
@@ -1225,7 +1415,7 @@
           <div class="codex-orb-name">Purple Orb</div>
           <span class="codex-orb-rarity orb-rarity-badge rarity-uncommon">Uncommon</span>
           <div class="codex-orb-ability">➕➕ <strong>+2 Guesses</strong> — Adds 2 extra turns to the match without reducing your fragment reward.</div>
-          <div class="codex-orb-unlock">🔓 Unlocks after defeating Boss 5</div>
+          <div class="codex-orb-unlock">🔓 Enters boss pool after defeating Boss 5</div>
           <div class="codex-orb-cost">Forge cost: 100 fragments</div>
         </div>
       </div>
@@ -1235,7 +1425,7 @@
         <div class="codex-orb-info">
           <div class="codex-orb-name">Black Orb</div>
           <span class="codex-orb-rarity orb-rarity-badge rarity-rare">Rare</span>
-          <div class="codex-orb-ability">🖤 <strong>Hint</strong> — Reveals the exact orb color at a chosen position in the secret code.</div>
+          <div class="codex-orb-ability">🖤 <strong>Hint</strong> — Tap to activate, then tap any guess slot to reveal the exact orb color at that position. Blocked by Queen Asabeth's special.</div>
           <div class="codex-orb-unlock">🔓 Unlocks after defeating Boss 6</div>
           <div class="codex-orb-cost">Forge cost: 130 fragments</div>
         </div>
@@ -1246,7 +1436,7 @@
           <div class="codex-orb-name">White Orb</div>
           <span class="codex-orb-rarity orb-rarity-badge rarity-rare">Rare</span>
           <div class="codex-orb-ability">➕➕➕ <strong>+3 Guesses</strong> — Adds 3 extra turns to the match without reducing your fragment reward.</div>
-          <div class="codex-orb-unlock">🔓 Unlocks after defeating Boss 7</div>
+          <div class="codex-orb-unlock">🔓 Enters boss pool after defeating Boss 7</div>
           <div class="codex-orb-cost">Forge cost: 150 fragments</div>
         </div>
       </div>
@@ -1256,7 +1446,7 @@
           <div class="codex-orb-name">Pink Orb</div>
           <span class="codex-orb-rarity orb-rarity-badge rarity-rare">Rare</span>
           <div class="codex-orb-ability">💗 <strong>+75% Reward</strong> — Passively multiplies your orb fragment reward by 1.75× this match.</div>
-          <div class="codex-orb-unlock">🔓 Unlocks after defeating Boss 8</div>
+          <div class="codex-orb-unlock">🔓 Enters boss pool after defeating Boss 8</div>
           <div class="codex-orb-cost">Forge cost: 180 fragments</div>
         </div>
       </div>
@@ -1266,7 +1456,7 @@
           <div class="codex-orb-name">Teal Orb</div>
           <span class="codex-orb-rarity orb-rarity-badge rarity-rare">Rare</span>
           <div class="codex-orb-ability">💠 <strong>+125% Reward</strong> — Passively multiplies your orb fragment reward by 2.25× this match. Does not stack with Pink.</div>
-          <div class="codex-orb-unlock">🔓 Unlocks after defeating Boss 9</div>
+          <div class="codex-orb-unlock">🔓 Enters boss pool after defeating Boss 9</div>
           <div class="codex-orb-cost">Forge cost: 300 fragments</div>
         </div>
       </div>
@@ -1300,36 +1490,35 @@
       <div class="codex-rule">Each fragment batch is rolled against the boss's loot table to determine its rarity tier — Common, Uncommon, or Rare. Higher rarity means rarer orb types appear in the reward.</div>
       <div class="codex-rule">Silver Orb (+15% Uncommon) and Gold Orb (+20% Rare) passively shift the loot table in your favor when equipped.</div>
       <div class="codex-h2">Forging Orbs</div>
-      <div class="codex-rule">Visit the <strong>Orb Forge</strong> to spend fragments and craft ability orbs. Each orb type has its own fragment cost and requires you to have unlocked that color through campaign progression.</div>
+      <div class="codex-rule">Visit the <strong>Orb Forge</strong> to spend fragments and craft ability orbs. Each orb has its own fragment cost — any orb can be forged once you have enough fragments, regardless of campaign progress.</div>
     </div>
 
     <!-- PROGRESSION -->
     <div class="codex-section" id="codex-progression">
       <div class="codex-h1">🗺️ Progression & Unlocks</div>
-      <div class="codex-p">OrbMaster has a full campaign of 10 bosses. Defeating each one unlocks the next and gradually expands your pool of available orb colors and MindBreaker capabilities.</div>
-      <div class="codex-h2">Color Unlock Schedule</div>
-      <div class="codex-rule"><strong>Start:</strong> Red, Blue, Yellow, Green, Orange</div>
-      <div class="codex-rule"><strong>After Boss 3:</strong> Silver unlocked</div>
-      <div class="codex-rule"><strong>After Boss 4:</strong> Gold unlocked</div>
-      <div class="codex-rule"><strong>After Boss 5:</strong> Purple unlocked</div>
-      <div class="codex-rule"><strong>After Boss 6:</strong> Black unlocked</div>
-      <div class="codex-rule"><strong>After Boss 7:</strong> White unlocked</div>
-      <div class="codex-rule"><strong>After Boss 8:</strong> Pink unlocked</div>
-      <div class="codex-rule"><strong>After Boss 9:</strong> Teal unlocked</div>
-      <div class="codex-tip">Boss 10 (Mad Martin) is the only boss whose 6-color code can draw from all 12 orb colors — making him the ultimate challenge.</div>
-      <div class="codex-h2">MindBreaker Rank Progression</div>
-      <div class="codex-rule"><strong>Rank 1:</strong> Starting rank — 4 orb slots</div>
-      <div class="codex-rule"><strong>Rank 2:</strong> Defeat Boss 2 — 4 orb slots</div>
-      <div class="codex-rule"><strong>Rank 3:</strong> Defeat Boss 3 — 4 orb slots</div>
-      <div class="codex-rule"><strong>Rank 4:</strong> Defeat Boss 4 — 4 orb slots (stays here until purchased)</div>
-      <div class="codex-rule"><strong>Rank 5:</strong> Purchase at Orb Forge after Boss 5 — unlocks 5 orb slots</div>
-      <div class="codex-rule"><strong>Rank 6:</strong> Purchase at Orb Forge after Boss 7 — unlocks 6 orb slots</div>
-      <div class="codex-h2">Boss Fragment Requirements</div>
-      <div class="codex-rule">Defeat each boss in order to unlock the next. No fragment requirements — just beat the previous boss to advance.</div>
+      <div class="codex-p">OrbMaster has a full Campaign of 10 bosses. Defeat each boss to unlock the next. No fragment requirements — just beat the previous boss to advance.</div>
+      <div class="codex-h2">Boss Orb Pool Progression</div>
+      <div class="codex-rule">Each boss draws their secret code from a fixed orb pool. The pool grows with each boss, adding one new color per boss from Boss 4 onward.</div>
+      <div class="codex-rule"><strong>Bosses 1–3:</strong> Red, Blue, Yellow, Green, Orange (5 orbs)</div>
+      <div class="codex-rule"><strong>Boss 4:</strong> + Silver (6 orbs)</div>
+      <div class="codex-rule"><strong>Boss 5:</strong> + Gold (7 orbs)</div>
+      <div class="codex-rule"><strong>Boss 6:</strong> + Purple (8 orbs)</div>
+      <div class="codex-rule"><strong>Boss 7:</strong> + Black (9 orbs)</div>
+      <div class="codex-rule"><strong>Boss 8:</strong> + White (10 orbs) — 5-orb code</div>
+      <div class="codex-rule"><strong>Boss 9:</strong> + Pink (11 orbs) — 5-orb code</div>
+      <div class="codex-rule"><strong>Boss 10:</strong> + Teal (12 orbs) — 6-orb code</div>
+      <div class="codex-tip">The full orb pool for each boss is shown in the pre-battle loadout screen. You'll only see those colors in the battle picker.</div>
+      <div class="codex-h2">MindBreaker Altar (Multiplayer)</div>
+      <div class="codex-rule">The altar rank only affects Multiplayer code size selection. Campaign code sizes are fixed by each boss.</div>
+      <div class="codex-rule"><strong>Rank 5 (5 slots):</strong> Purchase at Orb Forge after Boss 5.</div>
+      <div class="codex-rule"><strong>Rank 6 (6 slots):</strong> Purchase at Orb Forge after Boss 7.</div>
+      <div class="codex-h2">Settings</div>
+      <div class="codex-rule"><strong>Duplicate Colors:</strong> Toggle in Settings to allow or disallow repeated colors in boss codes. On by default — turning it off makes codes harder to guess.</div>
       <div class="codex-h2">Build Archetypes</div>
-      <div class="codex-rule"><strong>🧠 Solver Build:</strong> Black + Red + Green — maximize information gain per turn.</div>
-      <div class="codex-rule"><strong>💰 Economy Build:</strong> Pink + Gold + Silver — maximize fragment rewards per match.</div>
-      <div class="codex-rule"><strong>🛡️ Control Build:</strong> Yellow + Blue + Purple — manipulate the board and buy extra turns.</div>
+      <div class="codex-rule"><strong>🧠 Solver Build:</strong> Black + Red + Green — maximum information per turn.</div>
+      <div class="codex-rule"><strong>💰 Economy Build:</strong> Pink + Gold + Silver — maximize fragment rewards.</div>
+      <div class="codex-rule"><strong>🛡️ Control Build:</strong> Yellow + Blue + Purple — board manipulation and extra turns.</div>
+      <div class="codex-rule"><strong>💪 Endurance Build:</strong> Orange + Purple + White — stack extra turns for harder bosses.</div>
     </div>
 
   </div>
@@ -1395,6 +1584,13 @@
       </div>
       <button class="toggle-btn on" id="toggle-allowDuplicates" onclick="toggleSetting('allowDuplicates')"></button>
     </div>
+    <div class="settings-row" style="flex-direction:column;align-items:flex-start;">
+      <div>
+        <div class="settings-label">Home Screen Background</div>
+        <div class="settings-sublabel">Choose your title screen scene</div>
+      </div>
+      <div class="bg-carousel" id="bg-picker"></div>
+    </div>
     <div class="settings-row">
       <div>
         <div class="settings-label">Reset All Progress</div>
@@ -1438,6 +1634,25 @@
 <audio id="boss-music"                                                         loop preload="none" style="display:none;"></audio>
 <div class="toast" id="toast"></div>
 
+<!-- TUTORIAL OVERLAY -->
+<div id="tutorial-overlay">
+  <div id="tutorial-backdrop"></div>
+  <div id="tutorial-box" class="pos-center">
+    <div class="tut-label" id="tut-label">Tutorial</div>
+    <div class="tut-title" id="tut-title"></div>
+    <div class="tut-text"  id="tut-text"></div>
+    <div id="tut-pegs" style="display:none;margin-bottom:16px;">
+      <div class="tut-peg-row"><div class="tut-peg red"></div><span><strong style="color:#f87171">Red peg</strong> — right color, right position</span></div>
+      <div class="tut-peg-row"><div class="tut-peg white"></div><span><strong style="color:#e9d5ff">White peg</strong> — right color, wrong position</span></div>
+      <div class="tut-peg-row"><div class="tut-peg empty"></div><span><strong style="color:#6d28d9">No peg</strong> — color not in the code at all</span></div>
+    </div>
+    <div class="tut-btns">
+      <button class="tut-skip" onclick="tutSkipToHome()">Skip Tutorial</button>
+      <button class="tut-next" id="tut-next-btn" onclick="tutNext()">Next →</button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══════════════════════════════════════════════════ -->
 <!--  MULTIPLAYER SCREEN                                  -->
 <!-- ═══════════════════════════════════════════════════ -->
@@ -1460,8 +1675,31 @@
           <div style="font-size:10px;color:#a78bfa;margin-bottom:8px;letter-spacing:1px;">CODE SIZE (host sets for both players)</div>
           <div style="display:flex;gap:8px;" id="mp-codesize-btns"></div>
         </div>
+        <div style="margin-bottom:14px;">
+          <div style="font-size:10px;color:#a78bfa;margin-bottom:8px;letter-spacing:1px;">ORB POOL DIFFICULTY</div>
+          <div style="display:flex;gap:6px;" id="mp-pool-btns"></div>
+          <div id="mp-custom-pool" style="display:none;margin-top:8px;"></div>
+        </div>
         <button class="mp-btn primary" onclick="mpCreateRoom()">🎲 Create Room</button>
         <button class="mp-btn secondary" onclick="mpShowJoin()">🔗 Join Room</button>
+        <div style="display:flex;align-items:center;gap:10px;margin:14px 0 10px;color:#6d28d9;font-size:10px;letter-spacing:1px;">
+          <div style="flex:1;height:1px;background:rgba(124,58,237,0.3);"></div>OR<div style="flex:1;height:1px;background:rgba(124,58,237,0.3);"></div>
+        </div>
+        <div style="margin-bottom:12px;">
+          <div style="font-size:10px;color:#a78bfa;margin-bottom:8px;letter-spacing:1px;">CODE SIZE (the MindBreaker AI matches your choice)</div>
+          <div style="display:flex;gap:8px;" id="mp-ai-codesize-btns"></div>
+        </div>
+        <div style="margin-bottom:12px;">
+          <div style="font-size:10px;color:#a78bfa;margin-bottom:8px;letter-spacing:1px;">ORB POOL DIFFICULTY</div>
+          <div style="display:flex;gap:6px;" id="mp-ai-pool-btns"></div>
+          <div id="mp-ai-custom-pool" style="display:none;margin-top:8px;"></div>
+        </div>
+        <button class="mp-btn secondary" onclick="mpStartVsAI()" style="border-color:#0d9488;color:#5eead4;display:flex;align-items:center;justify-content:center;gap:8px;"><img src="Images/MindBreaker AI_alt.png" alt="" style="width:24px;height:24px;object-fit:contain;"> Play vs MindBreaker AI</button>
+        <label style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;font-size:11px;color:#a78bfa;cursor:pointer;">
+          <input type="checkbox" id="mp-ai-abilities-toggle" checked style="width:16px;height:16px;accent-color:#7c3aed;">
+          ⚡ Use orb abilities this match
+        </label>
+        <div class="mp-subtitle" style="margin-top:4px;">Casual practice match — not ranked</div>
       </div>
       <div id="mp-join-panel" style="display:none;">
         <div class="mp-section">
@@ -1502,31 +1740,47 @@
         <div class="mp-status" id="mp-setcode-status">Tap a slot then pick a color below</div>
         <!-- Color picker -->
         <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:12px 0;" id="mp-color-picker"></div>
-        <button class="mp-btn primary" id="mp-confirm-code-btn" onclick="mpConfirmCode()" disabled>✅ Lock In Code</button>
+        <!-- Ability loadout for this match -->
+        <div id="mp-loadout-wrap" style="border-top:1px solid rgba(124,58,237,0.3);margin-top:6px;padding-top:12px;">
+          <div style="font-size:11px;color:#a78bfa;letter-spacing:1px;margin-bottom:8px;">⚡ EQUIP ABILITY ORBS (MAX 4)</div>
+          <div id="mp-loadout-slots" style="display:flex;gap:8px;justify-content:center;margin-bottom:10px;"></div>
+          <div id="mp-loadout-roster" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;"></div>
+        </div>
+        <button class="mp-btn primary" id="mp-confirm-code-btn" onclick="mpConfirmCode()" disabled style="margin-top:12px;">✅ Lock In Code</button>
         <div class="mp-status" id="mp-setcode-wait"></div>
       </div>
     </div>
 
     <!-- BATTLE PHASE -->
     <div id="mp-phase-battle" style="display:none;">
+      <!-- Prominent MindBreaker AI portrait (vs-AI matches only) -->
+      <div id="mp-ai-portrait" style="display:none;text-align:center;margin-bottom:10px;">
+        <img src="Images/MindBreaker AI_alt.png" alt="MindBreaker AI" style="width:88%;max-width:300px;max-height:220px;object-fit:contain;filter:drop-shadow(0 0 18px rgba(13,148,136,0.7));">
+      </div>
       <div class="mp-section">
-        <div class="mp-board-label">🔵 Your Progress</div>
-        <!-- Opponent's progress bar -->
-        <div class="mp-opponent-progress" id="mp-opp-progress">
-          <div class="mp-board-label" style="color:#f87171;">🔴 Opponent's Progress</div>
-          <div class="mp-opp-bar-wrap"><div class="mp-opp-bar" id="mp-opp-bar" style="width:0%"></div></div>
-          <div class="mp-opp-turns" id="mp-opp-turns">0 / 10 turns used</div>
-          <div class="mp-opp-solved" id="mp-opp-solved" style="display:none;"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div class="mp-board-label" style="margin:0;">Round <span id="mp-round-num">1</span> / 10</div>
+          <div class="mp-board-label" id="mp-opp-label" style="margin:0;color:#f87171;">🔴 Opponent</div>
+        </div>
+        <div id="mp-ai-abilities" class="mp-ai-abilities" style="display:none;"></div>
+        <div id="mp-pool-info" class="mp-pool-info" style="margin-top:8px;"></div>
+        <div id="mp-opp-status" class="mp-opp-turns" style="margin-top:6px;">⏳ Opponent is still guessing…</div>
+        <!-- Submission countdown (appears 30s after the opponent locks in) -->
+        <div id="mp-countdown" style="display:none;margin-top:12px;text-align:center;">
+          <div class="mp-countdown-badge"><span id="mp-countdown-num">30</span><span style="font-size:13px;"> s</span></div>
+          <div style="font-size:11px;color:#fca5a5;margin-top:6px;">Submit now — your current guess locks in when this hits zero!</div>
         </div>
       </div>
-      <!-- The actual battle board is rendered in the existing battle screen area and mirrored here -->
+
       <div class="mp-section">
         <div class="mp-board-label">Your Guess Board</div>
         <div id="mp-battle-board"></div>
         <div id="mp-battle-picker" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:12px;"></div>
+        <div class="mp-board-label" id="mp-ability-label" style="margin-top:14px;">⚡ Ability Orbs</div>
+        <div id="mp-ability-bar" class="mp-ability-bar"></div>
         <div style="display:flex;gap:8px;margin-top:12px;">
           <button class="mp-btn secondary" style="flex:1;" onclick="mpClearGuess()">Clear</button>
-          <button class="mp-btn primary" style="flex:2;" id="mp-submit-btn" onclick="mpSubmitGuess()">Submit Guess</button>
+          <button class="mp-btn primary" style="flex:2;" id="mp-submit-btn" onclick="mpSubmitGuess(false)">Submit Guess</button>
         </div>
       </div>
     </div>
@@ -1639,6 +1893,92 @@ const BOSS_DEFS = [
 ];
 
 // ══════════════════════════════════════════════
+//  BOSS DIALOGUE — keyed by boss id
+//  enter      = taunt on entering battle
+//  bossVictory= boss gloats when you are defeated
+//  bossDefeat = boss reacts when you beat them
+// ══════════════════════════════════════════════
+const BOSS_QUIPS = {
+  1: {
+    enter: ["Aw, fresh meat. Or should I say... fresh squeezed?", "You picked the lemon to start with? How sour for you."],
+    bossVictory: ["Pucker up, buttercup — you just lost to a piece of fruit.", "Life gave you lemons. I gave you a beating."],
+    bossDefeat: ["Fine. You win. Don't let it go to that lumpy head of yours.", "Squeezed me dry already? Ugh. Beginner's luck."],
+  },
+  2: {
+    enter: ["The temple does not welcome fools. It buries them.", "Feel that chill? That's your confidence dying."],
+    bossVictory: ["Frozen in place, exactly as I foresaw. Predictable.", "Another little offering for the altar. How generous."],
+    bossDefeat: ["Impossible... the cold should have claimed you.", "You thaw my defenses this once. Do not expect a second."],
+  },
+  3: {
+    enter: ["Heh. You small. Bigginsly big. You do the math.", "Oh good — a snack with legs."],
+    bossVictory: ["SMASH. That the whole plan. Worked great.", "You break. Bigginsly no break. Bigginsly never break."],
+    bossDefeat: ["Wha— you tiny but you sneaky. Bigginsly no like sneaky.", "Bigginsly confused. And losing. Mostly confused."],
+  },
+  4: {
+    enter: ["Scanning opponent... threat level: adorable.", "I have simulated this battle 4,096 times. You lose in all of them."],
+    bossVictory: ["Outcome 4,097: still you, still losing. Fascinating.", "Error: I expected a challenge. None detected."],
+    bossDefeat: ["Recalculating... recalculating... this does not compute.", "A statistical anomaly. Savor it — it is your last."],
+  },
+  5: {
+    enter: ["Well well, look who wandered onto the wrong block.", "You sure you're in the right place, champ? Exit's behind you."],
+    bossVictory: ["Too easy. Didn't even break a sweat. Did you?", "Run home and tell 'em Natty D sent you packing."],
+    bossDefeat: ["Aight, aight, you got me. Lucky guess though. Real lucky.", "Don't get comfy. This ain't over, hotshot."],
+  },
+  6: {
+    enter: ["Ew. You're going to make me chip a nail, aren't you?", "Oh sweetie, you came all this way just to lose? Bold."],
+    bossVictory: ["Flawless, as always — unlike that little performance of yours.", "Did you really think you could outshine me? Precious."],
+    bossDefeat: ["You ruined my hair AND my streak. Unforgivable.", "Beaten by YOU? I'll never live it down. Neither will you."],
+  },
+  7: {
+    enter: ["A peasant challenges me? How quaintly suicidal.", "Draw your wits, knave. Oh — you brought none. Pity."],
+    bossVictory: ["Kneel. You've earned the privilege of my disappointment.", "Another commoner returned to the dirt, as is proper."],
+    bossDefeat: ["Bested by a commoner... the shame shall outlive me.", "Enjoy your little victory, peasant. It changes nothing."],
+  },
+  8: {
+    enter: ["Your precious hints won't save you in MY court. I've seen to that.", "Bow before your Queen — or be made to. Either amuses me."],
+    bossVictory: ["Off with your hopes. The crown remains mine.", "You played without your little hints. How did that feel?"],
+    bossDefeat: ["The crown slips... no. NO. This is treason!", "You stole a victory from a Queen. I shall not forget your face."],
+  },
+  9: {
+    enter: ["I scramble, you scream. We both know how this ends.", "Come closer, little thing. The antlers are hungry."],
+    bossVictory: ["Gored, gutted, and guessing wrong. A fine day for me.", "The herd thins. You were always the weakest of it."],
+    bossDefeat: ["You... unscrambled me? The beast does not fall so—", "Grraah! Flesh wound. FLESH WOUND. I'll remember your scent."],
+  },
+  10: {
+    enter: ["HELLO friend! Every right answer COSTS you. Isn't that DELIGHTFUL?", "The last face you'll puzzle over — I made sure it's an ugly one."],
+    bossVictory: ["HA! Every clue dug your grave a little deeper. Dig dig dig!", "You came so far just to break HERE. Poetic, isn't it? POETIC!"],
+    bossDefeat: ["No no no NO— you weren't supposed to— the MATH was PERFECT!", "You win the campaign and my screaming respect. RUN ALONG NOW."],
+  },
+};
+
+function pickQuip(bossId, type) {
+  const set = BOSS_QUIPS[bossId];
+  if (!set || !set[type] || !set[type].length) return null;
+  return set[type][Math.floor(Math.random() * set[type].length)];
+}
+
+// Speech-bubble overlay shown over the battle screen on entry
+function showBossQuip(bossIdx, type, onClose) {
+  const boss = BOSS_DEFS[bossIdx];
+  const line = pickQuip(boss.id, type);
+  if (!line) { if (onClose) onClose(); return; }
+  document.querySelectorAll('#screen-battle .boss-quip-overlay').forEach(o => o.remove());
+  const overlay = document.createElement('div');
+  overlay.className = 'boss-quip-overlay';
+  overlay.innerHTML = `
+    <div class="boss-quip-card">
+      <img class="boss-quip-img" src="${boss.img}" alt="${boss.name}">
+      <div class="boss-quip-name">${boss.name}</div>
+      <div class="boss-quip-text">&ldquo;${line}&rdquo;</div>
+      <div class="boss-quip-tap">▼ TAP TO CONTINUE</div>
+    </div>`;
+  let done = false;
+  const close = () => { if (done) return; done = true; overlay.remove(); if (onClose) onClose(); };
+  overlay.addEventListener('click', close);
+  document.getElementById('screen-battle').appendChild(overlay);
+}
+
+// ══════════════════════════════════════════════
 //  GAME STATE
 // ══════════════════════════════════════════════
 
@@ -1716,6 +2056,9 @@ function newBattle(bossIdx, codeSize) {
     usedAbilities: {},   // abilityKey -> true
     disabledAbilities: {}, // abilityKey -> true (yellow orb)
     revealedPositions: {}, // pos -> color (red/burn/black)
+    lockedSlots: {},       // pos -> color (player double-tapped to lock in)
+    lockedOutColors: [],   // colors player triple-tapped to eliminate
+    hintMode: false,       // waiting for player to pick a slot for black orb
     revealedWrong: [],   // colors not in code (green)
     multiplier: 1.0,
     bonusUncommon: 0,
@@ -1735,9 +2078,21 @@ function generateCode(pool, size) {
     const shuffled = [...pool].sort(() => Math.random() - 0.5);
     return shuffled.slice(0, size);
   }
-  // Duplicates allowed (or pool too small to avoid them)
+  // Duplicates allowed but weighted — already-used colors are 4x less likely
   const result = [];
-  for (let i = 0; i < size; i++) result.push(pool[Math.floor(Math.random() * pool.length)]);
+  const used = {};
+  for (let i = 0; i < size; i++) {
+    const weights = pool.map(c => used[c] ? 1 : 4); // fresh colors weighed 4:1 over repeats
+    const total = weights.reduce((a, b) => a + b, 0);
+    let r = Math.random() * total;
+    let pick = pool[pool.length - 1];
+    for (let j = 0; j < pool.length; j++) {
+      r -= weights[j];
+      if (r <= 0) { pick = pool[j]; break; }
+    }
+    result.push(pick);
+    used[pick] = true;
+  }
   return result;
 }
 
@@ -2024,6 +2379,7 @@ function startBattle() {
 
   showScreen('battle');
   renderBattle();
+  showBossQuip(idx, 'enter');
 }
 
 // ══════════════════════════════════════════════
@@ -2102,6 +2458,10 @@ function buildGuessRow(rowIdx, isPast, isCurrent) {
       if (b.revealedPositions[col] !== undefined) {
         color = b.revealedPositions[col];
         slot.classList.add('revealed');
+      } else if (b.lockedSlots[col] !== undefined) {
+        color = b.lockedSlots[col];
+        b.currentGuess[col] = color; // keep guess in sync
+        slot.classList.add('locked-in');
       } else {
         color = b.currentGuess[col];
       }
@@ -2111,8 +2471,24 @@ function buildGuessRow(rowIdx, isPast, isCurrent) {
 
     if (isCurrent && b.revealedPositions[col] === undefined) {
       slot.style.cursor = 'pointer';
-      slot.addEventListener('click', () => setActiveSlot(col));
-      if (col === b.activeSlot) {
+
+      // Double-tap to lock/unlock; single-tap to select; hint-mode tap to reveal
+      let tapCount = 0, tapTimer = null;
+      slot.addEventListener('click', () => {
+        if (b.hintMode) { applyHintToSlot(col); return; }
+        tapCount++;
+        clearTimeout(tapTimer);
+        tapTimer = setTimeout(() => {
+          if (tapCount === 1) {
+            setActiveSlot(col);
+          } else if (tapCount >= 2) {
+            toggleLockSlot(col);
+          }
+          tapCount = 0;
+        }, 280);
+      });
+
+      if (!b.hintMode && col === b.activeSlot && !b.lockedSlots[col]) {
         slot.style.borderColor = '#a855f7';
         slot.style.background = 'rgba(88,28,220,0.4)';
       }
@@ -2190,34 +2566,103 @@ function renderPicker() {
   visiblePool.forEach(color => {
     const def = ORB_DEFS[color];
     const btn = document.createElement('div');
-    btn.className = 'picker-orb' + (b.currentGuess[b.activeSlot]===color?' selected':'');
+    const isLockedOut = b.lockedOutColors.includes(color);
+    const isRevealedWrong = b.revealedWrong.includes(color);
+    btn.className = 'picker-orb'
+      + (b.currentGuess[b.activeSlot]===color ? ' selected' : '')
+      + (isLockedOut ? ' locked-out' : '');
     btn.innerHTML = `<img src="${def.img}" alt="${color}">`;
-    // Strikethrough if revealed as wrong
-    if (b.revealedWrong.includes(color)) {
+    if (isRevealedWrong && !isLockedOut) {
       btn.style.opacity = '0.25';
       btn.title = 'Not in sequence';
     }
-    btn.addEventListener('click', ()=> pickColor(color));
+
+    // Triple-tap to lock out / double-tap to undo lockout
+    let tapCount = 0, tapTimer = null;
+    btn.addEventListener('click', () => {
+      tapCount++;
+      clearTimeout(tapTimer);
+      tapTimer = setTimeout(() => {
+        if (tapCount === 1) {
+          pickColor(color);
+        } else if (tapCount === 2 && isLockedOut) {
+          // Undo lockout
+          b.lockedOutColors = b.lockedOutColors.filter(c => c !== color);
+          AUDIO.sfx.navigate();
+          showToast(`🔓 ${def.name} unlocked from elimination`);
+          renderPicker();
+        } else if (tapCount >= 3 && !isLockedOut) {
+          // Lock out
+          if (!b.lockedOutColors.includes(color)) b.lockedOutColors.push(color);
+          AUDIO.sfx.lose ? AUDIO.sfx.lose() : AUDIO.sfx.navigate();
+          showToast(`✕ ${def.name} eliminated from sequence`);
+          renderPicker();
+        }
+        tapCount = 0;
+      }, 350);
+    });
     container.appendChild(btn);
   });
 }
 
 function setActiveSlot(col) {
   if (BATTLE.revealedPositions[col] !== undefined) return;
+  if (BATTLE.lockedSlots[col] !== undefined) return; // can't select a locked slot
   BATTLE.activeSlot = col;
   renderGuessGrid();
   renderPicker();
 }
 
+function toggleLockSlot(col) {
+  const b = BATTLE;
+  if (b.revealedPositions[col] !== undefined) return; // can't lock a revealed slot
+  if (b.lockedSlots[col] !== undefined) {
+    // Unlock
+    delete b.lockedSlots[col];
+    AUDIO.sfx.navigate();
+    showToast(`🔓 Slot ${col+1} unlocked`);
+  } else {
+    const color = b.currentGuess[col];
+    if (!color) { showToast('Pick a color first, then double-tap to lock it.'); return; }
+    b.lockedSlots[col] = color;
+    AUDIO.sfx.redPeg(); // distinctive click sound
+    showToast(`🔒 ${ORB_DEFS[color].name} locked to slot ${col+1}!`);
+  }
+  renderGuessGrid();
+  renderPicker();
+}
+
+function applyHintToSlot(col) {
+  const b = BATTLE;
+  b.hintMode = false;
+  if (b.revealedPositions[col] !== undefined) {
+    showToast('That slot is already revealed. Pick another.');
+    b.hintMode = false;
+    renderBattle();
+    return;
+  }
+  b.revealedPositions[col] = b.code[col];
+  // Remove lock if player had locked this slot (hint overrides)
+  delete b.lockedSlots[col];
+  b.currentGuess[col] = b.code[col];
+  AUDIO.sfx.ability();
+  showToast(`🖤 Hint! Slot ${col+1} = ${ORB_DEFS[b.code[col]].name}`);
+  document.getElementById('guess-grid').classList.remove('hint-mode-active');
+  renderBattle();
+}
+
 function pickColor(color) {
   const b = BATTLE;
   if (b.revealedPositions[b.activeSlot] !== undefined) return;
+  if (b.lockedSlots[b.activeSlot] !== undefined) return; // locked slot, ignore pick
   AUDIO.sfx.orbPick();
   b.currentGuess[b.activeSlot] = color;
-  // Auto-advance to next unfilled slot
+  // Auto-advance to next unfilled, non-locked, non-revealed slot
   for (let i = 1; i <= b.codeSize; i++) {
     const next = (b.activeSlot + i) % b.codeSize;
-    if (b.revealedPositions[next] === undefined) { b.activeSlot = next; break; }
+    if (b.revealedPositions[next] === undefined && b.lockedSlots[next] === undefined) {
+      b.activeSlot = next; break;
+    }
   }
   refreshCurrentRow();
   renderPicker();
@@ -2226,7 +2671,10 @@ function pickColor(color) {
 function clearCurrentGuess() {
   const b = BATTLE;
   for (let i = 0; i < b.codeSize; i++) {
-    if (b.revealedPositions[i] === undefined) b.currentGuess[i] = null;
+    // Don't clear locked or revealed slots
+    if (b.revealedPositions[i] === undefined && b.lockedSlots[i] === undefined) {
+      b.currentGuess[i] = null;
+    }
   }
   b.activeSlot = 0;
   while (b.activeSlot < b.codeSize && b.revealedPositions[b.activeSlot] !== undefined) b.activeSlot++;
@@ -2253,14 +2701,14 @@ function submitGuess() {
 
   // Validate all slots filled
   for (let i=0;i<b.codeSize;i++) {
-    const val = b.revealedPositions[i] !== undefined ? b.revealedPositions[i] : b.currentGuess[i];
+    const val = b.revealedPositions[i] ?? b.lockedSlots[i] ?? b.currentGuess[i];
     if (!val) { showToast('Fill all orb slots first!'); return; }
   }
 
   // Build full guess
   const guess = [];
   for (let i=0;i<b.codeSize;i++) {
-    guess.push(b.revealedPositions[i] !== undefined ? b.revealedPositions[i] : b.currentGuess[i]);
+    guess.push(b.revealedPositions[i] ?? b.lockedSlots[i] ?? b.currentGuess[i]);
   }
 
   // Boss special: penaltyOnDiscover - count newly discovered correct positions
@@ -2273,6 +2721,7 @@ function submitGuess() {
   const feedback = calcFeedback(guess, b.code);
   b.guesses.push({guess:[...guess], feedback});
   AUDIO.sfx.submit();
+  tutOnGuess();
   setTimeout(() => {
     if (feedback.reds > 0) AUDIO.sfx.redPeg();
     else if (feedback.whites > 0) AUDIO.sfx.whitePeg();
@@ -2280,10 +2729,18 @@ function submitGuess() {
   b.turnsLeft--;
   if (penalty > 0) { b.turnsLeft -= penalty; b.penaltyCount += penalty; }
 
-  // Reset current guess (keeping revealed positions)
+  // Reset current guess — pre-fill locked slots and revealed positions
   b.currentGuess = Array(b.codeSize).fill(null);
+  for (let i = 0; i < b.codeSize; i++) {
+    if (b.revealedPositions[i] !== undefined) b.currentGuess[i] = b.revealedPositions[i];
+    else if (b.lockedSlots[i] !== undefined) b.currentGuess[i] = b.lockedSlots[i];
+  }
+  // Set active slot to first free (not locked, not revealed)
   b.activeSlot = 0;
-  while(b.activeSlot < b.codeSize && b.revealedPositions[b.activeSlot] !== undefined) b.activeSlot++;
+  while (b.activeSlot < b.codeSize &&
+    (b.revealedPositions[b.activeSlot] !== undefined || b.lockedSlots[b.activeSlot] !== undefined)) {
+    b.activeSlot++;
+  }
 
   // Check win
   if (feedback.reds === b.codeSize) {
@@ -2393,37 +2850,43 @@ function activateAbility(abilityKey) {
     scrambleBossCode();
     showToast('🌀 Submerge! Boss orbs scrambled.');
   } else if (abilityKey === 'revealWrong') {
-    // Reveal an orb NOT in the code, from the unlocked puzzle colors
-    const allColors = getUnlockedColors();
-    const notIn = allColors.filter(c=>!b.code.includes(c));
-    if (notIn.length > 0) {
-      const pick = notIn[Math.floor(Math.random()*notIn.length)];
+    // Reveal an orb NOT in the code — skip ones player already locked out
+    const notIn = b.pool.filter(c => !b.code.includes(c) && !b.revealedWrong.includes(c));
+    const unknowns = notIn.filter(c => !b.lockedOutColors.includes(c));
+    const candidates = unknowns.length > 0 ? unknowns : notIn; // fall back if all locked out
+    if (candidates.length > 0) {
+      const pick = candidates[Math.floor(Math.random()*candidates.length)];
       b.revealedWrong.push(pick);
       showToast(`🟢 ${ORB_DEFS[pick].name} is NOT in the code!`);
     } else {
-      showToast('No orbs left to reveal.');
+      showToast('No new orbs left to reveal.');
     }
   } else if (abilityKey === 'burn') {
-    // Reveal a random unrevealed position
+    // Reveal a random position — skip ones player already locked in
     const unrevealed = [];
     for (let i=0;i<b.codeSize;i++) if(b.revealedPositions[i]===undefined) unrevealed.push(i);
-    if (unrevealed.length === 0) { showToast('All positions already revealed!'); return; }
-    const pos = unrevealed[Math.floor(Math.random()*unrevealed.length)];
+    if (unrevealed.length === 0) { showToast('All positions already revealed!'); b.usedAbilities[abilityKey]=false; return; }
+    const unknowns = unrevealed.filter(i => b.lockedSlots[i] === undefined);
+    const candidates = unknowns.length > 0 ? unknowns : unrevealed;
+    const pos = candidates[Math.floor(Math.random()*candidates.length)];
     b.revealedPositions[pos] = b.code[pos];
-    showToast(`🔥 Burn! Position ${pos+1} = ${ORB_DEFS[b.code[pos]].name}`);
+    delete b.lockedSlots[pos]; // reveal overrides any lock
+    b.currentGuess[pos] = b.code[pos];
+    showToast(`🔥 Burn! Slot ${pos+1} = ${ORB_DEFS[b.code[pos]].name}`);
   } else if (abilityKey === 'disable') {
     b.bossSpecialDisabled = true;
     showToast('⚡ Boss special ability disabled!');
   } else if (abilityKey === 'hint') {
-    if (b.disabledAbilities['hint']) { showToast("Queen Asabeth blocked your Black Orb!"); return; }
-    // Let player pick a position to reveal
+    if (b.disabledAbilities['hint']) { showToast("Queen Asabeth blocked your Black Orb!"); b.usedAbilities[abilityKey]=false; return; }
     const unrevealed = [];
     for(let i=0;i<b.codeSize;i++) if(b.revealedPositions[i]===undefined) unrevealed.push(i);
-    if (unrevealed.length === 0) { showToast('Nothing left to reveal.'); return; }
-    // Auto-reveal first unrevealed (could add UI to pick)
-    const pos = unrevealed[0];
-    b.revealedPositions[pos] = b.code[pos];
-    showToast(`🖤 Hint! Position ${pos+1} = ${ORB_DEFS[b.code[pos]].name}`);
+    if (unrevealed.length === 0) { showToast('Nothing left to reveal.'); b.usedAbilities[abilityKey]=false; return; }
+    // Enter hint mode — player taps a slot to choose
+    b.hintMode = true;
+    showToast('🖤 Tap a slot to reveal its orb color!');
+    document.getElementById('guess-grid').classList.add('hint-mode-active');
+    renderBattle();
+    return; // skip the renderBattle call below — already called
   }
 
   // Lightweight refresh: update abilities row + current guess row only
@@ -2492,11 +2955,15 @@ function showBattleResult(won) {
       STATE.fragments[color] = (STATE.fragments[color]||0) + amt;
     }
 
+    // Track whether this is a first-time win before updating progress
+    const firstTimeWin = STATE.bossProgress[b.bossIdx] < 2;
+
     // Unlock next boss
     if (STATE.bossProgress[b.bossIdx] < 2) STATE.bossProgress[b.bossIdx] = 2;
     if (b.bossIdx+1 < 10 && STATE.bossProgress[b.bossIdx+1] < 1) {
       STATE.bossProgress[b.bossIdx+1] = 1;
     }
+    b.firstTimeWin = firstTimeWin;
 
     // Unlock new puzzle color + auto-advance MindBreaker rank
     applyColorUnlocks();
@@ -2514,10 +2981,13 @@ function showBattleResult(won) {
     `<div class="reward-item"><img src="${ORB_DEFS[c].img}" alt="${c}"><span>+${a}</span></div>`
   ).join('');
 
+  const quipLine = pickQuip(boss.id, won ? 'bossDefeat' : 'bossVictory');
+
   box.innerHTML = `
     <img class="results-boss-img" src="${boss.img}" alt="${boss.name}">
     <div class="results-outcome ${won?'win':'lose'}">${won?'VICTORY!':'DEFEATED'}</div>
     <div class="results-boss-name">vs Boss ${boss.id}: ${boss.name}</div>
+    ${quipLine ? `<div class="results-boss-quote">&ldquo;${quipLine}&rdquo;</div>` : ''}
     <div class="results-secret">
       <div class="secret-label">The secret code was:</div>
       <div class="secret-orbs">${secretOrbsHtml}</div>
@@ -2528,8 +2998,8 @@ function showBattleResult(won) {
         <div class="reward-items">${rewardHtml}</div>
       </div>
       <div class="results-total">Total: ${Object.values(rewards).reduce((a,b)=>a+b,0)} fragments</div>
-      ${b.bossIdx+1 < 10 && STATE.bossProgress[b.bossIdx+1] >= 1 ? `<div style="color:#fbbf24;font-size:12px;margin-bottom:6px;">🔓 Boss ${b.bossIdx+2} unlocked!</div>`:``}
-      ${COLOR_UNLOCK_AFTER[b.bossIdx] ? `<div style="color:#a855f7;font-size:13px;margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:8px;"><img src="${ORB_DEFS[COLOR_UNLOCK_AFTER[b.bossIdx]].img}" style="width:28px;height:28px;object-fit:contain;filter:drop-shadow(0 0 6px #a855f7);"> <span>✨ ${ORB_DEFS[COLOR_UNLOCK_AFTER[b.bossIdx]].name} Orb color unlocked!</span></div>` : ''}
+      ${b.firstTimeWin && b.bossIdx+1 < 10 ? `<div style="color:#fbbf24;font-size:12px;margin-bottom:6px;">🔓 Boss ${b.bossIdx+2} unlocked!</div>`:``}
+      ${b.firstTimeWin && COLOR_UNLOCK_AFTER[b.bossIdx] ? `<div style="color:#a855f7;font-size:13px;margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:8px;"><img src="${ORB_DEFS[COLOR_UNLOCK_AFTER[b.bossIdx]].img}" style="width:28px;height:28px;object-fit:contain;filter:drop-shadow(0 0 6px #a855f7);"> <span>✨ ${ORB_DEFS[COLOR_UNLOCK_AFTER[b.bossIdx]].name} Orb color unlocked!</span></div>` : ''}
     ` : `<div style="color:#f87171;margin-bottom:16px;font-size:13px;">Better luck next time! Study the boss's orb pool and adjust your loadout.</div>`}
     <button class="results-btn" onclick="rematch()">⚔️ Rematch</button>
     <button class="results-btn secondary" onclick="showScreen('campaign')">🗺️ Campaign</button>
@@ -2804,6 +3274,7 @@ function renderForge() {
         <img src="${def.img}" alt="${color}" style="${!colorUnlocked?'filter:grayscale(1);opacity:0.35':''}">
         <div class="forge-card-name">${def.name}</div>
         <div class="forge-card-ability">${def.abilityDesc}</div>
+        ${(color === 'teal' || color === 'pink') ? `<div class="forge-card-mp">⚔️ Multiplayer: ${MP_ABILITY_DESC[def.abilityKey]}</div>` : ''}
         <span class="forge-card-rarity orb-rarity-badge rarity-${rarity}">${rarity}</span>
         ${colorUnlocked ? `
           <div class="forge-card-frags"><img src="Images/Mind Orb Assets/multi_orb.png" style="width:13px;height:13px;object-fit:contain;vertical-align:middle;margin-right:3px;">Cost: ${def.cost}</div>
@@ -2854,11 +3325,67 @@ function forgeBuy(color) {
 // ══════════════════════════════════════════════
 
 function initSettings() {
-  if (!STATE.settings) STATE.settings = { sfx:true, music:true, anim:true, autoadvance:true, hints:true, allowDuplicates:true };
+  if (!STATE.settings) STATE.settings = { sfx:true, music:true, anim:true, autoadvance:true, hints:true, allowDuplicates:true, titleBg:'orbmaster_bg_4.png' };
+  if (!STATE.settings.titleBg) STATE.settings.titleBg = 'orbmaster_bg_4.png';
   Object.entries(STATE.settings).forEach(([key, val]) => {
     const btn = document.getElementById('toggle-'+key);
     if (btn) { btn.className = 'toggle-btn ' + (val?'on':'off'); }
   });
+  renderBgPicker();
+  applyTitleBg();
+}
+
+const BG_OPTIONS = [
+  { file: 'orbmaster_bg_1.png', label: 'Scene 1' },
+  { file: 'orbmaster_bg_2.png', label: 'Scene 2' },
+  { file: 'orbmaster_bg_3.png', label: 'Scene 3' },
+  { file: 'orbmaster_bg_4.png', label: 'Scene 4' },
+];
+
+function applyTitleBg() {
+  const bg = STATE.settings?.titleBg || 'orbmaster_bg_4.png';
+  document.documentElement.style.setProperty('--title-bg', `url('Images/${bg}')`);
+}
+
+function renderBgPicker() {
+  const container = document.getElementById('bg-picker');
+  if (!container) return;
+  const current = STATE.settings?.titleBg || 'orbmaster_bg_4.png';
+  let idx = BG_OPTIONS.findIndex(o => o.file === current);
+  if (idx < 0) idx = 0;
+
+  function render() {
+    const opt = BG_OPTIONS[idx];
+    const dots = BG_OPTIONS.map((_, i) =>
+      `<div class="bg-dot${i === idx ? ' active' : ''}" onclick="bgCarouselGo(${i})"></div>`
+    ).join('');
+    container.innerHTML = `
+      <div class="bg-carousel-img" style="background-image:url('Images/${opt.file}');">
+        <div class="bg-carousel-label">${opt.label} — tap to select</div>
+      </div>
+      <div class="bg-carousel-controls">
+        <button class="bg-carousel-btn" onclick="bgCarouselPrev()">&#8592;</button>
+        <div class="bg-carousel-dots">${dots}</div>
+        <button class="bg-carousel-btn" onclick="bgCarouselNext()">&#8594;</button>
+      </div>
+    `;
+  }
+
+  window.bgCarouselNext = () => { idx = (idx + 1) % BG_OPTIONS.length; render(); };
+  window.bgCarouselPrev = () => { idx = (idx - 1 + BG_OPTIONS.length) % BG_OPTIONS.length; render(); };
+  window.bgCarouselGo  = (i) => { idx = i; render(); };
+
+  // Tap the image to select
+  container.addEventListener('click', (e) => {
+    if (e.target.closest('.bg-carousel-img')) {
+      STATE.settings.titleBg = BG_OPTIONS[idx].file;
+      saveState();
+      applyTitleBg();
+      render();
+    }
+  });
+
+  render();
 }
 
 function toggleSetting(key) {
@@ -2888,17 +3415,108 @@ function doReset() {
 
 const _baseShowScreen = showScreen;
 // Patch showScreen to handle forge and title
+// Screen navigation history for Android back button
+const _screenHistory = [];
+let _suppressHistory = false; // set while navigating *backwards* so we don't re-push
+
 function showScreen(name) {
   AUDIO.sfx.navigate();
+  // Track history — but never while going back (that would re-push and trap you)
+  const current = document.querySelector('.screen.active')?.id?.replace('screen-', '');
+  if (!_suppressHistory && current && current !== name) {
+    _screenHistory.push(current);
+    if (_screenHistory.length > 20) _screenHistory.shift(); // cap size
+  }
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+name).classList.add('active');
   if (name === 'campaign') renderCampaign();
   if (name === 'inventory') renderInventory();
   if (name === 'loadout') renderLoadout();
   if (name === 'forge') renderForge();
-  if (name === 'title') { initProfile(); updateTitlePlayBtn(); }
+  if (name === 'title') { initProfile(); updateTitlePlayBtn(); _screenHistory.length = 0; }
   if (name === 'codex') { showCodexTab('howtoplay'); }
+  if (name === 'multiplayer') { mpReset(); mpPhase('lobby'); document.getElementById('mp-join-panel').style.display = 'none'; mpRenderCodeSizePicker(); mpRenderAICodeSizePicker(); mpRenderPoolPicker(false); mpRenderPoolPicker(true); }
 }
+
+// Android back button
+// Most screens have a fixed "parent" they back out to. The Orb Stash is the
+// exception — it returns to whatever screen you were on before opening it.
+const BACK_PARENT = {
+  campaign:    'title',
+  forge:       'campaign',
+  loadout:     'campaign',
+  results:     'campaign',
+  codex:       'title',
+  multiplayer: 'title',
+};
+
+// Navigate without pushing onto history (a back step should shrink, not grow, the stack)
+function navBack(name) {
+  _suppressHistory = true;
+  showScreen(name);
+  _suppressHistory = false;
+}
+
+function handleBackButton() {
+  // Close any open modal first
+  const openModal = document.querySelector('.modal-overlay.show');
+  if (openModal) { openModal.classList.remove('show'); return; }
+
+  const current = document.querySelector('.screen.active')?.id?.replace('screen-', '');
+
+  // In battle: confirm before abandoning
+  if (current === 'battle') {
+    if (confirm('Quit this battle? Your progress will be lost.')) {
+      AUDIO.stopBossTrack();
+      navBack('campaign');
+    }
+    return;
+  }
+
+  // Title is the root — offer to exit the app
+  if (current === 'title') {
+    if (confirm('Exit OrbMaster?')) {
+      if (window.Capacitor?.Plugins?.App) {
+        window.Capacitor.Plugins.App.exitApp();
+      } else {
+        navigator.app?.exitApp?.();
+      }
+    }
+    return;
+  }
+
+  // Multiplayer: clean up the channel / AI timer, then go home
+  if (current === 'multiplayer') {
+    mpExit();
+    return;
+  }
+
+  // Orb Stash returns to the previous screen
+  if (current === 'inventory') {
+    let prev = _screenHistory.pop();
+    while (prev === 'inventory') prev = _screenHistory.pop(); // skip self-references
+    navBack(prev || 'campaign');
+    return;
+  }
+
+  // Everything else backs out to its fixed parent
+  navBack(BACK_PARENT[current] || 'title');
+}
+
+// Register the hardware back button.
+// Capacitor (this app's runtime) delivers it via the App plugin's 'backButton'
+// listener. Register ONLY one source — registering both the Capacitor listener and
+// the Cordova 'backbutton' DOM event made the handler fire twice (double prompts,
+// flickering navigation).
+(function registerBackButton() {
+  const App = window.Capacitor?.Plugins?.App;
+  if (App?.addListener) {
+    App.addListener('backButton', () => handleBackButton());
+  } else {
+    // Cordova / older WebView fallback
+    document.addEventListener('backbutton', handleBackButton, false);
+  }
+})();
 
 // Patch openModal to handle profile
 function openModal(id) {
@@ -3077,6 +3695,29 @@ function ensureAudio() {
 document.addEventListener('touchstart', ensureAudio, { once: true });
 document.addEventListener('click',      ensureAudio, { once: true });
 
+// Pause/resume audio when app is backgrounded or foregrounded
+function audioPause() {
+  if (!AUDIO.started) return;
+  if (AUDIO.ctx && AUDIO.ctx.state === 'running') AUDIO.ctx.suspend().catch(()=>{});
+  if (AUDIO.bgMusic)   AUDIO.bgMusic.pause();
+  if (AUDIO.bossMusic) AUDIO.bossMusic.pause();
+}
+function audioResume() {
+  if (!AUDIO.started) return;
+  if (AUDIO.ctx && AUDIO.ctx.state === 'suspended') AUDIO.ctx.resume().catch(()=>{});
+  if (STATE.settings?.music === false) return;
+  const bossPlaying = AUDIO.bossMusic && AUDIO.bossMusic.src && !AUDIO.bossMusic.ended;
+  if (bossPlaying) AUDIO.bossMusic.play().catch(()=>{});
+  else if (AUDIO.bgMusic) AUDIO.bgMusic.play().catch(()=>{});
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) audioPause();
+  else audioResume();
+});
+// Capacitor native lifecycle events (Android back/home button)
+document.addEventListener('pause',  audioPause);
+document.addEventListener('resume', audioResume);
+
 // Register service worker for offline play
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -3102,7 +3743,13 @@ while (STATE.equippedOrbs.length < 4) STATE.equippedOrbs.push(null);
 // Init profile + settings
 initProfile();
 initSettings();
+applyTitleBg();
 updateTitlePlayBtn();
+
+// Auto-start tutorial for brand new players
+if (!STATE.tutorialSeen && STATE.bossProgress.every(p => p <= 1)) {
+  setTimeout(() => { tutStart(); showScreen('campaign'); }, 800);
+}
 
 saveState();
 
@@ -3140,14 +3787,77 @@ let MP = {
   gameOver: false,
   codeLocked: false,
   oppCodeLocked: false,
+  vsAI: false,      // true = casual single-player match against the computer
+  aiCodeSize: 4,    // chosen code size for the vs-MindBreaker-AI match
+  // ── Orb pool (the colors a match draws from) ──
+  orbPool: [],          // active pool of colors for the current match
+  poolLabel: 'Easy',    // difficulty label for display (Easy/Medium/Hard/Custom)
+  poolDiff: 'easy',     // friend-match difficulty: easy|medium|hard|custom
+  poolCustom: [],       // friend-match custom color selection
+  aiPoolDiff: 'easy',   // vs-AI difficulty
+  aiPoolCustom: [],     // vs-AI custom color selection
+  aiTimer: null,    // pending timeout for the AI's next round guess
+  aiGuesses: [],    // AI's guess history (against the player's code)
+  // ── Lockstep round state ──
+  round: 0,             // current round number (1-based once started)
+  mySubmitted: false,   // have I submitted my guess this round?
+  oppSubmitted: false,  // has the opponent submitted this round?
+  myFirstSolve: null,   // { round } when I first cracked the code
+  oppFirstSolve: null,  // { round } when the opponent first cracked the code
+  solveOrder: [],       // host-authoritative order of correct submissions (ids)
+  graceTimer: null,     // 30s silent grace before the visible countdown
+  countdownTimer: null, // 1s interval driving the visible red countdown
+  countdownLeft: 0,     // seconds remaining on the visible countdown
+  // ── Ability orbs (from the campaign equipped loadout) ──
+  abilitiesEnabled: true, // master switch (vs-Computer toggle; always on online)
+  matchLoadout: [],       // ability orb colors equipped for THIS match (max 4)
+  myAbilities: [],        // my equipped MP-usable ability keys
+  oppAbilities: [],       // opponent's equipped MP-usable ability keys (for Disable)
+  oppUsedAbilities: {},   // online: abilities the opponent has used (for the row)
+  oppDisabledByMe: {},    // online: opponent abilities I have disabled
+  usedAbilities: {},      // abilityKey -> true (once per match)
+  disabledAbilities: {},  // my abilityKeys the OPPONENT has disabled
+  revealedPositions: {},  // slot index -> revealed color (Burn / Hint)
+  revealedWrong: [],      // colors known to NOT be in the opponent's code
+  lockedSlots: {},        // slot index -> color (double-tapped to lock in)
+  lockedOutColors: [],    // colors triple-tapped to eliminate
+  hintMode: false,        // waiting for the player to tap a slot to reveal
+  disablePickMode: false, // choosing which opponent ability to disable
+  // AI ability bookkeeping (vs-Computer)
+  aiAbilities: [],
+  aiUsedAbilities: {},
+  aiDisabledAbilities: {}, // AI abilities the player disabled
+  aiKnownPositions: {},   // positions of my code the AI has "burned"
+  aiKnownWrong: [],       // colors the AI knows are NOT in my code (Teal)
 };
 
 function mpReset() {
+  mpClearRoundTimers();
+  if (MP.aiTimer) { clearTimeout(MP.aiTimer); MP.aiTimer = null; }
   if (MP.channel) { getSB().removeChannel(MP.channel); MP.channel = null; }
   MP = { roomCode:null, isHost:false, myId:null, opponentId:null, channel:null,
     myCode:[], opponentCode:[], codeSize:4, myGuesses:[], currentGuess:[],
     activeSlot:0, oppTurnsUsed:0, oppSolved:false, gameOver:false,
-    codeLocked:false, oppCodeLocked:false };
+    codeLocked:false, oppCodeLocked:false,
+    vsAI:false, aiCodeSize:4,
+    orbPool:[], poolLabel:'Easy', poolDiff:'easy', poolCustom:[], aiPoolDiff:'easy', aiPoolCustom:[],
+    aiTimer:null, aiGuesses:[],
+    round:0, mySubmitted:false, oppSubmitted:false,
+    myFirstSolve:null, oppFirstSolve:null, solveOrder:[],
+    graceTimer:null, countdownTimer:null, countdownLeft:0,
+    abilitiesEnabled:true, matchLoadout:[], myAbilities:[], oppAbilities:[],
+    oppUsedAbilities:{}, oppDisabledByMe:{},
+    usedAbilities:{}, disabledAbilities:{}, revealedPositions:{}, revealedWrong:[],
+    lockedSlots:{}, lockedOutColors:[],
+    hintMode:false, disablePickMode:false,
+    aiAbilities:[], aiUsedAbilities:{}, aiDisabledAbilities:{}, aiKnownPositions:{}, aiKnownWrong:[] };
+}
+
+function mpClearRoundTimers() {
+  if (MP.graceTimer)     { clearTimeout(MP.graceTimer);   MP.graceTimer = null; }
+  if (MP.countdownTimer) { clearInterval(MP.countdownTimer); MP.countdownTimer = null; }
+  const cd = document.getElementById('mp-countdown');
+  if (cd) cd.style.display = 'none';
 }
 
 function mpPhase(name) {
@@ -3190,9 +3900,9 @@ function mpSubscribeChannel(code) {
     const slot2 = document.getElementById('mp-slot-p2');
     if (slot2) { slot2.classList.add('connected'); document.getElementById('mp-status-p2').textContent = '✅ Connected'; }
     document.getElementById('mp-wait-status').textContent = 'Opponent connected! Starting…';
-    // Host picks code size and tells both to move to setcode
+    // Host sets code size + orb pool and tells both to move to setcode
     if (MP.isHost) {
-      ch.send({ type:'broadcast', event:'start_setcode', payload:{ codeSize: MP.codeSize } });
+      ch.send({ type:'broadcast', event:'start_setcode', payload:{ codeSize: MP.codeSize, orbPool: MP.orbPool, poolLabel: MP.poolLabel } });
       mpStartSetCode(MP.codeSize);
     }
   });
@@ -3209,6 +3919,8 @@ function mpSubscribeChannel(code) {
       return;
     }
     MP.codeSize = needed;
+    MP.orbPool = (payload.orbPool && payload.orbPool.length) ? payload.orbPool : getUnlockedColors();
+    MP.poolLabel = payload.poolLabel || 'Easy';
     mpStartSetCode(MP.codeSize);
   });
 
@@ -3221,29 +3933,43 @@ function mpSubscribeChannel(code) {
   ch.on('broadcast', { event: 'code_locked' }, ({ payload }) => {
     if (payload.id === MP.myId) return;
     MP.opponentCode = payload.code;
+    MP.oppAbilities = payload.abilities || []; // their equipped abilities (for Disable)
     MP.oppCodeLocked = true;
     document.getElementById('mp-setcode-wait').textContent = '✅ Opponent locked their code!';
     if (MP.codeLocked) mpStartBattle();
   });
 
-  ch.on('broadcast', { event: 'guess_result' }, ({ payload }) => {
+  // Opponent submitted their guess for the current round
+  ch.on('broadcast', { event: 'round_submit' }, ({ payload }) => {
     if (payload.id === MP.myId) return;
-    MP.oppTurnsUsed = payload.turnsUsed;
-    const pct = Math.min(100, (payload.turnsUsed / 10) * 100);
-    const bar = document.getElementById('mp-opp-bar');
-    const turns = document.getElementById('mp-opp-turns');
-    if (bar) bar.style.width = pct + '%';
-    if (turns) turns.textContent = payload.turnsUsed + ' / 10 turns used';
-    if (payload.solved) {
-      MP.oppSolved = true;
-      const solved = document.getElementById('mp-opp-solved');
-      if (solved) { solved.style.display = ''; solved.textContent = '🔴 Opponent cracked your code!'; }
-      if (!MP.gameOver) mpEndGame(false, 'opponent_first');
-    }
+    if (payload.round !== MP.round) return; // stale
+    mpHandleOpponentSubmit(payload.solved);
   });
 
-  ch.on('broadcast', { event: 'game_over' }, ({ payload }) => {
-    // handled via guess_result solved flag
+  // Host's authoritative verdict for the round (non-host applies it)
+  ch.on('broadcast', { event: 'round_resolve' }, ({ payload }) => {
+    if (MP.isHost) return; // host already applied locally
+    if (payload.round !== MP.round) return;
+    mpApplyResolution(payload);
+  });
+
+  // Opponent scrambled the code I'm cracking
+  ch.on('broadcast', { event: 'code_scrambled' }, ({ payload }) => {
+    if (payload.id === MP.myId) return;
+    mpApplyScrambleToMe(payload.code);
+  });
+
+  // Opponent disabled one of my abilities
+  ch.on('broadcast', { event: 'ability_disabled' }, ({ payload }) => {
+    if (payload.id === MP.myId) return;
+    mpApplyDisableToMe(payload.key);
+  });
+
+  // Opponent used one of their abilities — gray it out in their ability row
+  ch.on('broadcast', { event: 'ability_used' }, ({ payload }) => {
+    if (payload.id === MP.myId) return;
+    MP.oppUsedAbilities[payload.key] = true;
+    mpRenderAIAbilities();
   });
 
   ch.subscribe((status) => {
@@ -3261,10 +3987,19 @@ async function mpCreateRoom() {
     showToast('Supabase not configured — see setup instructions in index.html');
     return;
   }
+  // Capture the host's lobby choices before mpReset clears them
+  const size = MP.codeSize || 4;
+  const diff = MP.poolDiff || 'easy';
+  const custom = (MP.poolCustom || []).slice();
   mpReset();
   MP.isHost = true;
   MP.myId = 'p1_' + Date.now();
   MP.roomCode = mpGenCode();
+  MP.codeSize = size;
+  MP.poolDiff = diff;
+  MP.poolCustom = custom;
+  MP.orbPool = mpComputePool(size, diff, custom);
+  MP.poolLabel = mpDiffLabel(diff);
 
   mpPhase('waiting');
   document.getElementById('mp-display-code').textContent = MP.roomCode;
@@ -3324,10 +4059,10 @@ function mpStartSetCode(codeSize) {
   }
   mpHighlightCodeSlot();
 
-  // Render color picker (unlocked colors only)
+  // Render color picker — the match's orb pool defines which colors are selectable
   const pickerEl = document.getElementById('mp-color-picker');
   pickerEl.innerHTML = '';
-  const colors = STATE.unlockedColors || ['red','blue','yellow','green','orange'];
+  const colors = mpPool();
   colors.forEach(c => {
     const def = ORB_DEFS[c];
     const img = document.createElement('img');
@@ -3337,6 +4072,81 @@ function mpStartSetCode(codeSize) {
     img.onclick = () => mpPickCodeColor(c);
     pickerEl.appendChild(img);
   });
+
+  // Default the match loadout to your campaign equipped orbs (owned + MP-usable, pool-legal)
+  const poolBig = mpPool().length >= MP_BIGPOOL_MIN;
+  MP.matchLoadout = (STATE.equippedOrbs || [])
+    .filter(c => c && STATE.ownedOrbs[c] && MP_ABILITY_KEYS.includes(ORB_DEFS[c].abilityKey)
+      && !(MP_BIGPOOL_ABILITIES.includes(ORB_DEFS[c].abilityKey) && !poolBig))
+    .slice(0, 4);
+  mpRenderLoadout();
+}
+
+// Pick which ability orbs to equip for this match (like the campaign loadout)
+function mpRenderLoadout() {
+  const wrap = document.getElementById('mp-loadout-wrap');
+  const slotsEl = document.getElementById('mp-loadout-slots');
+  const rosterEl = document.getElementById('mp-loadout-roster');
+  if (!wrap || !slotsEl || !rosterEl) return;
+  // Hide entirely when abilities are off for the match (vs-AI toggle)
+  wrap.style.display = MP.abilitiesEnabled ? '' : 'none';
+  if (!MP.abilitiesEnabled) return;
+
+  slotsEl.innerHTML = '';
+  for (let i = 0; i < 4; i++) {
+    const color = MP.matchLoadout[i];
+    const slot = document.createElement('div');
+    slot.style.cssText = `width:48px;height:48px;border-radius:12px;border:2px ${color ? 'solid #7c3aed' : 'dashed #4c1d95'};`
+      + `background:${color ? 'rgba(45,27,105,0.5)' : 'rgba(15,5,40,0.5)'};display:flex;align-items:center;justify-content:center;cursor:${color ? 'pointer' : 'default'};`;
+    if (color) {
+      slot.innerHTML = `<img src="${ORB_DEFS[color].img}" style="width:34px;height:34px;object-fit:contain;">`;
+      slot.title = ORB_DEFS[color].name + ' — tap to remove';
+      slot.onclick = () => mpToggleLoadoutOrb(color);
+    } else {
+      slot.innerHTML = `<span style="color:#4c1d95;font-size:20px;">+</span>`;
+    }
+    slotsEl.appendChild(slot);
+  }
+
+  rosterEl.innerHTML = '';
+  const order = (typeof ORB_ORDER !== 'undefined' && ORB_ORDER) ? ORB_ORDER : Object.keys(ORB_DEFS);
+  const usable = order.filter(c => STATE.ownedOrbs && STATE.ownedOrbs[c] && MP_ABILITY_KEYS.includes(ORB_DEFS[c].abilityKey));
+  if (!usable.length) {
+    rosterEl.innerHTML = `<div style="font-size:10px;color:#6d28d9;">Forge ability orbs in the campaign to equip them here</div>`;
+    return;
+  }
+  const poolBig = mpPool().length >= MP_BIGPOOL_MIN;
+  usable.forEach(c => {
+    const def = ORB_DEFS[c];
+    const bigOnly = MP_BIGPOOL_ABILITIES.includes(def.abilityKey);
+    const locked = bigOnly && !poolBig;
+    const equipped = MP.matchLoadout.includes(c);
+    const orb = document.createElement('div');
+    orb.style.cssText = `position:relative;width:44px;height:44px;border-radius:10px;border:2px solid ${equipped ? '#7c3aed' : '#4c1d95'};`
+      + `background:${equipped ? 'rgba(88,28,220,0.35)' : 'rgba(45,27,105,0.4)'};display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:${locked ? '0.4' : '1'};`;
+    orb.innerHTML = `<img src="${def.img}" style="width:32px;height:32px;object-fit:contain;">`
+      + (equipped ? `<span style="position:absolute;top:1px;right:2px;font-size:9px;color:#a855f7;">✓</span>` : '')
+      + (locked ? `<span style="position:absolute;bottom:-2px;right:-2px;font-size:10px;">🔒</span>` : '');
+    orb.title = locked ? `${def.name} — needs an orb pool of 8+` : `${def.name} — ${MP_ABILITY_DESC[def.abilityKey] || def.abilityDesc}`;
+    orb.onclick = () => mpToggleLoadoutOrb(c);
+    rosterEl.appendChild(orb);
+  });
+}
+
+function mpToggleLoadoutOrb(color) {
+  const idx = MP.matchLoadout.indexOf(color);
+  if (idx >= 0) {
+    MP.matchLoadout.splice(idx, 1);
+  } else {
+    const k = ORB_DEFS[color].abilityKey;
+    if (MP_BIGPOOL_ABILITIES.includes(k) && mpPool().length < MP_BIGPOOL_MIN) {
+      showToast(`${ORB_DEFS[color].name} orb needs an orb pool of 8 or higher.`); return;
+    }
+    if (MP.matchLoadout.length >= 4) { showToast('You can equip up to 4 ability orbs.'); return; }
+    MP.matchLoadout.push(color);
+  }
+  if (AUDIO && AUDIO.sfx && AUDIO.sfx.navigate) AUDIO.sfx.navigate();
+  mpRenderLoadout();
 }
 
 function mpHighlightCodeSlot() {
@@ -3367,11 +4177,22 @@ function mpConfirmCode() {
   MP.codeLocked = true;
   document.getElementById('mp-confirm-code-btn').disabled = true;
   document.getElementById('mp-setcode-status').textContent = '✅ Code locked in!';
+
+  // Vs Computer: the AI instantly generates its own secret code, then battle begins
+  if (MP.vsAI) {
+    MP.opponentCode = mpAIGenerateCode();
+    MP.oppCodeLocked = true;
+    document.getElementById('mp-setcode-wait').textContent = '✅ The MindBreaker AI locked its code — starting battle!';
+    mpStartBattle();
+    return;
+  }
+
   document.getElementById('mp-setcode-wait').textContent = MP.oppCodeLocked
     ? '✅ Both codes locked — starting battle!' : 'Waiting for opponent to lock their code…';
 
-  // Broadcast code to opponent
-  MP.channel.send({ type:'broadcast', event:'code_locked', payload:{ id: MP.myId, code: MP.myCode } });
+  // Broadcast code + my equipped abilities to opponent
+  if (MP.channel) MP.channel.send({ type:'broadcast', event:'code_locked',
+    payload:{ id: MP.myId, code: MP.myCode, abilities: mpEquippedAbilityKeys() } });
 
   if (MP.oppCodeLocked) mpStartBattle();
 }
@@ -3381,9 +4202,360 @@ function mpStartBattle() {
   MP.currentGuess = Array(MP.codeSize).fill(null);
   MP.activeSlot = 0;
   MP.gameOver = false;
+  MP.round = 0;
+  MP.myFirstSolve = null;
+  MP.oppFirstSolve = null;
+  MP.solveOrder = [];
+  MP.usedAbilities = {};
+  MP.disabledAbilities = {};
+  MP.revealedPositions = {};
+  MP.revealedWrong = [];
+  MP.lockedSlots = {};
+  MP.lockedOutColors = [];
+  MP.hintMode = false;
+  MP.disablePickMode = false;
+  MP.aiUsedAbilities = {};
+  MP.aiDisabledAbilities = {};
+  MP.aiKnownPositions = {};
+  MP.aiKnownWrong = [];
+  MP.oppUsedAbilities = {};
+  MP.oppDisabledByMe = {};
+  // My usable abilities come from the campaign equipped loadout
+  MP.myAbilities = MP.abilitiesEnabled ? mpEquippedAbilityKeys() : [];
+  // Vs Computer: the AI mirrors the player's ability set, and the player can
+  // Disable one of the AI's abilities (oppAbilities) just like in PvP.
+  if (MP.vsAI) {
+    MP.aiAbilities = MP.abilitiesEnabled ? MP.myAbilities.slice() : [];
+    MP.oppAbilities = MP.aiAbilities.slice();
+    MP.aiGuesses = [];
+  }
   mpPhase('battle');
-  mpRenderBattleBoard();
   mpRenderBattlePicker();
+  mpBeginRound();
+}
+
+// Ability key -> the orb color that grants it (for icons/names)
+const ABILITY_ORB = { burn:'red', hint:'black', revealWrong:'green', submerge:'blue', disable:'yellow', mult125:'teal', mult75:'pink' };
+// Abilities that are only allowed when the orb pool is large (too strong otherwise)
+const MP_BIGPOOL_ABILITIES = ['mult125', 'mult75'];
+const MP_BIGPOOL_MIN = 8;
+
+// The MP-usable ability keys from the player's match loadout (falls back to campaign loadout)
+function mpEquippedAbilityKeys() {
+  const eq = (MP.matchLoadout && MP.matchLoadout.length) ? MP.matchLoadout : (STATE.equippedOrbs || []);
+  const poolBig = mpPool().length >= MP_BIGPOOL_MIN;
+  const keys = [];
+  eq.forEach(color => {
+    if (!color) return;
+    const k = ORB_DEFS[color] && ORB_DEFS[color].abilityKey;
+    if (!k || !MP_ABILITY_KEYS.includes(k)) return;
+    if (MP_BIGPOOL_ABILITIES.includes(k) && !poolBig) return; // pool-8+ only
+    if (!keys.includes(k)) keys.push(k);
+  });
+  return keys;
+}
+
+// ── Lockstep round engine ──
+// Both players guess each round; the round only resolves once BOTH have submitted
+// (manually, or auto-submitted when their countdown expires). The host is the sole
+// authority on who solved first, so both screens always agree on the winner.
+
+function mpBeginRound() {
+  mpClearRoundTimers();
+  MP.round += 1;
+  MP.mySubmitted = false;
+  MP.oppSubmitted = false;
+  MP.hintMode = false;
+  MP.currentGuess = Array(MP.codeSize).fill(null);
+  // Carry revealed (Burn / Hint) and locked slots forward into the new round's guess
+  for (const pos in MP.lockedSlots) MP.currentGuess[pos] = MP.lockedSlots[pos];
+  for (const pos in MP.revealedPositions) MP.currentGuess[pos] = MP.revealedPositions[pos];
+  MP.activeSlot = 0;
+  mpRenderBattleBoard();
+  mpRenderAbilities();
+  mpUpdateRoundUI();
+  const btn = document.getElementById('mp-submit-btn');
+  if (btn) { btn.disabled = false; btn.textContent = 'Submit Guess'; }
+  if (MP.vsAI) {
+    if (MP.abilitiesEnabled) mpAIMaybeUseAbilities();
+    mpAIScheduleRoundGuess();
+  }
+}
+
+// Vs Computer: the AI spends its abilities across the early rounds
+function mpAIMaybeUseAbilities() {
+  if (!MP.vsAI || !MP.abilitiesEnabled || MP.gameOver) return;
+  const has = (k) => MP.aiAbilities.includes(k) && !MP.aiUsedAbilities[k] && !MP.aiDisabledAbilities[k];
+
+  // Round 1: disable one of the player's abilities
+  if (MP.round === 1 && has('disable')) {
+    const targets = MP.myAbilities.filter(k => k !== 'disable' && !MP.disabledAbilities[k]);
+    if (targets.length) {
+      MP.aiUsedAbilities['disable'] = true;
+      mpApplyDisableToMe(targets[Math.floor(Math.random() * targets.length)]);
+      mpRenderAIAbilities();
+      return;
+    }
+  }
+  // Rounds 2–4: scramble the player's code once
+  if (MP.round >= 2 && MP.round <= 4 && has('submerge')) {
+    MP.aiUsedAbilities['submerge'] = true;
+    const orig = MP.opponentCode.slice();
+    let shuffled = orig.slice();
+    for (let t = 0; t < 12; t++) { shuffled = mpShuffle(orig.slice()); if (shuffled.join() !== orig.join()) break; }
+    mpApplyScrambleToMe(shuffled);
+    mpRenderAIAbilities();
+    return;
+  }
+  // Otherwise: quietly use an info ability to help itself solve faster
+  if (MP.round >= 2) {
+    const unknownPos = () => {
+      const u = []; for (let i = 0; i < MP.codeSize; i++) if (MP.aiKnownPositions[i] === undefined) u.push(i); return u;
+    };
+    if (has('mult75') && unknownPos().length) {
+      // Pink: learn up to 2 positions of the player's code
+      MP.aiUsedAbilities['mult75'] = true;
+      let u = unknownPos();
+      for (let n = 0; n < 2 && u.length; n++) {
+        const i = Math.floor(Math.random() * u.length);
+        MP.aiKnownPositions[u[i]] = MP.myCode[u[i]];
+        u.splice(i, 1);
+      }
+    } else if (has('mult125')) {
+      // Teal: learn up to 3 colors NOT in the player's code
+      MP.aiUsedAbilities['mult125'] = true;
+      const notIn = mpPool().filter(c => !MP.myCode.includes(c) && !MP.aiKnownWrong.includes(c));
+      for (let n = 0; n < 3 && notIn.length; n++) {
+        const i = Math.floor(Math.random() * notIn.length);
+        MP.aiKnownWrong.push(notIn[i]);
+        notIn.splice(i, 1);
+      }
+    } else {
+      const learn = has('burn') ? 'burn' : (has('hint') ? 'hint' : null);
+      const u = unknownPos();
+      if (learn && u.length) {
+        MP.aiUsedAbilities[learn] = true;
+        const pos = u[Math.floor(Math.random() * u.length)];
+        MP.aiKnownPositions[pos] = MP.myCode[pos];
+      }
+    }
+  }
+  mpRenderAIAbilities();
+}
+
+function mpUpdateRoundUI() {
+  const rn = document.getElementById('mp-round-num');
+  if (rn) rn.textContent = MP.round;
+  const portrait = document.getElementById('mp-ai-portrait');
+  if (portrait) portrait.style.display = MP.vsAI ? '' : 'none';
+  const oppLabel = document.getElementById('mp-opp-label');
+  if (oppLabel) {
+    if (MP.vsAI) {
+      oppLabel.innerHTML = `<img src="Images/MindBreaker AI_alt.png" alt="" style="width:20px;height:20px;object-fit:contain;vertical-align:middle;margin-right:5px;">MindBreaker AI`;
+    } else {
+      oppLabel.textContent = '🔴 Opponent';
+    }
+  }
+  mpSetOppStatus();
+  mpRenderAIAbilities();
+  mpRenderPoolInfo();
+}
+
+// Show the match's orb pool (difficulty, size, and the actual orbs) during battle
+function mpRenderPoolInfo() {
+  const el = document.getElementById('mp-pool-info');
+  if (!el) return;
+  const pool = mpPool();
+  const orbs = pool.map(c => `<img src="${ORB_DEFS[c].img}" title="${ORB_DEFS[c].name}" alt="">`).join('');
+  el.innerHTML = `<span class="pool-tag">${MP.poolLabel || ''} · Pool ${pool.length}</span>${orbs}`;
+}
+
+// Show the opponent's installed abilities under their name (both AI and online).
+// Spent (used by them, or disabled by you) ones gray out; you can tap an available
+// one to disable it (spending your own Disable orb).
+function mpRenderAIAbilities() {
+  const row = document.getElementById('mp-ai-abilities');
+  if (!row) return;
+  const show = MP.abilitiesEnabled && MP.oppAbilities && MP.oppAbilities.length > 0;
+  row.style.display = show ? '' : 'none';
+  if (!show) { row.innerHTML = ''; return; }
+
+  const usedSet     = MP.vsAI ? MP.aiUsedAbilities     : MP.oppUsedAbilities;
+  const disabledSet = MP.vsAI ? MP.aiDisabledAbilities : MP.oppDisabledByMe;
+  const canDisable = MP.myAbilities.includes('disable') && !MP.usedAbilities['disable'] && !MP.disabledAbilities['disable'];
+  row.innerHTML = '';
+  MP.oppAbilities.forEach(k => {
+    const color = ABILITY_ORB[k];
+    const def = ORB_DEFS[color];
+    const used = !!usedSet[k];
+    const disabled = !!disabledSet[k];
+    const spent = used || disabled;
+    const targetable = !spent && canDisable && !MP.gameOver;
+    const chip = document.createElement('div');
+    chip.className = 'mp-ai-ability' + (spent ? ' spent' : '') + (targetable ? ' targetable' : '');
+    chip.title = (MP_ABILITY_LABEL[k] || def.name) + (disabled ? ' (disabled)' : used ? ' (used)' : targetable ? ' — tap to disable' : '');
+    chip.innerHTML = `<img src="${def.img}" alt="${def.name}">` + (disabled ? `<span class="ai-ability-x">✖</span>` : '');
+    if (targetable) chip.onclick = () => mpPlayerDisableAI(k);
+    row.appendChild(chip);
+  });
+}
+
+// You tap one of the opponent's abilities to disable it for the rest of the match
+function mpPlayerDisableAI(key) {
+  if (MP.gameOver) return;
+  const usedSet     = MP.vsAI ? MP.aiUsedAbilities     : MP.oppUsedAbilities;
+  const disabledSet = MP.vsAI ? MP.aiDisabledAbilities : MP.oppDisabledByMe;
+  if (usedSet[key] || disabledSet[key]) return;
+  if (!MP.myAbilities.includes('disable')) { showToast('Equip a Disable orb to disable abilities.'); return; }
+  if (MP.usedAbilities['disable']) { showToast('Your Disable orb is already used.'); return; }
+  if (MP.disabledAbilities['disable']) { showToast('Your Disable orb was disabled.'); return; }
+  MP.usedAbilities['disable'] = true;
+  disabledSet[key] = true;
+  if (AUDIO && AUDIO.sfx && AUDIO.sfx.ability) AUDIO.sfx.ability();
+  if (!MP.vsAI && MP.channel) {
+    MP.channel.send({ type:'broadcast', event:'ability_disabled', payload:{ id: MP.myId, key } });
+    mpBroadcastAbilityUsed('disable'); // so they see my Disable orb spent
+  }
+  showToast(`⚡ Disabled the ${MP.vsAI ? 'MindBreaker AI' : 'opponent'}’s ${MP_ABILITY_LABEL[key] || key}!`);
+  mpRenderAIAbilities();
+  mpRenderAbilities();
+}
+
+// Tell the opponent I used an ability, so my row grays out on their screen
+function mpBroadcastAbilityUsed(key) {
+  if (!MP.vsAI && MP.channel) {
+    MP.channel.send({ type:'broadcast', event:'ability_used', payload:{ id: MP.myId, key } });
+  }
+}
+
+function mpSetOppStatus() {
+  const el = document.getElementById('mp-opp-status');
+  if (!el) return;
+  const who = MP.vsAI ? 'MindBreaker AI' : 'Opponent';
+  if (MP.oppSubmitted) {
+    el.style.color = '#34d399';
+    el.textContent = MP.mySubmitted ? `Both locked in — revealing…` : `✅ ${who} locked in their guess`;
+  } else {
+    el.style.color = '#a78bfa';
+    el.textContent = MP.mySubmitted ? `Waiting for ${who}…` : `⏳ ${who} is still guessing…`;
+  }
+}
+
+function mpRecordSolve(id) {
+  if (!MP.solveOrder.includes(id)) MP.solveOrder.push(id);
+}
+
+function mpSubmitGuess(auto) {
+  if (MP.gameOver || MP.mySubmitted) return;
+  // Build the guess from revealed > locked > current for each slot
+  const guess = [];
+  for (let i = 0; i < MP.codeSize; i++) {
+    guess.push(MP.revealedPositions[i] ?? MP.lockedSlots[i] ?? MP.currentGuess[i] ?? null);
+  }
+  if (!auto && guess.filter(Boolean).length < MP.codeSize) {
+    showToast('Fill all ' + MP.codeSize + ' slots first!');
+    return;
+  }
+  const { black, white } = mpScoreGuess(guess, MP.opponentCode);
+  MP.myGuesses[MP.round - 1] = { guess, black, white };
+  MP.mySubmitted = true;
+
+  const solved = black === MP.codeSize;
+  if (solved && !MP.myFirstSolve) {
+    MP.myFirstSolve = { round: MP.round };
+    if (MP.isHost) mpRecordSolve(MP.myId);
+  }
+
+  mpClearRoundTimers(); // I submitted — cancel my own countdown
+  const btn = document.getElementById('mp-submit-btn');
+  if (btn) { btn.disabled = true; btn.textContent = auto ? 'Auto-submitted' : 'Submitted ✓'; }
+  mpRenderBattleBoard();
+  mpSetOppStatus();
+
+  // Notify the opponent (online). Vs the computer there is no channel.
+  if (MP.channel) MP.channel.send({ type:'broadcast', event:'round_submit',
+    payload:{ id: MP.myId, round: MP.round, solved } });
+
+  mpAfterSubmission();
+}
+
+// The opponent submitted this round (from the network, or the local AI)
+function mpHandleOpponentSubmit(solved) {
+  if (MP.gameOver || MP.oppSubmitted) return;
+  MP.oppSubmitted = true;
+  if (solved && !MP.oppFirstSolve) {
+    MP.oppFirstSolve = { round: MP.round };
+    if (MP.isHost) mpRecordSolve(MP.opponentId);
+  }
+  mpSetOppStatus();
+  // They're in and I'm not — start my grace period, then the red countdown
+  if (!MP.mySubmitted) mpStartGrace();
+  mpAfterSubmission();
+}
+
+function mpAfterSubmission() {
+  if (!(MP.mySubmitted && MP.oppSubmitted)) return;
+  mpClearRoundTimers();
+  // Host (or the local player vs the computer) decides the outcome; the
+  // non-host waits for the host's round_resolve verdict.
+  if (MP.isHost) mpResolveRound();
+}
+
+function mpResolveRound() {
+  let payload;
+  if (MP.solveOrder.length > 0) {
+    payload = { round: MP.round, gameOver: true, winnerId: MP.solveOrder[0], reason: 'solved' };
+  } else if (MP.round >= 10) {
+    payload = { round: MP.round, gameOver: true, winnerId: null, reason: 'out_of_turns' };
+  } else {
+    payload = { round: MP.round, gameOver: false };
+  }
+  if (MP.channel) MP.channel.send({ type:'broadcast', event:'round_resolve', payload });
+  mpApplyResolution(payload);
+}
+
+function mpApplyResolution(payload) {
+  if (payload.gameOver) {
+    if (payload.reason === 'out_of_turns') {
+      mpEndGame(false, 'out_of_turns'); // neither cracked it — both lose
+    } else {
+      const iWon = payload.winnerId === MP.myId;
+      mpEndGame(iWon, iWon ? 'solved' : 'opponent_first');
+    }
+  } else {
+    // Brief reveal pause so both players see the pegs, then next round
+    setTimeout(() => { if (!MP.gameOver) mpBeginRound(); }, 900);
+  }
+}
+
+// ── Submission countdown: 30s silent grace, then a 30s glowing red countdown ──
+function mpStartGrace() {
+  mpClearRoundTimers();
+  MP.graceTimer = setTimeout(() => {
+    MP.graceTimer = null;
+    mpStartVisibleCountdown(30);
+  }, 30000);
+}
+
+function mpStartVisibleCountdown(seconds) {
+  MP.countdownLeft = seconds;
+  const cd = document.getElementById('mp-countdown');
+  if (cd) cd.style.display = '';
+  mpRenderCountdown();
+  MP.countdownTimer = setInterval(() => {
+    MP.countdownLeft -= 1;
+    if (MP.countdownLeft <= 0) {
+      mpClearRoundTimers();
+      if (!MP.mySubmitted && !MP.gameOver) mpSubmitGuess(true); // lock in as-is
+      return;
+    }
+    mpRenderCountdown();
+  }, 1000);
+}
+
+function mpRenderCountdown() {
+  const num = document.getElementById('mp-countdown-num');
+  if (num) num.textContent = MP.countdownLeft;
 }
 
 function mpRenderBattleBoard() {
@@ -3395,24 +4567,38 @@ function mpRenderBattleBoard() {
     html += `<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
       <div style="width:20px;font-size:10px;color:#6d28d9;text-align:right;">${t+1}</div>
       <div style="display:flex;gap:4px;">`;
+    const isRow = !guess && !MP.mySubmitted && t === (MP.round - 1);
     for (let s = 0; s < MP.codeSize; s++) {
-      const color = guess ? guess.guess[s] : (t === MP.myGuesses.length && MP.currentGuess[s] ? MP.currentGuess[s] : null);
+      let color = null, locked = false, revealed = false;
+      if (guess) {
+        color = guess.guess[s];
+      } else if (isRow) {
+        if (MP.revealedPositions[s] !== undefined) { color = MP.revealedPositions[s]; revealed = true; }
+        else if (MP.lockedSlots[s] !== undefined) { color = MP.lockedSlots[s]; locked = true; }
+        else color = MP.currentGuess[s] || null;
+      }
       const def = color ? ORB_DEFS[color] : null;
-      const isCurrent = !guess && t === MP.myGuesses.length;
-      const isActive = isCurrent && s === MP.activeSlot;
-      html += `<div onclick="${isCurrent ? `mpBoardSlotClick(${s})` : ''}" style="
-        width:36px;height:36px;border-radius:50%;border:2px solid ${isActive ? '#a855f7' : (isCurrent ? '#4c1d95' : '#1e0a3c')};
+      const isCurrent = isRow;
+      const isActive = isCurrent && !locked && !revealed && s === MP.activeSlot;
+      const border = isActive ? '#a855f7' : locked ? '#fbbf24' : revealed ? '#34d399' : (isCurrent ? '#4c1d95' : '#1e0a3c');
+      const glow = isActive ? '0 0 8px #a855f7' : locked ? '0 0 6px rgba(251,191,36,0.6)' : 'none';
+      html += `<div onclick="${isCurrent ? `mpSlotTap(${s})` : ''}" style="
+        position:relative;width:36px;height:36px;border-radius:50%;border:2px solid ${border};
         display:flex;align-items:center;justify-content:center;cursor:${isCurrent?'pointer':'default'};
-        background:${isCurrent ? 'rgba(76,29,149,0.3)' : '#0d0020'};box-shadow:${isActive?'0 0 8px #a855f7':'none'};">
+        background:${isCurrent ? 'rgba(76,29,149,0.3)' : '#0d0020'};box-shadow:${glow};">
         ${def ? `<img src="${def.img}" style="width:28px;height:28px;object-fit:contain;">` : ''}
+        ${locked ? `<span style="position:absolute;bottom:-4px;right:-4px;font-size:10px;">🔒</span>` : ''}
       </div>`;
     }
     html += `</div>`;
     if (guess) {
-      // Pegs
-      html += `<div style="display:flex;gap:2px;flex-wrap:wrap;width:44px;">`;
-      for (let p = 0; p < guess.black; p++) html += `<div style="width:10px;height:10px;border-radius:50%;background:#1f2937;border:1px solid #f9fafb;"></div>`;
-      for (let p = 0; p < guess.white; p++) html += `<div style="width:10px;height:10px;border-radius:50%;background:white;border:1px solid #9ca3af;"></div>`;
+      // Feedback pegs — same bright convention as campaign:
+      // red peg = correct color & position, white peg = correct color wrong position
+      html += `<div class="peg-section">`;
+      for (let p = 0; p < guess.black; p++) html += `<div class="peg red"></div>`;
+      for (let p = 0; p < guess.white; p++) html += `<div class="peg white"></div>`;
+      const empties = MP.codeSize - guess.black - guess.white;
+      for (let p = 0; p < empties; p++) html += `<div class="peg empty"></div>`;
       html += `</div>`;
     }
     html += `</div>`;
@@ -3422,34 +4608,394 @@ function mpRenderBattleBoard() {
 
 function mpRenderBattlePicker() {
   const picker = document.getElementById('mp-battle-picker');
-  const colors = STATE.unlockedColors || ['red','blue','yellow','green','orange'];
+  const colors = mpPool();
   picker.innerHTML = '';
   colors.forEach(c => {
     const def = ORB_DEFS[c];
-    const img = document.createElement('img');
-    img.src = def.img;
-    img.style.cssText = 'width:44px;height:44px;object-fit:contain;cursor:pointer;border-radius:50%;border:2px solid transparent;';
-    img.onclick = () => mpPickBattleColor(c);
-    picker.appendChild(img);
+    const isOut = MP.lockedOutColors.includes(c);
+    const isWrong = MP.revealedWrong.includes(c) && !isOut;
+    const selected = MP.currentGuess[MP.activeSlot] === c;
+    const wrap = document.createElement('div');
+    wrap.style.cssText = `position:relative;width:44px;height:44px;cursor:pointer;border-radius:50%;`
+      + `border:2px solid ${selected ? '#a855f7' : (isOut ? '#dc2626' : 'transparent')};`
+      + `opacity:${isOut ? '0.4' : (isWrong ? '0.3' : '1')};`;
+    wrap.innerHTML = `<img src="${def.img}" style="width:100%;height:100%;object-fit:contain;display:block;">`
+      + (isOut ? `<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;font-weight:bold;text-shadow:0 0 3px #000;">✕</span>` : '');
+    wrap.title = isOut ? 'Eliminated — double-tap to restore' : (isWrong ? 'Revealed not in code' : def.name + ' — triple-tap to eliminate');
+    wrap.onclick = () => mpColorTap(c);
+    picker.appendChild(wrap);
   });
 }
 
+// Multi-tap state for board slots and picker colors
+let _mpSlotTap = { slot: null, count: 0, timer: null };
+let _mpColorTap = { color: null, count: 0, timer: null };
+
+// Board slot tap: hint-mode reveal, else single = select, double = lock/unlock
+function mpSlotTap(slot) {
+  if (MP.gameOver || MP.mySubmitted) return;
+  if (MP.hintMode) { mpBoardSlotClick(slot); return; } // immediate reveal
+  if (_mpSlotTap.slot !== slot) { _mpSlotTap.slot = slot; _mpSlotTap.count = 0; }
+  _mpSlotTap.count++;
+  clearTimeout(_mpSlotTap.timer);
+  _mpSlotTap.timer = setTimeout(() => {
+    const n = _mpSlotTap.count; _mpSlotTap.count = 0; _mpSlotTap.slot = null;
+    if (n === 1) mpSelectSlot(slot);
+    else mpToggleLockSlot(slot);
+  }, 280);
+}
+
 function mpBoardSlotClick(slot) {
+  if (MP.gameOver || MP.mySubmitted) return;
+  // Hint mode: tapping a slot reveals that position's color in the opponent's code
+  if (MP.hintMode) {
+    if (MP.revealedPositions[slot] === undefined) {
+      MP.revealedPositions[slot] = MP.opponentCode[slot];
+      MP.currentGuess[slot] = MP.opponentCode[slot];
+      delete MP.lockedSlots[slot]; // a reveal overrides a lock
+      MP.usedAbilities['hint'] = true;
+      mpBroadcastAbilityUsed('hint');
+      if (AUDIO && AUDIO.sfx && AUDIO.sfx.ability) AUDIO.sfx.ability();
+      showToast(`🖤 Slot ${slot + 1} = ${ORB_DEFS[MP.opponentCode[slot]].name}`);
+    }
+    MP.hintMode = false;
+    mpRenderBattleBoard();
+    mpRenderAbilities();
+    return;
+  }
+  mpSelectSlot(slot);
+}
+
+function mpSelectSlot(slot) {
+  if (MP.revealedPositions[slot] !== undefined) return; // revealed — not selectable
+  if (MP.lockedSlots[slot] !== undefined) return;       // locked — not selectable
   MP.activeSlot = slot;
   mpRenderBattleBoard();
 }
 
-function mpPickBattleColor(color) {
-  if (MP.gameOver) return;
-  MP.currentGuess[MP.activeSlot] = color;
-  if (MP.activeSlot < MP.codeSize - 1) MP.activeSlot++;
+// Double-tap a slot to lock the current orb there (or unlock it)
+function mpToggleLockSlot(slot) {
+  if (MP.gameOver || MP.mySubmitted) return;
+  if (MP.revealedPositions[slot] !== undefined) return; // can't lock a revealed slot
+  if (MP.lockedSlots[slot] !== undefined) {
+    delete MP.lockedSlots[slot];
+    showToast(`🔓 Slot ${slot + 1} unlocked`);
+  } else {
+    const color = MP.currentGuess[slot];
+    if (!color) { showToast('Pick a color first, then double-tap to lock it.'); return; }
+    MP.lockedSlots[slot] = color;
+    showToast(`🔒 ${ORB_DEFS[color].name} locked to slot ${slot + 1}!`);
+  }
+  if (AUDIO && AUDIO.sfx && AUDIO.sfx.navigate) AUDIO.sfx.navigate();
   mpRenderBattleBoard();
+  mpRenderBattlePicker();
+}
+
+// Picker color tap: single = pick, triple = eliminate, double = restore an eliminated color
+function mpColorTap(color) {
+  if (MP.gameOver || MP.mySubmitted) return;
+  if (_mpColorTap.color !== color) { _mpColorTap.color = color; _mpColorTap.count = 0; }
+  _mpColorTap.count++;
+  clearTimeout(_mpColorTap.timer);
+  _mpColorTap.timer = setTimeout(() => {
+    const n = _mpColorTap.count; _mpColorTap.count = 0; _mpColorTap.color = null;
+    const isOut = MP.lockedOutColors.includes(color);
+    if (n === 1) mpPickBattleColor(color);
+    else if (n === 2 && isOut) mpRestoreColor(color);
+    else if (n >= 3 && !isOut) mpEliminateColor(color);
+  }, 350);
+}
+
+function mpEliminateColor(color) {
+  if (!MP.lockedOutColors.includes(color)) MP.lockedOutColors.push(color);
+  if (AUDIO && AUDIO.sfx && AUDIO.sfx.navigate) AUDIO.sfx.navigate();
+  showToast(`✕ ${ORB_DEFS[color].name} eliminated from the pool`);
+  mpRenderBattlePicker();
+}
+
+function mpRestoreColor(color) {
+  MP.lockedOutColors = MP.lockedOutColors.filter(c => c !== color);
+  if (AUDIO && AUDIO.sfx && AUDIO.sfx.navigate) AUDIO.sfx.navigate();
+  showToast(`🔓 ${ORB_DEFS[color].name} restored`);
+  mpRenderBattlePicker();
+}
+
+// Which campaign abilities function in a code-cracking PvP match
+const MP_ABILITY_KEYS = ['burn', 'hint', 'revealWrong', 'submerge', 'disable', 'mult125', 'mult75'];
+const MP_ABILITY_LABEL = { submerge: 'Scramble', disable: 'Disable', burn: 'Burn', hint: 'Hint', revealWrong: 'Reveal', mult125: 'Purge 3', mult75: 'Reveal 2' };
+const MP_ABILITY_DESC = {
+  burn: 'Reveal a random correct orb position',
+  hint: 'Tap a slot to reveal its orb color',
+  revealWrong: 'Reveal one orb NOT in the code',
+  submerge: "Scramble the opponent's code (first 5 rounds)",
+  disable: "Disable one of the opponent's abilities",
+  mult125: 'Remove 3 orbs NOT in the sequence (orb pool 8+)',
+  mult75: 'Reveal 2 orbs in the sequence (orb pool 8+)',
+};
+
+function mpRenderAbilities() {
+  const bar = document.getElementById('mp-ability-bar');
+  const label = document.getElementById('mp-ability-label');
+  if (!bar) return;
+  bar.innerHTML = '';
+
+  if (!MP.abilitiesEnabled) {
+    if (label) label.style.display = 'none';
+    bar.innerHTML = `<div style="font-size:10px;color:#6d28d9;text-align:center;width:100%;">Orb abilities are off for this match</div>`;
+    return;
+  }
+  if (label) label.style.display = '';
+
+  // Disable-pick mode: show the opponent's abilities to choose one to shut off
+  if (MP.disablePickMode) {
+    const targets = MP.oppAbilities.filter(k => k !== 'disable'); // can't disable their disabler reactively (already used)
+    bar.innerHTML = `<div style="font-size:10px;color:#fbbf24;width:100%;text-align:center;margin-bottom:4px;">Choose an opponent ability to disable:</div>`;
+    if (targets.length === 0) {
+      const none = document.createElement('div');
+      none.style.cssText = 'font-size:10px;color:#6d28d9;width:100%;text-align:center;';
+      none.textContent = 'Opponent has no abilities to disable.';
+      bar.appendChild(none);
+    }
+    targets.forEach(k => {
+      const color = ABILITY_ORB[k];
+      const def = ORB_DEFS[color];
+      const btn = document.createElement('button');
+      btn.className = 'mp-ability-orb arming';
+      btn.innerHTML = `<img src="${def.img}" alt="${def.name}"><span>${MP_ABILITY_LABEL[k] || def.name}</span>`;
+      btn.onclick = () => mpConfirmDisable(k);
+      bar.appendChild(btn);
+    });
+    const cancel = document.createElement('button');
+    cancel.className = 'mp-btn secondary';
+    cancel.style.cssText = 'width:100%;margin-top:6px;';
+    cancel.textContent = 'Cancel';
+    cancel.onclick = () => { MP.disablePickMode = false; mpRenderAbilities(); };
+    bar.appendChild(cancel);
+    return;
+  }
+
+  if (MP.myAbilities.length === 0) {
+    bar.innerHTML = `<div style="font-size:10px;color:#6d28d9;text-align:center;width:100%;">Equip ability orbs in the campaign Loadout to use them here</div>`;
+    return;
+  }
+
+  MP.myAbilities.forEach(k => {
+    const color = ABILITY_ORB[k];
+    const def = ORB_DEFS[color];
+    const used = !!MP.usedAbilities[k];
+    const disabled = !!MP.disabledAbilities[k];
+    const lockedByTurn = (k === 'submerge') && (MP.round > 5);
+    const off = used || disabled || lockedByTurn || MP.mySubmitted || MP.gameOver;
+    const btn = document.createElement('button');
+    btn.className = 'mp-ability-orb' + (off ? ' used' : '') + (MP.hintMode && k === 'hint' ? ' arming' : '');
+    btn.disabled = off;
+    btn.title = disabled ? 'Disabled by your opponent' : (lockedByTurn ? 'Scramble only works in the first 5 rounds' : (MP_ABILITY_DESC[k] || def.abilityDesc));
+    btn.innerHTML = `<img src="${def.img}" alt="${def.name}"><span>${disabled ? '✖ ' : ''}${MP_ABILITY_LABEL[k] || def.name}</span>`;
+    btn.onclick = () => mpActivateAbility(k);
+    bar.appendChild(btn);
+  });
+
+  if (MP.revealedWrong.length) {
+    const w = document.createElement('div');
+    w.style.cssText = 'font-size:10px;color:#86efac;margin-top:6px;width:100%;text-align:center;';
+    w.textContent = '🚫 Not in code: ' + MP.revealedWrong.map(c => ORB_DEFS[c].name).join(', ');
+    bar.appendChild(w);
+  }
+}
+
+function mpActivateAbility(key) {
+  if (MP.gameOver || MP.mySubmitted) { showToast('You already locked in this round.'); return; }
+  if (MP.usedAbilities[key]) return;
+  if (MP.disabledAbilities[key]) { showToast('Your opponent disabled this ability!'); return; }
+  const code = MP.opponentCode;
+
+  if (key === 'submerge') {
+    if (MP.round > 5) { showToast('Scramble only works in the first 5 rounds!'); return; }
+    MP.usedAbilities[key] = true;
+    mpBroadcastAbilityUsed('submerge');
+    mpScrambleMyCode();
+    return;
+  }
+
+  if (key === 'disable') {
+    // Both modes: you disable by tapping one of the opponent's abilities under their name
+    showToast(`🎯 Tap one of the ${MP.vsAI ? 'MindBreaker AI' : 'opponent'}’s abilities (under their name) to disable it.`);
+    return;
+  }
+
+  if (key === 'burn') {
+    const unrevealed = [];
+    for (let i = 0; i < MP.codeSize; i++) if (MP.revealedPositions[i] === undefined) unrevealed.push(i);
+    if (!unrevealed.length) { showToast('Every position is already revealed!'); return; }
+    // Prefer slots the player hasn't already locked in
+    const unknowns = unrevealed.filter(i => MP.lockedSlots[i] === undefined);
+    const candidates = unknowns.length ? unknowns : unrevealed;
+    const pos = candidates[Math.floor(Math.random() * candidates.length)];
+    MP.revealedPositions[pos] = code[pos];
+    delete MP.lockedSlots[pos]; // reveal overrides a lock
+    MP.currentGuess[pos] = code[pos];
+    MP.usedAbilities[key] = true;
+    mpBroadcastAbilityUsed('burn');
+    if (AUDIO && AUDIO.sfx && AUDIO.sfx.ability) AUDIO.sfx.ability();
+    showToast(`🔥 Burn! Slot ${pos + 1} = ${ORB_DEFS[code[pos]].name}`);
+
+  } else if (key === 'revealWrong') {
+    // Skip colors already eliminated by the player so the reveal gives new info
+    const notIn = mpPool().filter(c => !code.includes(c) && !MP.revealedWrong.includes(c) && !MP.lockedOutColors.includes(c));
+    if (!notIn.length) { showToast('No new orbs left to reveal.'); return; }
+    const pick = notIn[Math.floor(Math.random() * notIn.length)];
+    MP.revealedWrong.push(pick);
+    MP.usedAbilities[key] = true;
+    mpBroadcastAbilityUsed('revealWrong');
+    if (AUDIO && AUDIO.sfx && AUDIO.sfx.ability) AUDIO.sfx.ability();
+    showToast(`🟢 ${ORB_DEFS[pick].name} is NOT in the code!`);
+
+  } else if (key === 'mult125') {
+    // Teal: remove 3 orbs NOT in the sequence (orb pool 8+ only)
+    if (mpPool().length < MP_BIGPOOL_MIN) { showToast('Teal orb needs an orb pool of 8 or higher!'); return; }
+    const notIn = mpPool().filter(c => !code.includes(c) && !MP.revealedWrong.includes(c) && !MP.lockedOutColors.includes(c));
+    if (!notIn.length) { showToast('No new orbs left to remove.'); return; }
+    const picks = [];
+    for (let n = 0; n < 3 && notIn.length; n++) {
+      const i = Math.floor(Math.random() * notIn.length);
+      picks.push(notIn[i]);
+      MP.revealedWrong.push(notIn[i]);
+      notIn.splice(i, 1);
+    }
+    MP.usedAbilities[key] = true;
+    mpBroadcastAbilityUsed('mult125');
+    if (AUDIO && AUDIO.sfx && AUDIO.sfx.ability) AUDIO.sfx.ability();
+    showToast(`💧 Purged ${picks.length}: ${picks.map(c => ORB_DEFS[c].name).join(', ')} — NOT in the code!`);
+
+  } else if (key === 'mult75') {
+    // Pink: reveal 2 orbs in the sequence (orb pool 8+ only)
+    if (mpPool().length < MP_BIGPOOL_MIN) { showToast('Pink orb needs an orb pool of 8 or higher!'); return; }
+    let unrevealed = [];
+    for (let i = 0; i < MP.codeSize; i++) if (MP.revealedPositions[i] === undefined) unrevealed.push(i);
+    if (!unrevealed.length) { showToast('Every position is already revealed!'); return; }
+    let candidates = unrevealed.filter(i => MP.lockedSlots[i] === undefined);
+    if (!candidates.length) candidates = unrevealed;
+    const got = [];
+    for (let n = 0; n < 2 && candidates.length; n++) {
+      const i = Math.floor(Math.random() * candidates.length);
+      const pos = candidates[i];
+      candidates.splice(i, 1);
+      MP.revealedPositions[pos] = code[pos];
+      delete MP.lockedSlots[pos];
+      MP.currentGuess[pos] = code[pos];
+      got.push(pos);
+    }
+    MP.usedAbilities[key] = true;
+    mpBroadcastAbilityUsed('mult75');
+    if (AUDIO && AUDIO.sfx && AUDIO.sfx.ability) AUDIO.sfx.ability();
+    showToast(`💗 Revealed: ${got.map(p => `slot ${p + 1} = ${ORB_DEFS[code[p]].name}`).join(', ')}`);
+
+  } else if (key === 'hint') {
+    const unrevealed = [];
+    for (let i = 0; i < MP.codeSize; i++) if (MP.revealedPositions[i] === undefined) unrevealed.push(i);
+    if (!unrevealed.length) { showToast('Nothing left to reveal.'); return; }
+    MP.hintMode = true; // marked used when the player actually taps a slot
+    showToast('🖤 Tap a slot to reveal its orb color!');
+    mpRenderBattleBoard();
+    mpRenderAbilities();
+    return;
+  }
+
+  mpRenderBattleBoard();
+  mpRenderAbilities();
+}
+
+function mpShuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// Scramble the order of MY code (the one the opponent is cracking) and reset their progress
+function mpScrambleMyCode() {
+  const orig = MP.myCode.slice();
+  let shuffled = orig.slice();
+  for (let t = 0; t < 12; t++) { shuffled = mpShuffle(orig.slice()); if (shuffled.join() !== orig.join()) break; }
+  MP.myCode = shuffled;
+  if (AUDIO && AUDIO.sfx && AUDIO.sfx.ability) AUDIO.sfx.ability();
+  if (MP.vsAI) {
+    MP.aiGuesses = [];
+    MP.aiKnownPositions = {};
+    showToast('🌀 Scramble! The MindBreaker AI’s progress was reset.');
+  } else if (MP.channel) {
+    MP.channel.send({ type:'broadcast', event:'code_scrambled', payload:{ id: MP.myId, code: MP.myCode } });
+    showToast('🌀 Scramble! Your opponent’s progress was reset.');
+  }
+  mpRenderAbilities();
+}
+
+// The opponent scrambled the code I'm cracking — reset my solving progress
+function mpApplyScrambleToMe(newCode) {
+  MP.opponentCode = newCode;
+  MP.myGuesses = [];
+  MP.revealedPositions = {};
+  MP.revealedWrong = [];
+  MP.lockedSlots = {};
+  MP.lockedOutColors = [];
+  MP.hintMode = false;
+  MP.currentGuess = Array(MP.codeSize).fill(null);
+  MP.activeSlot = 0;
+  showToast(`🌀 The ${MP.vsAI ? 'MindBreaker AI' : 'opponent'} scrambled the code! Your progress was reset.`);
+  mpRenderBattleBoard();
+  mpRenderAbilities();
+}
+
+// I picked which opponent ability to shut off for the rest of the match
+function mpConfirmDisable(key) {
+  MP.disablePickMode = false;
+  MP.usedAbilities['disable'] = true;
+  if (AUDIO && AUDIO.sfx && AUDIO.sfx.ability) AUDIO.sfx.ability();
+  const name = MP_ABILITY_LABEL[key] || key;
+  if (MP.vsAI) {
+    MP.aiDisabledAbilities = MP.aiDisabledAbilities || {};
+    MP.aiDisabledAbilities[key] = true;
+    showToast(`⚡ Disabled the MindBreaker AI’s ${name}!`);
+  } else if (MP.channel) {
+    MP.channel.send({ type:'broadcast', event:'ability_disabled', payload:{ id: MP.myId, key } });
+    showToast(`⚡ Disabled your opponent’s ${name}!`);
+  }
+  mpRenderAbilities();
+}
+
+// The opponent disabled one of my abilities for the rest of the match
+function mpApplyDisableToMe(key) {
+  MP.disabledAbilities[key] = true;
+  if (MP.hintMode && key === 'hint') MP.hintMode = false;
+  const name = MP_ABILITY_LABEL[key] || key;
+  showToast(`⚡ The ${MP.vsAI ? 'MindBreaker AI' : 'opponent'} disabled your ${name}!`);
+  mpRenderAbilities();
+}
+
+function mpPickBattleColor(color) {
+  if (MP.gameOver || MP.mySubmitted) return;
+  if (MP.revealedPositions[MP.activeSlot] !== undefined) return; // revealed, ignore
+  if (MP.lockedSlots[MP.activeSlot] !== undefined) return;       // locked, ignore
+  MP.currentGuess[MP.activeSlot] = color;
+  // Advance to the next slot that isn't locked or revealed
+  for (let i = 1; i <= MP.codeSize; i++) {
+    const next = (MP.activeSlot + i) % MP.codeSize;
+    if (MP.revealedPositions[next] === undefined && MP.lockedSlots[next] === undefined) { MP.activeSlot = next; break; }
+  }
+  mpRenderBattleBoard();
+  mpRenderBattlePicker();
 }
 
 function mpClearGuess() {
+  if (MP.gameOver || MP.mySubmitted) return;
   MP.currentGuess = Array(MP.codeSize).fill(null);
+  // Keep locked and revealed slots — those are known facts, not free guesses
+  for (const pos in MP.lockedSlots) MP.currentGuess[pos] = MP.lockedSlots[pos];
+  for (const pos in MP.revealedPositions) MP.currentGuess[pos] = MP.revealedPositions[pos];
   MP.activeSlot = 0;
   mpRenderBattleBoard();
+  mpRenderBattlePicker();
 }
 
 function mpScoreGuess(guess, code) {
@@ -3466,45 +5012,20 @@ function mpScoreGuess(guess, code) {
   return { black, white };
 }
 
-function mpSubmitGuess() {
-  if (MP.gameOver) return;
-  if (MP.currentGuess.filter(Boolean).length < MP.codeSize) {
-    showToast('Fill all ' + MP.codeSize + ' slots first!');
-    return;
-  }
-  const guess = [...MP.currentGuess];
-  const { black, white } = mpScoreGuess(guess, MP.opponentCode);
-  MP.myGuesses.push({ guess, black, white });
-  MP.currentGuess = Array(MP.codeSize).fill(null);
-  MP.activeSlot = 0;
-
-  const turnsUsed = MP.myGuesses.length;
-  const solved = black === MP.codeSize;
-
-  // Broadcast progress to opponent
-  MP.channel.send({ type:'broadcast', event:'guess_result', payload:{
-    id: MP.myId, turnsUsed, solved
-  }});
-
-  mpRenderBattleBoard();
-
-  if (solved) {
-    mpEndGame(true, 'solved');
-  } else if (turnsUsed >= 10) {
-    mpEndGame(false, 'out_of_turns');
-  }
-}
-
 function mpEndGame(won, reason) {
   if (MP.gameOver) return;
   MP.gameOver = true;
+  if (MP.aiTimer) { clearTimeout(MP.aiTimer); MP.aiTimer = null; }
+  mpClearRoundTimers();
   mpPhase('results');
 
+  const oppLabel = MP.vsAI ? 'The MindBreaker AI' : 'Your opponent';
+  const solveRound = MP.myFirstSolve ? MP.myFirstSolve.round : MP.round;
   const codeHtml = MP.opponentCode.map(c => `<img src="${ORB_DEFS[c].img}" style="width:36px;height:36px;object-fit:contain;">`).join('');
   let headline = '', msg = '';
-  if (won && reason === 'solved')          { headline = '🏆 YOU WIN!'; msg = `You cracked the code in ${MP.myGuesses.length} turn${MP.myGuesses.length!==1?'s':''}!`; }
-  else if (!won && reason === 'opponent_first') { headline = '💀 YOU LOSE'; msg = 'Your opponent cracked their code first!'; }
-  else if (!won && reason === 'out_of_turns')   { headline = '💀 OUT OF TURNS'; msg = 'You ran out of guesses!'; }
+  if (won && reason === 'solved')          { headline = '🏆 YOU WIN!'; msg = `You cracked the code first — on round ${solveRound}!`; }
+  else if (!won && reason === 'opponent_first') { headline = '💀 YOU LOSE'; msg = `${oppLabel} cracked the code first!`; }
+  else if (!won && reason === 'out_of_turns')   { headline = '💀 OUT OF TURNS'; msg = `Neither player cracked the code in 10 rounds — both lose!`; }
 
   document.getElementById('mp-results-box').innerHTML = `
     <div style="font-size:28px;font-weight:bold;color:${won?'#34d399':'#f87171'};margin-bottom:10px;">${headline}</div>
@@ -3514,6 +5035,415 @@ function mpEndGame(won, reason) {
   `;
 }
 
+// ══════════════════════════════════════════════
+//  VS COMPUTER (casual single-player, non-ranked)
+//  Mirrors the 2-player race, but the opponent is a
+//  local Mastermind-solving AI instead of a remote peer.
+// ══════════════════════════════════════════════
+
+function mpStartVsAI() {
+  const size = Math.min(MP.aiCodeSize || 4, getMindBreakerSlots());
+  const diff = MP.aiPoolDiff || 'easy';
+  const custom = (MP.aiPoolCustom || []).slice();
+  const toggle = document.getElementById('mp-ai-abilities-toggle');
+  const abilitiesOn = toggle ? toggle.checked : true;
+  mpReset();
+  MP.vsAI = true;
+  MP.isHost = true;
+  MP.myId = 'you';
+  MP.opponentId = 'computer';
+  MP.codeSize = size;
+  MP.abilitiesEnabled = abilitiesOn;
+  MP.orbPool = mpComputePool(size, diff, custom);
+  MP.poolLabel = mpDiffLabel(diff);
+  mpStartSetCode(size);
+}
+
+// The AI picks its own secret code (the one YOU must crack) from the match orb pool
+function mpAIGenerateCode() {
+  const colors = mpPool();
+  const code = [];
+  for (let i = 0; i < MP.codeSize; i++) code.push(colors[Math.floor(Math.random() * colors.length)]);
+  return code;
+}
+
+// Vs Computer: schedule the AI's single guess for the current round after a
+// human-like "thinking" pause, so the lockstep round feels like a live opponent.
+function mpAIScheduleRoundGuess() {
+  if (MP.aiTimer) { clearTimeout(MP.aiTimer); MP.aiTimer = null; }
+  const delay = 3000 + Math.floor(Math.random() * 3500); // 3.0–6.5s "thinking"
+  MP.aiTimer = setTimeout(mpAISubmitRound, delay);
+}
+
+// The AI submits its guess for this round (its "opponent submitted" event)
+function mpAISubmitRound() {
+  MP.aiTimer = null;
+  if (!MP.vsAI || MP.gameOver || MP.oppSubmitted) return;
+  const guess = mpAIMakeGuess();
+  const r = mpScoreGuess(guess, MP.myCode);
+  MP.aiGuesses.push({ guess, black: r.black, white: r.white });
+  mpHandleOpponentSubmit(r.black === MP.codeSize);
+}
+
+// Choose the AI's next guess. Strategy: sample a pool of candidate codes that are
+// consistent with every clue so far, then play a Knuth-style minimax — pick the
+// candidate consistent with its clues. It deliberately does NOT play the optimal
+// minimax guess, and AI_MISTAKE_CHANCE of the time it plays a "lazy" guess that
+// ignores its feedback entirely — together these slow its average solve so the
+// player has a fair shot at winning the race. Tune AI_MISTAKE_CHANCE to taste:
+// higher = the AI takes more guesses to crack the code.
+const AI_MISTAKE_CHANCE = 0.5;
+
+function mpAIMakeGuess() {
+  const fullPool = mpPool();
+  const size = MP.codeSize;
+  const history = MP.aiGuesses;
+  const known = MP.aiKnownPositions || {};
+  const wrong = MP.aiKnownWrong || [];
+  // Avoid colors the AI knows aren't in the code (Teal), but keep a fallback
+  const colors = fullPool.filter(c => !wrong.includes(c)).length ? fullPool.filter(c => !wrong.includes(c)) : fullPool;
+  const randomGuess = () => {
+    const g = [];
+    for (let i = 0; i < size; i++) {
+      // Positions the AI has "burned" are locked to their true color
+      g.push(known[i] !== undefined ? known[i] : colors[Math.floor(Math.random() * colors.length)]);
+    }
+    return g;
+  };
+  if (history.length === 0) return randomGuess();
+
+  // Handicap: sometimes the AI guesses without using its accumulated feedback
+  if (Math.random() < AI_MISTAKE_CHANCE) return randomGuess();
+
+  const consistent = (cand) => history.every(h => {
+    const r = mpScoreGuess(h.guess, cand);
+    return r.black === h.black && r.white === h.white;
+  });
+
+  // Build a pool of consistent candidates and pick one at random (not minimax-optimal)
+  const pool = [];
+  const POOL_TARGET = 80;
+  for (let a = 0; a < 2000 && pool.length < POOL_TARGET; a++) {
+    const c = randomGuess();
+    if (consistent(c)) pool.push(c);
+  }
+  if (pool.length === 0) return randomGuess(); // nothing found — fall back
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+// ── Orb pool / difficulty ──
+// Pool size by orb set (code size) and difficulty. Ranges from the design are
+// pinned to a single value per preset (Medium/Hard use the upper end).
+const POOL_PRESETS = {
+  4: { easy: 5, medium: 7, hard: 8 },
+  5: { easy: 6, medium: 8, hard: 10 },
+  6: { easy: 7, medium: 9, hard: 12 },
+};
+const POOL_DIFFS = ['easy', 'medium', 'hard', 'custom'];
+
+// The active pool of colors for the current match (falls back to unlocked colors)
+function mpPool() {
+  return (MP.orbPool && MP.orbPool.length) ? MP.orbPool : getUnlockedColors();
+}
+
+// Preset pool size for a code size + difficulty, capped by how many colors are unlocked
+function mpPoolSizeFor(codeSize, diff) {
+  const unlockedCount = getUnlockedColors().length;
+  const preset = POOL_PRESETS[codeSize] || POOL_PRESETS[4];
+  const size = preset[diff] != null ? preset[diff] : preset.easy;
+  return Math.max(2, Math.min(size, unlockedCount, 12));
+}
+
+// Build the actual pool (array of colors) for a match
+function mpComputePool(codeSize, diff, customColors) {
+  const unlocked = getUnlockedColors();
+  if (diff === 'custom') {
+    const sel = (customColors || []).filter(c => unlocked.includes(c));
+    return sel.length >= 2 ? sel.slice() : unlocked.slice(0, Math.min(codeSize + 1, unlocked.length));
+  }
+  return unlocked.slice(0, mpPoolSizeFor(codeSize, diff));
+}
+
+function mpDiffLabel(d) {
+  return ({ easy: 'Easy', medium: 'Medium', hard: 'Hard', custom: 'Custom' })[d] || 'Easy';
+}
+
+// Difficulty buttons (Easy/Medium/Hard/Custom) for a lobby section (isAI true/false)
+function mpRenderPoolPicker(isAI) {
+  const container = document.getElementById(isAI ? 'mp-ai-pool-btns' : 'mp-pool-btns');
+  if (!container) return;
+  const codeSize = isAI ? (MP.aiCodeSize || 4) : (MP.codeSize || 4);
+  const unlockedCount = getUnlockedColors().length;
+  const preset = POOL_PRESETS[codeSize] || POOL_PRESETS[4];
+  // If the selected difficulty is no longer reachable, fall back to Easy
+  let diff = isAI ? MP.aiPoolDiff : MP.poolDiff;
+  if (diff !== 'custom' && diff !== 'easy' && preset[diff] > unlockedCount) {
+    diff = 'easy';
+    if (isAI) MP.aiPoolDiff = 'easy'; else MP.poolDiff = 'easy';
+  }
+  container.innerHTML = '';
+  POOL_DIFFS.forEach(d => {
+    const isCustom = d === 'custom';
+    const presetSize = isCustom ? null : preset[d];
+    // Easy + Custom always available; Medium/Hard gate on having enough colors unlocked
+    const locked = !isCustom && d !== 'easy' && presetSize > unlockedCount;
+    const active = diff === d;
+    const btn = document.createElement('button');
+    btn.className = 'mp-btn ' + (active ? 'primary' : 'secondary');
+    btn.style.cssText = `flex:1;min-width:60px;padding:7px 2px;margin-bottom:0;font-size:11px;line-height:1.2;${locked ? 'opacity:0.4;cursor:not-allowed;' : ''}`;
+    const label = isCustom ? 'Custom' : d.charAt(0).toUpperCase() + d.slice(1);
+    btn.innerHTML = locked ? `🔒 ${label}` : (isCustom ? label : `${label}<br><span style="font-size:9px;opacity:0.85;">${Math.min(presetSize, unlockedCount, 12)} orbs</span>`);
+    btn.disabled = locked;
+    btn.onclick = () => {
+      if (isAI) MP.aiPoolDiff = d; else MP.poolDiff = d;
+      if (isCustom) {
+        const key = isAI ? 'aiPoolCustom' : 'poolCustom';
+        if (!MP[key] || MP[key].length < 2) MP[key] = getUnlockedColors().slice();
+      }
+      mpRenderPoolPicker(isAI);
+    };
+    container.appendChild(btn);
+  });
+  mpRenderCustomPanel(isAI);
+}
+
+// Custom orb-selection grid (shown only when Custom is the chosen difficulty)
+function mpRenderCustomPanel(isAI) {
+  const panel = document.getElementById(isAI ? 'mp-ai-custom-pool' : 'mp-custom-pool');
+  if (!panel) return;
+  const diff = isAI ? MP.aiPoolDiff : MP.poolDiff;
+  if (diff !== 'custom') { panel.style.display = 'none'; panel.innerHTML = ''; return; }
+  panel.style.display = '';
+  const sel = (isAI ? MP.aiPoolCustom : MP.poolCustom) || [];
+  let html = `<div style="font-size:10px;color:#5eead4;margin-bottom:6px;">Tap orbs to include in the pool (min 2) — Pool: ${sel.length}</div>`;
+  html += `<div style="display:flex;flex-wrap:wrap;gap:6px;">`;
+  getUnlockedColors().forEach(c => {
+    const on = sel.includes(c);
+    html += `<div onclick="mpToggleCustomOrb(${isAI},'${c}')" title="${ORB_DEFS[c].name}" style="width:38px;height:38px;border-radius:8px;border:2px solid ${on ? '#0d9488' : '#3b1fa0'};background:${on ? 'rgba(13,148,136,0.25)' : 'rgba(15,5,40,0.5)'};display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:${on ? '1' : '0.45'};"><img src="${ORB_DEFS[c].img}" style="width:28px;height:28px;object-fit:contain;"></div>`;
+  });
+  html += `</div>`;
+  panel.innerHTML = html;
+}
+
+function mpToggleCustomOrb(isAI, color) {
+  const key = isAI ? 'aiPoolCustom' : 'poolCustom';
+  const sel = (MP[key] || []).slice();
+  const idx = sel.indexOf(color);
+  if (idx >= 0) {
+    if (sel.length <= 2) { showToast('The orb pool needs at least 2 orbs.'); return; }
+    sel.splice(idx, 1);
+  } else {
+    sel.push(color);
+  }
+  MP[key] = sel;
+  mpRenderCustomPanel(isAI);
+}
+
 function mpRenderCodeSizePicker() {
   const maxSlots = getMindBreakerSlots();
-  MP.codeSize = Math.min(MP.codeSize || 4, m
+  MP.codeSize = Math.min(MP.codeSize || 4, maxSlots);
+  const container = document.getElementById('mp-codesize-btns');
+  if (!container) return;
+  container.innerHTML = '';
+  [4, 5, 6].forEach(n => {
+    const locked = n > maxSlots;
+    const active = MP.codeSize === n;
+    const btn = document.createElement('button');
+    btn.className = 'mp-btn ' + (active ? 'primary' : 'secondary');
+    btn.style.cssText = `flex:1;padding:10px 0;margin-bottom:0;${locked ? 'background:#1a0a2e;border:1px solid #3b1fa0;color:#ffffff;cursor:not-allowed;' : ''}`;
+    btn.textContent = locked ? `🔒 ${n} Orbs` : `${n} Orbs`;
+    btn.disabled = locked;
+    btn.onclick = () => { MP.codeSize = n; mpRenderCodeSizePicker(); mpRenderPoolPicker(false); };
+    container.appendChild(btn);
+  });
+}
+
+// Code-size picker for the vs-MindBreaker-AI match (the AI uses the same size)
+function mpRenderAICodeSizePicker() {
+  const maxSlots = getMindBreakerSlots();
+  MP.aiCodeSize = Math.min(MP.aiCodeSize || 4, maxSlots);
+  const container = document.getElementById('mp-ai-codesize-btns');
+  if (!container) return;
+  container.innerHTML = '';
+  [4, 5, 6].forEach(n => {
+    const locked = n > maxSlots;
+    const active = MP.aiCodeSize === n;
+    const btn = document.createElement('button');
+    btn.className = 'mp-btn ' + (active ? 'primary' : 'secondary');
+    btn.style.cssText = `flex:1;padding:10px 0;margin-bottom:0;${locked ? 'background:#1a0a2e;border:1px solid #3b1fa0;color:#ffffff;cursor:not-allowed;' : ''}`;
+    btn.textContent = locked ? `🔒 ${n} Orbs` : `${n} Orbs`;
+    btn.disabled = locked;
+    btn.onclick = () => { MP.aiCodeSize = n; mpRenderAICodeSizePicker(); mpRenderPoolPicker(true); };
+    container.appendChild(btn);
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+//  TUTORIAL ENGINE
+// ══════════════════════════════════════════════════════════════
+
+const TUT_STEPS = [
+  {
+    pos: 'pos-center', label: 'Welcome!', backdrop: true,
+    title: '👋 Welcome to OrbMaster!',
+    text: 'Each boss hides a secret sequence of colored orbs. Your job is to crack the code before you run out of turns.\n\nThis tutorial will walk you through your first match. Ready?',
+    btn: "Let's Go!"
+  },
+  {
+    pos: 'pos-top', label: 'Step 1 of 8', backdrop: true,
+    title: '🗺️ The Campaign',
+    text: "This is the Campaign screen. Each boss card shows who you're up against, their orb pool, and the loot they drop.\n\nBosses unlock in order — defeat one to face the next.",
+    btn: '⚔️ Challenge Lemons!',
+    action: () => { tutHide(); onBossClick(0); }
+  },
+  {
+    pos: 'pos-bottom', label: 'Step 2 of 8', backdrop: true,
+    title: '🔮 The Orb Pool',
+    text: "See the orbs shown here? That's Lemons' ORB POOL — the exact colors he'll use in his secret code.\n\nThe more bosses you defeat, the larger the orb pool grows.",
+    btn: 'Got it!'
+  },
+  {
+    pos: 'pos-bottom', label: 'Step 3 of 8', backdrop: true,
+    title: '✨ Ability Orbs',
+    text: "These empty slots are for ABILITY ORBS — powerful items you can forge and equip.\n\nAbilities like Burn (reveal a position), Hint (choose a slot to reveal), and Submerge (scramble the code) can turn the tide.\n\nWe'll skip equipping for now. Tap ENTER BATTLE!",
+    btn: '⚔️ Enter Battle!',
+    action: () => { tutHide(); startBattle(); }
+  },
+  {
+    pos: 'pos-top', label: 'Step 4 of 8', backdrop: true,
+    title: '🎯 The Guess Board',
+    text: "This is your GUESS BOARD. Each row is one guess.\n\nFill in the colored orb slots using the color picker below, then tap SUBMIT GUESS.\n\nYou have 10 turns — use the feedback pegs to zero in on the secret code!",
+    btn: 'Got it!'
+  },
+  {
+    pos: 'pos-top', label: 'Step 5 of 8', backdrop: true,
+    title: '🎨 Pick Your Colors',
+    text: "Tap any color in the picker at the bottom to fill the active slot.\n\nThe active slot pulses purple. Tap a different slot to change which one you're filling.\n\nTry making your first guess now!",
+    btn: 'OK — let me try!'
+  },
+  {
+    pos: 'pos-top', label: 'Step 6 of 8', backdrop: true, showPegs: true,
+    title: '📊 Reading the Pegs',
+    text: "After submitting, feedback pegs appear on the right:\n",
+    btn: 'Got it — keep guessing!'
+  },
+  {
+    pos: 'pos-top', label: 'Step 7 of 8', backdrop: true,
+    title: '🔒 Pro Tips',
+    text: "Two handy tools as you guess:\n\n🔒 Double-tap a filled slot to LOCK that color in place — it carries forward to every future guess.\n\n✕ Triple-tap a color in the picker to ELIMINATE it when you know it's not in the code.",
+    btn: 'Nice — let me play!'
+  },
+  {
+    pos: 'pos-center', label: 'Step 8 of 8', backdrop: true,
+    title: '⚗️ Fragments & Forging',
+    text: "When you win, you earn ORB FRAGMENTS based on how fast you cracked the code.\n\nSpend fragments in the ORB FORGE to craft ability orbs you can equip before each battle.\n\nYou're ready, MindBreaker. Good luck! 🏆",
+    btn: 'Start Playing!',
+    finish: true
+  }
+];
+
+let TUT = { active: false, step: 0, guessMade: false };
+
+function tutStart() {
+  TUT = { active: true, step: 0, guessMade: false };
+  STATE.tutorialSeen = true;
+  saveState();
+  tutShow(0);
+}
+
+function tutSkip() {
+  tutHide();
+  TUT.active = false;
+  STATE.tutorialSeen = true;
+  saveState();
+}
+
+// Skip Tutorial button — exit the tutorial and return to the home screen
+function tutSkipToHome() {
+  tutSkip();
+  showScreen('title');
+}
+
+function tutHide() {
+  document.getElementById('tutorial-overlay').classList.remove('active');
+}
+
+function tutShow(stepIdx) {
+  const step = TUT_STEPS[stepIdx];
+  if (!step) { tutSkip(); return; }
+  TUT.step = stepIdx;
+
+  const overlay = document.getElementById('tutorial-overlay');
+  const box = document.getElementById('tutorial-box');
+  overlay.classList.add('active');
+
+  box.className = 'tut-box ' + step.pos;
+  document.getElementById('tut-label').textContent = step.label;
+  document.getElementById('tut-title').textContent = step.title;
+  document.getElementById('tut-text').textContent = step.text;
+  document.getElementById('tut-pegs').style.display = step.showPegs ? '' : 'none';
+
+  const nextBtn = document.getElementById('tut-next-btn');
+  if (step.btn) {
+    nextBtn.style.display = '';
+    nextBtn.textContent = step.btn;
+  } else {
+    nextBtn.style.display = 'none';
+  }
+}
+
+function tutNext() {
+  const step = TUT_STEPS[TUT.step];
+  if (step.action) { step.action(); return; }
+  if (step.finish)  { tutSkip(); showScreen('campaign'); return; }
+  tutShow(TUT.step + 1);
+}
+
+// Auto-advance tutorial when player hits campaign screen
+function tutOnCampaign() {
+  if (!TUT.active) return;
+  if (TUT.step === 1) tutShow(1);
+}
+
+// Auto-advance tutorial when player hits loadout
+function tutOnLoadout() {
+  if (!TUT.active) return;
+  if (TUT.step <= 2) tutShow(2);
+}
+
+// Auto-advance tutorial when battle starts
+function tutOnBattle() {
+  if (!TUT.active) return;
+  if (TUT.step <= 4) tutShow(4);
+}
+
+// Called after player submits first guess in tutorial
+function tutOnGuess() {
+  if (!TUT.active || TUT.guessMade) return;
+  TUT.guessMade = true;
+  tutShow(6); // peg explanation
+}
+
+// Wire tutorial into showScreen
+// ══════════════════════════════════════════════════════════════
+
+// Wire multiplayer into showScreen
+const _origShowScreen = showScreen;
+showScreen = function(name) {
+  _origShowScreen(name);
+  if (name === 'multiplayer') {
+    mpReset();
+    mpPhase('lobby');
+    document.getElementById('mp-join-panel').style.display = 'none';
+    mpRenderCodeSizePicker();
+    mpRenderAICodeSizePicker();
+    mpRenderPoolPicker(false);
+    mpRenderPoolPicker(true);
+  }
+  if (name === 'campaign') tutOnCampaign();
+  if (name === 'loadout')  tutOnLoadout();
+  if (name === 'battle')   tutOnBattle();
+};
+</script>
+</body>
+</html>
