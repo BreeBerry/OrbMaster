@@ -24,11 +24,13 @@ workflows:
         script: |
           set -e
           # Web app is static (www) — no build step needed.
-          if [ ! -d "ios" ]; then npx cap add ios; fi   # create the iOS project (also writes the Podfile)
+          if [ ! -d "ios" ]; then npx cap add ios; fi   # create the iOS project
           npx cap sync ios                              # copy www + native plugins into the iOS project
-          echo "----- iOS project tree -----"
-          ls -la ios && ls -la ios/App || true
-          find ios -name Podfile
+      - name: Set the app icon
+        script: |
+          set -e
+          # Replace Capacitor's placeholder icon with the OrbMaster icon (opaque 1024px).
+          cp resources/ios-appicon-1024.png ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png
       - name: Lock the app to portrait
         script: |
           PL=ios/App/App/Info.plist
