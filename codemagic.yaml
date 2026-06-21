@@ -12,7 +12,7 @@ workflows:
         XCODE_WORKSPACE: "App.xcworkspace"
         XCODE_SCHEME: "App"
         BUNDLE_ID: "com.breezybee.orbmaster"
-      node: 20
+      node: 22
       xcode: latest          # newest Xcode = iOS 26 SDK (required by Apple)
       cocoapods: default
     scripts:
