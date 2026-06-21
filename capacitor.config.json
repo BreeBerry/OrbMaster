@@ -1,6 +1,6 @@
 {
   "appId": "com.breezybee.orbmaster",
-  "appName": "OrbMaster",
+  "appName": "Orb Master",
   "webDir": "www",
   "server": {
     "androidScheme": "https"
