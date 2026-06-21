@@ -41,6 +41,9 @@ workflows:
           # Portrait-only on iPad requires opting out of multitasking, or Apple rejects the upload.
           /usr/libexec/PlistBuddy -c "Delete :UIRequiresFullScreen" "$PL" 2>/dev/null || true
           /usr/libexec/PlistBuddy -c "Add :UIRequiresFullScreen bool true" "$PL"
+          # Export compliance: app uses only standard HTTPS encryption (exempt) — skips the TestFlight prompt.
+          /usr/libexec/PlistBuddy -c "Delete :ITSAppUsesNonExemptEncryption" "$PL" 2>/dev/null || true
+          /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" "$PL"
       - name: Set up code signing (auto-create cert + profile)
         script: |
           set -e
