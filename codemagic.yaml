@@ -38,12 +38,20 @@ workflows:
           /usr/libexec/PlistBuddy -c "Add :UISupportedInterfaceOrientations~ipad:0 string UIInterfaceOrientationPortrait" "$PL"
       - name: Set up code signing (auto-create cert + profile)
         script: |
+          set -e
           keychain initialize
+          echo "===== fetch-signing-files ====="
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_STORE \
-            --create
+            --create \
+            --verbose
+          echo "===== provisioning profiles on disk ====="
+          ls -la "$HOME/Library/MobileDevice/Provisioning Profiles/" || true
           keychain add-certificates
-          xcode-project use-profiles
+          echo "===== certificates in keychain ====="
+          keychain list-certificates 2>/dev/null | grep -iE "common name|serial|expires" || true
+          echo "===== applying profiles to project ====="
+          xcode-project use-profiles --verbose
       - name: Set version + build number
         script: |
           cd $CM_BUILD_DIR/ios/App
