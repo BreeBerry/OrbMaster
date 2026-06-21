@@ -54,9 +54,11 @@ workflows:
           set -e
           cd $CM_BUILD_DIR/ios/App
           if [ -d "$XCODE_WORKSPACE" ]; then
-            xcode-project build-ipa --workspace "$XCODE_WORKSPACE" --scheme "$XCODE_SCHEME"
+            xcode-project build-ipa --workspace "$XCODE_WORKSPACE" --scheme "$XCODE_SCHEME" \
+              --archive-flags="-destination 'generic/platform=iOS'"
           else
-            xcode-project build-ipa --project "App.xcodeproj" --scheme "$XCODE_SCHEME"
+            xcode-project build-ipa --project "App.xcodeproj" --scheme "$XCODE_SCHEME" \
+              --archive-flags="-destination 'generic/platform=iOS'"
           fi
     artifacts:
       - ios/App/build/ios/ipa/*.ipa
