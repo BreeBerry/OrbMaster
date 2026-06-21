@@ -4,7 +4,7 @@
   "description": "Crack the code. Master the Orbs. A Mastermind-style RPG puzzle game.",
   "start_url": "./index.html",
   "display": "fullscreen",
-  "orientation": "any",
+  "orientation": "portrait",
   "background_color": "#1a0a2e",
   "theme_color": "#7c3aed",
   "icons": [
