@@ -8,6 +8,8 @@ workflows:
       # Codemagic → Team settings → Integrations → Apple Developer Portal.
       app_store_connect: codemagic
     environment:
+      groups:
+        - ios_signing      # holds CERTIFICATE_PRIVATE_KEY (add this in Codemagic UI)
       vars:
         XCODE_WORKSPACE: "App.xcworkspace"
         XCODE_SCHEME: "App"
@@ -40,18 +42,14 @@ workflows:
         script: |
           set -e
           keychain initialize
-          echo "===== fetch-signing-files ====="
+          # Reuses the distribution certificate tied to CERTIFICATE_PRIVATE_KEY,
+          # creating it (and the profile) on the first run.
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_STORE \
-            --create \
-            --verbose
-          echo "===== provisioning profiles on disk ====="
-          ls -la "$HOME/Library/MobileDevice/Provisioning Profiles/" || true
+            --certificate-key=@env:CERTIFICATE_PRIVATE_KEY \
+            --create
           keychain add-certificates
-          echo "===== certificates in keychain ====="
-          keychain list-certificates 2>/dev/null | grep -iE "common name|serial|expires" || true
-          echo "===== applying profiles to project ====="
-          xcode-project use-profiles --verbose
+          xcode-project use-profiles
       - name: Set version + build number
         script: |
           cd $CM_BUILD_DIR/ios/App
