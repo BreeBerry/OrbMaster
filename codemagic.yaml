@@ -31,6 +31,12 @@ workflows:
           set -e
           # Replace Capacitor's placeholder icon with the OrbMaster icon (opaque 1024px).
           cp resources/ios-appicon-1024.png ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png
+      - name: Make the app iPhone-only
+        script: |
+          set -e
+          # Portrait phone game — ship as iPhone-only so iPad screenshots aren't required.
+          sed -i '' 's/TARGETED_DEVICE_FAMILY = [^;]*;/TARGETED_DEVICE_FAMILY = "1";/g' ios/App/App.xcodeproj/project.pbxproj
+          grep -n "TARGETED_DEVICE_FAMILY" ios/App/App.xcodeproj/project.pbxproj
       - name: Lock the app to portrait
         script: |
           PL=ios/App/App/Info.plist
