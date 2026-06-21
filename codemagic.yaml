@@ -20,9 +20,13 @@ workflows:
         script: npm install
       - name: Generate the iOS project + copy web assets
         script: |
+          set -e
           # Web app is static (www) — no build step needed.
-          npx cap add ios || true     # creates ios/ on first run; harmless if it exists
-          npx cap sync ios            # copies www + native plugins into the iOS project
+          if [ ! -d "ios" ]; then npx cap add ios; fi   # create the iOS project (also writes the Podfile)
+          npx cap sync ios                              # copy www + native plugins into the iOS project
+          echo "----- iOS project tree -----"
+          ls -la ios && ls -la ios/App || true
+          find ios -name Podfile
       - name: Lock the app to portrait
         script: |
           PL=ios/App/App/Info.plist
@@ -34,7 +38,11 @@ workflows:
           /usr/libexec/PlistBuddy -c "Add :UISupportedInterfaceOrientations~ipad:0 string UIInterfaceOrientationPortrait" "$PL"
       - name: Install CocoaPods dependencies
         script: |
-          cd ios/App && pod install
+          set -e
+          PODDIR=$(dirname "$(find ios -name Podfile | head -1)")
+          echo "Installing pods in: $PODDIR"
+          cd "$PODDIR"
+          pod install --repo-update
       - name: Set up code signing (auto-create cert + profile)
         script: |
           keychain initialize
