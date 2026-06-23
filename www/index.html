@@ -725,8 +725,8 @@
     background: linear-gradient(135deg,#2d1b69,#1e0a4a);
     border: 1px solid #7c3aed;
     border-radius: 16px; padding: 20px;
-    width: 100%; max-width: 340px;
-    max-height: 80vh; overflow-y: auto;
+    width: 100%; max-width: min(340px, calc(100vw - 24px));
+    max-height: 85vh; overflow-y: auto; overflow-wrap: anywhere;
   }
   .modal-title { font-size: 16px; color: #e9d5ff; font-weight: bold; margin-bottom: 12px; }
   .modal-body { font-size: 13px; color: #c4b5fd; line-height: 1.5; margin-bottom: 16px; }
@@ -897,12 +897,14 @@
   .forge-section-title::after {
     content: ''; flex: 1; height: 1px; background: rgba(245,158,11,0.3);
   }
-  .forge-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 8px; }
+  .forge-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 8px; }
   .forge-card {
     background: linear-gradient(135deg,rgba(45,27,105,0.7),rgba(15,5,40,0.8));
     border: 1px solid #4c1d95; border-radius: 12px;
     padding: 12px; text-align: center; position: relative;
+    min-width: 0; overflow-wrap: anywhere;
   }
+  .forge-buy-btn, .forge-upgrade-btn { white-space: normal; overflow-wrap: anywhere; }
   .forge-card.affordable { border-color: #f59e0b; }
   .forge-card.owned-card { border-color: #10b981; }
   .forge-card img { width: 56px; height: 56px; object-fit: contain; }
@@ -989,11 +991,11 @@
   .signin-dot.off { background: #6b7280; }
   #global-tooltip {
     position: fixed; display: none; z-index: 10000;
-    max-width: 230px; background: rgba(13,0,32,0.96);
+    max-width: min(230px, calc(100vw - 20px)); background: rgba(13,0,32,0.96);
     border: 1px solid #a855f7; border-radius: 8px;
     padding: 8px 10px; font-size: 11px; line-height: 1.45;
     color: #e9d5ff; box-shadow: 0 4px 16px rgba(0,0,0,0.6);
-    pointer-events: none; white-space: normal;
+    pointer-events: none; white-space: normal; overflow-wrap: anywhere;
   }
   .settings-version { text-align: center; font-size: 10px; color: #4c1d95; margin-top: 14px; }
   .bg-carousel { width: 100%; margin-top: 10px; }
@@ -1211,13 +1213,15 @@
   }
   #tutorial-box {
     position: absolute; left: 50%; transform: translateX(-50%);
-    width: calc(100% - 32px); max-width: 420px;
+    width: calc(100% - 24px); max-width: 360px;
     background: linear-gradient(135deg, #1e0a4a, #0d0020);
-    border: 2px solid #a855f7; border-radius: 16px;
-    padding: 20px; pointer-events: all;
-    box-shadow: 0 0 30px rgba(168,85,247,0.4);
+    border: 2px solid #a855f7; border-radius: 14px;
+    padding: 14px 16px; pointer-events: all;
+    box-shadow: 0 0 30px rgba(168,85,247,0.45);
     z-index: 901;
   }
+  /* Interactive (hands-on) steps: don't dim or block — the player uses the real board. */
+  #tutorial-overlay.passthrough #tutorial-backdrop { background: transparent; pointer-events: none; }
   #tutorial-box.pos-top    { top: 16px; }
   #tutorial-box.pos-bottom { bottom: 16px; }
   #tutorial-box.pos-center { top: 50%; transform: translate(-50%,-50%); }
@@ -1226,12 +1230,24 @@
   .tut-text   { font-size:13px; color:#c4b5fd; line-height:1.6; margin-bottom:16px; white-space:pre-line; }
   .tut-peg-row { display:flex; align-items:center; gap:10px; margin-bottom:8px; font-size:13px; color:#c4b5fd; }
   .tut-peg { width:18px; height:18px; border-radius:50%; flex-shrink:0; }
-  .tut-peg.red   { background:#1f2937; border:2px solid #f9fafb; }
-  .tut-peg.white { background:white; border:2px solid #9ca3af; }
-  .tut-peg.empty { background:#1a0a2e; border:2px solid #4c1d95; }
+  .tut-peg.red   { background:#dc2626; box-shadow:0 0 5px #dc2626; }
+  .tut-peg.white { background:#f0f0f0; box-shadow:0 0 5px #f0f0f0; }
+  .tut-peg.empty { background:rgba(255,255,255,0.10); border:1px solid #4c1d95; }
   .tut-btns { display:flex; gap:10px; }
   .tut-next { flex:1; padding:12px; background:linear-gradient(135deg,#7c3aed,#4f46e5); border:none; border-radius:10px; color:white; font-size:14px; font-weight:bold; cursor:pointer; }
   .tut-skip { padding:12px 16px; background:transparent; border:1px solid #4c1d95; border-radius:10px; color:#6d28d9; font-size:13px; cursor:pointer; }
+  /* Spotlight: highlights the real on-screen control the current step describes */
+  #tutorial-spotlight {
+    position:absolute; border-radius:14px; pointer-events:none; z-index:900;
+    display:none; transition: top .25s, left .25s, width .25s, height .25s;
+    animation: tutPulse 1.7s ease-in-out infinite;
+  }
+  @keyframes tutPulse {
+    0%,100% { box-shadow: 0 0 0 9999px rgba(5,0,20,0.80), 0 0 0 2px rgba(168,85,247,0.75); }
+    50%     { box-shadow: 0 0 0 9999px rgba(5,0,20,0.80), 0 0 16px 4px rgba(168,85,247,0.95); }
+  }
+  #tutorial-overlay.spotlight #tutorial-backdrop { background: transparent; }
+  #tutorial-overlay.spotlight #tutorial-spotlight { display:block; }
 
   /* ── MULTIPLAYER ── */
   #screen-multiplayer {
@@ -1963,7 +1979,7 @@
       </div>
       <button class="reset-btn" onclick="confirmReset()">⚠️ Reset</button>
     </div>
-    <div class="settings-version">OrbMaster v1.10 · BreezyBee Games</div>
+    <div class="settings-version">OrbMaster v1.11 · BreezyBee Games</div>
     <button class="modal-btn cancel" style="margin-top:14px;" onclick="closeModal('modal-settings')">Close</button>
   </div>
 </div>
@@ -1974,7 +1990,18 @@
     <div class="modal-title">⚙️ Battle Menu</div>
     <button class="battle-menu-btn" onclick="closeModal('modal-battle-menu');openHowToPlay()"><span class="bm-icon">📖</span> How to Play</button>
     <button class="battle-menu-btn" onclick="closeModal('modal-battle-menu');openModal('modal-settings')"><span class="bm-icon">🔧</span> Settings</button>
+    <button class="battle-menu-btn" style="border-color:#dc2626;color:#fca5a5;" onclick="openQuitBattle()"><span class="bm-icon">🏳️</span> Quit Match</button>
     <button class="modal-btn cancel" style="margin-top:4px;" onclick="closeModal('modal-battle-menu')">↩️ Resume Battle</button>
+  </div>
+</div>
+
+<!-- Quit-Match Confirm (context-aware: campaign / daily / gauntlet / multiplayer) -->
+<div class="modal-overlay" id="modal-quit-battle">
+  <div class="modal-box">
+    <div class="modal-title">🏳️ Quit Match?</div>
+    <div class="modal-body" id="quit-battle-body"></div>
+    <button class="modal-btn" style="background:linear-gradient(135deg,#dc2626,#991b1b);" onclick="doQuitBattle()">Yes, Quit</button>
+    <button class="modal-btn cancel" onclick="closeModal('modal-quit-battle')">↩️ Keep Playing</button>
   </div>
 </div>
 
@@ -2079,6 +2106,7 @@
 <!-- TUTORIAL OVERLAY -->
 <div id="tutorial-overlay">
   <div id="tutorial-backdrop"></div>
+  <div id="tutorial-spotlight"></div>
   <div id="tutorial-box" class="pos-center">
     <div class="tut-label" id="tut-label">Tutorial</div>
     <div class="tut-title" id="tut-title"></div>
@@ -4462,7 +4490,8 @@ function startBattle() {
 
   showScreen('battle');
   renderBattle();
-  showBossQuip(idx, 'enter');
+  // Skip the boss taunt during the tutorial so it doesn't cover the board the tour highlights.
+  if (!(typeof TUT !== 'undefined' && TUT.active)) showBossQuip(idx, 'enter');
 }
 
 // ══════════════════════════════════════════════
@@ -4711,6 +4740,7 @@ function renderPicker() {
           AUDIO.sfx.lose ? AUDIO.sfx.lose() : AUDIO.sfx.navigate();
           showToast(`✕ ${def.name} eliminated from sequence`);
           renderPicker();
+          if (typeof tutOnEliminate === 'function') tutOnEliminate(color);
         }
         tapCount = 0;
       }, 350);
@@ -4741,6 +4771,7 @@ function toggleLockSlot(col) {
     b.lockedSlots[col] = color;
     AUDIO.sfx.redPeg(); // distinctive click sound
     showToast(`🔒 ${ORB_DEFS[color].name} locked to slot ${col+1}!`);
+    if (typeof tutOnLock === 'function') tutOnLock(col, color);
   }
   renderGuessGrid();
   renderPicker();
@@ -4910,6 +4941,7 @@ function submitGuess() {
   if (feedback.reds === b.codeSize) {
     b.won = true;
     setTimeout(() => AUDIO.sfx.win(), 300);
+    if (b.isTutorial) { tutFinishBattle(); return; }   // practice match → tutorial celebration
     showBattleResult(true);
     return;
   }
@@ -6209,6 +6241,35 @@ function openModal(id) {
 // In-battle menu + rules
 function openBattleMenu() { openModal('modal-battle-menu'); }
 function openHowToPlay() { openModal('modal-howtoplay'); }
+
+// Which kind of battle are we in right now?
+function quitBattleContext() {
+  const mpScreen = document.getElementById('screen-multiplayer');
+  const mpBattle = document.getElementById('mp-phase-battle');
+  if (mpScreen && mpScreen.classList.contains('active') && mpBattle && mpBattle.style.display !== 'none') return 'mp';
+  if (BATTLE && BATTLE.isGauntlet) return 'gauntlet';
+  if (BATTLE && BATTLE.isDaily) return 'daily';
+  return 'campaign';
+}
+function openQuitBattle() {
+  closeModal('modal-battle-menu');
+  const ctx = quitBattleContext();
+  const body = document.getElementById('quit-battle-body');
+  if (ctx === 'mp') body.textContent = 'Forfeit this match and return to the home screen?';
+  else if (ctx === 'gauntlet') { const d = Math.max(0, (GAUNTLET.stage || 1) - 1); body.textContent = `End your Gauntlet run now? You'll bank rewards for depth ${d} already cleared.`; }
+  else if (ctx === 'daily') body.textContent = 'Quit the Daily Challenge? You can replay it anytime today.';
+  else body.textContent = 'Quit this battle and return to the campaign? This attempt will be forfeited.';
+  openModal('modal-quit-battle');
+}
+function doQuitBattle() {
+  closeModal('modal-quit-battle');
+  const ctx = quitBattleContext();
+  try { AUDIO.stopBossTrack(); } catch (e) {}
+  if (ctx === 'mp') { mpExit(); return; }
+  if (ctx === 'gauntlet') { gauntletEndRun(Math.max(0, (GAUNTLET.stage || 1) - 1)); return; }
+  if (ctx === 'daily') { showScreen('campaign'); showCampaignTab('daily'); return; }
+  showScreen('campaign');
+}
 
 // ══════════════════════════════════════════════
 //  CODEX
@@ -9275,70 +9336,93 @@ function mpRenderAICodeSizePicker() {
 //  TUTORIAL ENGINE
 // ══════════════════════════════════════════════════════════════
 
+// Hands-on guided tour. The player actually plays a short, fixed practice match
+// to completion. Spotlight steps highlight real controls (box pinned clear of the
+// board); `interactive` steps let the player tap the real board (no dim, no block);
+// `build` steps generate text from the live feedback after a guess.
+const TUT_CODE = ['red', 'blue', 'blue', 'green'];             // fixed practice code (R B B G)
+const TUT_POOL = ['red', 'blue', 'green', 'yellow', 'orange']; // 5-color pool (yellow & orange aren't in this code)
+
+function tutLastFeedback() {
+  const b = BATTLE, g = b && b.guesses[b.guesses.length - 1];
+  return g ? g.feedback : { reds: 0, whites: 0 };
+}
+function tutExplainEliminate() {
+  const f = tutLastFeedback();
+  return `A guess of all yellow scored ${f.reds} red and ${f.whites} white.\n\n`
+    + (f.reds === 0 && f.whites === 0
+      ? "Zero pegs of any kind means yellow appears NOWHERE in the code. Triple-tap the 🟡 yellow orb in the picker to cross it out so it's out of your way. (Changed your mind? Double-tap a grayed-out orb to bring it back.)"
+      : "🔴 Red = right color & spot.  ⚪ White = right color, wrong spot. A color that scores nothing isn't in the code — triple-tap it to eliminate it (double-tap a grayed orb to restore it).");
+}
+function tutExplainReds() {
+  const f = tutLastFeedback();
+  return `Three 🔴 reds and one 🔵 blue scored ${f.reds} red and ${f.whites} white.\n\n`
+    + (f.reds === 1 && f.whites === 1
+      ? "🔴 1 red = one orb is in exactly the right spot. ⚪ 1 white = another is the right color, wrong spot. But pegs never say WHICH orbs — that white could be the blue, OR a second red in the wrong place. We can't tell yet.\n\nWhat we DO know: red is in the code. Let's probe blue next."
+      : "🔴 Red = right spot. ⚪ White = right color, wrong spot. Pegs show totals, not which orb — so keep probing to narrow it down.");
+}
+function tutExplainLock() {
+  const f = tutLastFeedback();
+  return `Three 🔵 blues and one 🟢 green scored ${f.reds} red and ${f.whites} white.\n\n`
+    + (f.reds === 3 && f.whites === 0
+      ? "Three orbs are in exactly the right spot, with nothing left over — strong evidence the blues and green fill three slots, leaving slot 1. Since we know red is in the code, red is the clear fit for slot 1. Confident enough to commit: tap 🔴 red into slot 1 and double-tap to LOCK it (and double-tap a locked slot again any time to unlock it)."
+      : "Most slots look right now. When you're confident about one, place that color and double-tap the slot to lock it in place (double-tap again to unlock).");
+}
+
 const TUT_STEPS = [
-  {
-    pos: 'pos-center', label: 'Welcome!', backdrop: true,
+  { boxPos: 'center', label: 'Welcome!',
     title: '👋 Welcome to OrbMaster!',
-    text: 'Each boss hides a secret sequence of colored orbs. Your job is to crack the code before you run out of turns.\n\nThis tutorial will walk you through your first match. Ready?',
-    btn: "Let's Go!"
-  },
-  {
-    pos: 'pos-top', label: 'Step 1 of 8', backdrop: true,
-    title: '🗺️ The Campaign',
-    text: "This is the Campaign screen. Each boss card shows who you're up against, their orb pool, and the loot they drop.\n\nBosses unlock in order — defeat one to face the next.",
-    btn: '⚔️ Challenge Lemons!',
-    action: () => { tutHide(); onBossClick(0); }
-  },
-  {
-    pos: 'pos-bottom', label: 'Step 2 of 8', backdrop: true,
+    text: "Every boss hides a secret sequence of colored orbs. Let's crack one together, step by step — you'll learn deduction plus two power tools.",
+    btn: "Let's Go!" },
+  { target: '#boss-list .boss-card', label: 'The Campaign',
+    title: '🗺️ Pick a Boss',
+    text: "Each card is a boss guarding a secret code. We'll take on the first one.",
+    btn: '⚔️ Challenge!', action: () => { onBossClick(0); } },
+  { target: '#loadout-boss-section', label: 'The Orb Pool',
     title: '🔮 The Orb Pool',
-    text: "See the orbs shown here? That's Lemons' ORB POOL — the exact colors he'll use in his secret code.\n\nThe more bosses you defeat, the larger the orb pool grows.",
-    btn: 'Got it!'
-  },
-  {
-    pos: 'pos-bottom', label: 'Step 3 of 8', backdrop: true,
+    text: "These are the five colors a boss's code can use: red, blue, green, yellow, and orange. Part of cracking it is figuring out which ones are actually in the code — and where.",
+    btn: 'Got it!' },
+  { target: '#ability-slots', label: 'Ability Orbs',
     title: '✨ Ability Orbs',
-    text: "These empty slots are for ABILITY ORBS — powerful items you can forge and equip.\n\nAbilities like Burn (reveal a position), Hint (choose a slot to reveal), and Submerge (scramble the code) can turn the tide.\n\nWe'll skip equipping for now. Tap ENTER BATTLE!",
-    btn: '⚔️ Enter Battle!',
-    action: () => { tutHide(); startBattle(); }
-  },
-  {
-    pos: 'pos-top', label: 'Step 4 of 8', backdrop: true,
-    title: '🎯 The Guess Board',
-    text: "This is your GUESS BOARD. Each row is one guess.\n\nFill in the colored orb slots using the color picker below, then tap SUBMIT GUESS.\n\nYou have 10 turns — use the feedback pegs to zero in on the secret code!",
-    btn: 'Got it!'
-  },
-  {
-    pos: 'pos-top', label: 'Step 5 of 8', backdrop: true,
-    title: '🎨 Pick Your Colors',
-    text: "Tap any color in the picker at the bottom to fill the active slot.\n\nThe active slot pulses purple. Tap a different slot to change which one you're filling.\n\nTry making your first guess now!",
-    btn: 'OK — let me try!'
-  },
-  {
-    pos: 'pos-top', label: 'Step 6 of 8', backdrop: true, showPegs: true,
-    title: '📊 Reading the Pegs',
-    text: "After submitting, feedback pegs appear on the right:\n",
-    btn: 'Got it — keep guessing!'
-  },
-  {
-    pos: 'pos-top', label: 'Step 7 of 8', backdrop: true,
-    title: '🔒 Pro Tips',
-    text: "Two handy tools as you guess:\n\n🔒 Double-tap a filled slot to LOCK that color in place — it carries forward to every future guess.\n\n✕ Triple-tap a color in the picker to ELIMINATE it when you know it's not in the code.",
-    btn: 'Nice — let me play!'
-  },
-  {
-    pos: 'pos-center', label: 'Step 8 of 8', backdrop: true,
-    title: '⚗️ Fragments & Forging',
-    text: "When you win, you earn ORB FRAGMENTS based on how fast you cracked the code.\n\nSpend fragments in the ORB FORGE to craft ability orbs you can equip before each battle.\n\nYou're ready, MindBreaker. Good luck! 🏆",
-    btn: 'Start Playing!',
-    finish: true
-  }
+    text: "Later you'll forge and equip up to 4 helper orbs here. We'll skip that for now — into battle!",
+    btn: '⚔️ Enter Battle!', action: () => { tutStartBattle(); } },
+  // ── practice match ──
+  { target: '#guess-grid', boxPos: 'top', label: 'The Board',
+    title: '🎯 Crack the Code',
+    text: "The MindBreaker hid a secret 4-orb code from these five colors. Each row is a guess; the pegs tell you how close you were. Let's deduce it.",
+    btn: 'Show me!' },
+  { boxPos: 'top', interactive: true, awaitGuess: true,
+    expect: ['yellow', 'yellow', 'yellow', 'yellow'], expectMsg: 'yellow, yellow, yellow, yellow',
+    label: 'Guess 1', title: '🧪 Probe a color',
+    text: "First, find out if yellow is even used. Tap 🟡 🟡 🟡 🟡 (all yellow) and SUBMIT." },
+  { boxPos: 'top', interactive: true, awaitEliminate: true, showPegs: true,
+    label: 'Eliminate', title: '✕ Cross it out', build: tutExplainEliminate },
+  { boxPos: 'top', interactive: true, awaitGuess: true,
+    expect: ['red', 'red', 'red', 'blue'], expectMsg: 'red, red, red, blue',
+    label: 'Guess 2', title: '🔴 Probe with reds',
+    text: "Now tap 🔴 🔴 🔴 🔵 — three reds and a blue — then SUBMIT." },
+  { target: '#guess-grid', boxPos: 'top', showPegs: true, build: tutExplainReds,
+    label: 'Reading the Pegs', title: '📊 What it tells us', btn: 'Next →' },
+  { boxPos: 'top', interactive: true, awaitGuess: true,
+    expect: ['blue', 'blue', 'blue', 'green'], expectMsg: 'blue, blue, blue, green',
+    label: 'Guess 3', title: '🔵 Now probe blue',
+    text: "Tap 🔵 🔵 🔵 🟢 — three blues and a green — then SUBMIT." },
+  { boxPos: 'top', interactive: true, awaitLock: true, showPegs: true,
+    label: 'Lock it in', title: '🔒 Lock a slot', build: tutExplainLock },
+  { boxPos: 'top', interactive: true, awaitGuess: true, final: true,
+    expect: ['red', 'blue', 'blue', 'green'], expectMsg: 'red, blue, blue, green',
+    label: 'Guess 4', title: '🏁 Finish it!',
+    text: "Slot 1 is locked to red. Fill 🔵 blue, 🔵 blue, 🟢 green in slots 2–4 and SUBMIT to win!" },
+  { boxPos: 'center', label: 'Solved!',
+    title: '🏆 You cracked it!',
+    text: "That's deduction: eliminate what's out, lock what's certain, and narrow the rest. Win matches to earn fragments, then forge and upgrade Ability Orbs in the Orb Forge.\n\nGood luck, MindMaster!",
+    btn: 'Start Playing!', finish: true }
 ];
 
-let TUT = { active: false, step: 0, guessMade: false };
+let TUT = { active: false, step: 0 };
 
 function tutStart() {
-  TUT = { active: true, step: 0, guessMade: false };
+  TUT = { active: true, step: 0 };
   STATE.tutorialSeen = true;
   saveState();
   tutShow(0);
@@ -9347,6 +9431,7 @@ function tutStart() {
 function tutSkip() {
   tutHide();
   TUT.active = false;
+  if (BATTLE && BATTLE.isTutorial) BATTLE = null;
   STATE.tutorialSeen = true;
   saveState();
 }
@@ -9358,7 +9443,8 @@ function tutSkipToHome() {
 }
 
 function tutHide() {
-  document.getElementById('tutorial-overlay').classList.remove('active');
+  const ov = document.getElementById('tutorial-overlay');
+  ov.classList.remove('active', 'spotlight', 'passthrough');
 }
 
 function tutShow(stepIdx) {
@@ -9368,53 +9454,129 @@ function tutShow(stepIdx) {
 
   const overlay = document.getElementById('tutorial-overlay');
   const box = document.getElementById('tutorial-box');
+  const spot = document.getElementById('tutorial-spotlight');
   overlay.classList.add('active');
 
-  box.className = 'tut-box ' + step.pos;
-  document.getElementById('tut-label').textContent = step.label;
-  document.getElementById('tut-title').textContent = step.title;
-  document.getElementById('tut-text').textContent = step.text;
+  document.getElementById('tut-label').textContent = step.label || 'Tutorial';
+  document.getElementById('tut-title').textContent = step.title || '';
+  document.getElementById('tut-text').textContent = step.build ? step.build() : (step.text || '');
   document.getElementById('tut-pegs').style.display = step.showPegs ? '' : 'none';
 
   const nextBtn = document.getElementById('tut-next-btn');
-  if (step.btn) {
-    nextBtn.style.display = '';
-    nextBtn.textContent = step.btn;
+  if (step.btn) { nextBtn.style.display = ''; nextBtn.textContent = step.btn; }
+  else { nextBtn.style.display = 'none'; }
+
+  const interactive = !!step.interactive;
+  overlay.classList.toggle('passthrough', interactive);   // hands-on: don't dim/block
+
+  // Spotlight the highlighted control (only when not in hands-on mode).
+  const el = (!interactive && step.target) ? document.querySelector(step.target) : null;
+  if (el) {
+    overlay.classList.add('spotlight');
+    try { el.scrollIntoView({ block: 'nearest' }); } catch (e) {}
+    const r = el.getBoundingClientRect(), pad = 8;
+    spot.style.top = (r.top - pad) + 'px';
+    spot.style.left = (r.left - pad) + 'px';
+    spot.style.width = (r.width + pad * 2) + 'px';
+    spot.style.height = (r.height + pad * 2) + 'px';
   } else {
-    nextBtn.style.display = 'none';
+    overlay.classList.remove('spotlight');
+  }
+
+  // Position the text box so it never covers the board the player needs to see.
+  box.classList.remove('pos-center');
+  box.style.left = '50%'; box.style.transform = 'translateX(-50%)';
+  if (step.boxPos === 'center') {
+    box.classList.add('pos-center');
+    box.style.top = ''; box.style.left = ''; box.style.bottom = ''; box.style.transform = '';
+  } else if (step.boxPos === 'top') {
+    box.style.top = '12px'; box.style.bottom = 'auto';
+  } else if (step.boxPos === 'bottom') {
+    box.style.top = 'auto'; box.style.bottom = '12px';
+  } else {
+    // auto: opposite side of the highlighted control
+    box.style.bottom = 'auto';
+    requestAnimationFrame(() => {
+      const bh = box.offsetHeight, vh = window.innerHeight;
+      let top = 12;
+      if (el) { const r = el.getBoundingClientRect(); top = (r.top > vh * 0.5) ? (r.top - 8 - bh - 14) : (r.bottom + 8 + 14); }
+      box.style.top = Math.max(12, Math.min(top, vh - bh - 12)) + 'px';
+    });
   }
 }
 
 function tutNext() {
   const step = TUT_STEPS[TUT.step];
-  if (step.action) { step.action(); return; }
-  if (step.finish)  { tutSkip(); showScreen('campaign'); return; }
+  if (step.finish) { tutSkip(); showScreen('campaign'); return; }
+  if (step.action) { step.action(); return; }   // screen change → tutOn* hook re-shows the tour
   tutShow(TUT.step + 1);
 }
 
-// Auto-advance tutorial when player hits campaign screen
-function tutOnCampaign() {
-  if (!TUT.active) return;
-  if (TUT.step === 1) tutShow(1);
+// Launch the fixed practice battle (simple code, can't be lost).
+function tutStartBattle() {
+  const boss = Object.assign({}, BOSS_DEFS[0], { pool: TUT_POOL.slice(), special: null, specialDesc: null });
+  BATTLE = newBattle(0, 4, { boss, pool: TUT_POOL.slice(), code: TUT_CODE.slice() });
+  BATTLE.isTutorial = true;
+  BATTLE.maxTurns = 99; BATTLE.turnsLeft = 99;   // the lesson can't be lost
+  showScreen('battle');
+  renderBattle();
+  tutShow(4);
 }
 
-// Auto-advance tutorial when player hits loadout
+// Player solved the practice code — celebrate and finish.
+function tutFinishBattle() {
+  BATTLE = null;
+  tutShow(TUT_STEPS.length - 1);
+}
+
+// Keep the spotlight aligned if the viewport changes mid-tour.
+window.addEventListener('resize', () => { if (TUT.active) tutShow(TUT.step); });
+
+function tutOnCampaign() {}
+
+// Re-show once the pre-battle loadout screen is on (Orb Pool step).
 function tutOnLoadout() {
   if (!TUT.active) return;
-  if (TUT.step <= 2) tutShow(2);
+  if (TUT.step < 2) tutShow(2);
 }
 
-// Auto-advance tutorial when battle starts
-function tutOnBattle() {
-  if (!TUT.active) return;
-  if (TUT.step <= 4) tutShow(4);
-}
+// Battle entry is driven explicitly by tutStartBattle.
+function tutOnBattle() {}
 
-// Called after player submits first guess in tutorial
+// Advance the coaching when the player submits a guess at an awaitGuess step.
+// Forced guesses are enforced: a wrong guess is undone and the player re-prompted.
 function tutOnGuess() {
-  if (!TUT.active || TUT.guessMade) return;
-  TUT.guessMade = true;
-  tutShow(6); // peg explanation
+  if (!TUT.active || !BATTLE || !BATTLE.isTutorial) return;
+  const step = TUT_STEPS[TUT.step];
+  if (!step || !step.awaitGuess) return;
+  const fb = tutLastFeedback();
+  if (fb.reds === BATTLE.codeSize) return; // solved → submitGuess calls tutFinishBattle
+  if (step.expect) {
+    const last = (BATTLE.guesses[BATTLE.guesses.length - 1] || {}).guess || [];
+    const ok = last.length === step.expect.length && last.every((c, i) => c === step.expect[i]);
+    if (!ok) {
+      BATTLE.guesses.pop();          // undo the off-script guess
+      renderBattle();
+      showToast('For this lesson, enter ' + (step.expectMsg || 'the suggested orbs') + '.');
+      return;
+    }
+  }
+  if (step.final) return;            // final solves only on a win (handled above)
+  tutShow(TUT.step + 1);
+}
+
+// Advance when the player triple-taps to eliminate a color at an awaitEliminate step.
+function tutOnEliminate(color) {
+  if (!TUT.active) return;
+  const step = TUT_STEPS[TUT.step];
+  if (step && step.awaitEliminate) tutShow(TUT.step + 1);
+}
+
+// Advance when the player double-taps to lock a slot at an awaitLock step.
+function tutOnLock(col, color) {
+  if (!TUT.active) return;
+  const step = TUT_STEPS[TUT.step];
+  if (step && step.awaitLock) tutShow(TUT.step + 1);
 }
 
 // Wire tutorial into showScreen

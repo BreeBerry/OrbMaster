@@ -1,5 +1,16 @@
 # OrbMaster — Release Notes
 
+## v1.11 (June 2026)
+
+### What's new in 1.11
+
+- **Redesigned tutorial** — a hands-on, guided first match that teaches deduction step by step: probe with a guess, read the pegs, eliminate a color (triple-tap), lock a confirmed slot (double-tap), and crack the code. The boss taunt is suppressed during the lesson so the board stays visible.
+- **Quit Match** — every battle screen's ⚙️ menu now has a Quit option (forfeit/return), so you can leave a Gauntlet, Daily, Campaign, or Multiplayer match at any time (especially handy on iPhone).
+- **iPhone polish** — fixed tooltips and the Orb Forge overflowing the screen edge, and tightened layouts to fit iPhone screens.
+- **First iOS release groundwork** — the app icon, portrait lock, iPhone-only sizing, and App Store export-compliance are wired up for the App Store build.
+
+---
+
 ## v1.10 (June 2026)
 
 ### Play Store "What's new" (short)
