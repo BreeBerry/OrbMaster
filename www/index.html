@@ -1567,7 +1567,7 @@
     <button class="codex-tab" onclick="showCodexTab('fragments')">Fragments</button>
     <button class="codex-tab" onclick="showCodexTab('progression')">Progression</button>
     <button class="codex-tab" onclick="showCodexTab('playonline')">Play Online</button>
-    <button class="codex-tab" onclick="showCodexTab('playgames')">Google Play</button>
+    <button class="codex-tab" id="codex-tab-playgames" onclick="showCodexTab('playgames')">Google Play</button>
   </div>
   <div class="codex-body">
 
@@ -1832,10 +1832,10 @@
       <div class="codex-rule">Tap <strong>"Play vs MindBreaker AI"</strong> for a casual practice match against the AI. Choose your code size, orb pool, and whether to enable orb abilities.</div>
       <div class="codex-rule">AI matches are not ranked and don't affect your campaign progress. They're ideal for testing loadouts and strategies.</div>
       <div class="codex-h2">Friends List & Invites</div>
-      <div class="codex-rule">Your <strong>Google Play Games friends</strong> appear at the bottom of the multiplayer lobby. If a friend is online and has a room open, you'll see a "Join" button next to their name.</div>
+      <div class="codex-rule">Your <strong>friends</strong> appear at the bottom of the multiplayer lobby. If a friend is online and has a room open, you'll see a "Join" button next to their name.</div>
       <div class="codex-rule"><strong>Inviting:</strong> When you create a room, you can invite friends directly. They'll see a banner notification with your room code and can join with one tap.</div>
       <div class="codex-rule"><strong>Online Presence:</strong> A green dot indicates friends who are currently in the multiplayer lobby. Tap "Refresh" to update the list.</div>
-      <div class="codex-tip">Friends are loaded from your Google Play Games account. You must be signed in to see and invite friends.</div>
+      <div class="codex-tip">Friends are loaded from your connected game service. You must be signed in to see and invite friends.</div>
       <div class="codex-rule"><strong>Add friends from matches:</strong> After a random online match, tap <strong>Add Friend</strong> on the results screen. If your opponent accepts, they join your friends list — then you can challenge them directly from the Friends section, no room code needed.</div>
       <div class="codex-h2">Multiplayer Battle Flow</div>
       <div class="codex-rule"><strong>1. Set Your Code:</strong> Both players pick a secret orb sequence for their opponent to crack.</div>
@@ -1881,7 +1881,7 @@
     <div id="profile-pgs-view" style="display:none;">
       <img class="profile-avatar-img" id="profile-pgs-avatar" src="" alt="Avatar">
       <div style="text-align:center;font-size:18px;font-weight:bold;color:#e9d5ff;margin-bottom:4px;" id="profile-pgs-name"></div>
-      <div id="profile-svc-label" style="text-align:center;font-size:12px;color:#a78bfa;margin-bottom:12px;">Google Play Games</div>
+      <div id="profile-svc-label" style="text-align:center;font-size:12px;color:#a78bfa;margin-bottom:12px;"></div>
       <div id="profile-pgs-sync-status" style="text-align:center;font-size:12px;color:#86efac;margin-bottom:8px;"></div>
     </div>
     <!-- Local/offline view -->
@@ -1895,7 +1895,7 @@
     <button class="modal-btn" style="background:linear-gradient(135deg,#b45309,#f59e0b);" onclick="openAchievements()">🏅 Achievements</button>
     <div id="profile-local-btns">
       <button class="modal-btn" onclick="saveProfile()">Save Profile</button>
-      <button class="modal-btn" id="profile-pgs-signin-btn" style="display:none;background:linear-gradient(135deg,#16a34a,#15803d);" onclick="manualPgsSignIn()">🎮 Sign in with Google Play</button>
+      <button class="modal-btn" id="profile-pgs-signin-btn" style="display:none;background:linear-gradient(135deg,#16a34a,#15803d);" onclick="manualPgsSignIn()">🎮 Sign In</button>
     </div>
     <button class="modal-btn cancel" onclick="closeModal('modal-profile')">Close</button>
   </div>
@@ -1965,9 +1965,9 @@
       </div>
       <div class="bg-carousel" id="bg-picker"></div>
     </div>
-    <div class="settings-row">
+    <div class="settings-row" id="settings-pgs-row">
       <div>
-        <div class="settings-label">Google Play Games</div>
+        <div class="settings-label" id="settings-pgs-label">Game Service</div>
         <div class="settings-sublabel" id="settings-pgs-status">Not signed in</div>
       </div>
       <button class="pgs-signin-btn" id="settings-pgs-btn" onclick="pgsSettingsBtnClick()">Sign In</button>
@@ -3983,7 +3983,7 @@ function offerCloudRestore(cloudSave) {
   const rank = cloudSave.mindBreakerRank || 1;
   const name = (cloudSave.profile && cloudSave.profile.name) || 'Adventurer';
   document.getElementById('modal-cloud-restore-body').innerHTML = `
-    You reset your progress, but a cloud save from your Google Play account still exists:
+    You reset your progress, but a cloud save still exists:
     <div style="background:#1e0a3c;border:1px solid #4c1d95;border-radius:10px;padding:10px 14px;margin:10px 0;text-align:left;font-size:12px;line-height:1.8;">
       <div>🧙 ${name}</div>
       <div>⚔️ ${bosses} / 10 bosses defeated</div>
@@ -5680,7 +5680,7 @@ function openProfileModal() {
     localView.style.display = '';
     localBtns.style.display = '';
     const gBtn = document.getElementById('profile-pgs-signin-btn');
-    if (gBtn) { gBtn.style.display = (typeof PGS !== 'undefined' && PGS.isNative()) ? '' : 'none'; gBtn.textContent = '🎮 Sign in with ' + svc; }
+    if (gBtn) { gBtn.style.display = (typeof PGS !== 'undefined' && PGS.isNative() && PGS.platform() !== 'ios') ? '' : 'none'; gBtn.textContent = '🎮 Sign in with ' + svc; }
     const name = STATE.profile?.name || '';
     const avatar = STATE.profile?.avatar || '🧙';
     document.getElementById('profile-name-input').value = name;
@@ -6701,6 +6701,17 @@ function serviceLabel() {
 function updateSignInUI() {
   if (typeof PGS === 'undefined') return;
   const svc = serviceLabel();
+  // Relabel platform-specific UI to the current service name.
+  const lbl = document.getElementById('settings-pgs-label'); if (lbl) lbl.textContent = svc;
+  const psl = document.getElementById('profile-svc-label'); if (psl) psl.textContent = svc;
+  // App Store Guideline 2.3.10: the iOS app must not reference other platforms.
+  // iOS v1 uses Game Center silent auth / anonymous fallback, so hide all sign-in
+  // account UI (and the Android-only Codex tab) entirely on iOS.
+  if (PGS.platform() === 'ios') {
+    ['codex-tab-playgames', 'codex-playgames', 'settings-pgs-row', 'profile-pgs-signin-btn', 'title-signin-pill']
+      .forEach(id => { const e = document.getElementById(id); if (e) e.style.display = 'none'; });
+    return;
+  }
   // Title screen pill
   const pill = document.getElementById('title-signin-pill');
   const dot  = document.getElementById('title-signin-dot');
@@ -6768,11 +6779,11 @@ async function manualPgsSignIn() {
       const profileModal = document.getElementById('modal-profile');
       if (profileModal && profileModal.classList.contains('show')) openProfileModal();
     } else {
-      showToast('❌ Google Play sign-in failed — check your connection and try again');
+      showToast('❌ ' + serviceLabel() + ' sign-in failed — check your connection and try again');
     }
   } catch (e) {
     console.error('[PGS] Manual sign-in error:', e);
-    showToast('❌ Google Play sign-in failed');
+    showToast('❌ ' + serviceLabel() + ' sign-in failed');
     updateSignInUI();
   } finally {
     pgsSigningIn = false;
@@ -6809,6 +6820,7 @@ async function manualPgsSignOut() {
 
 // Auto sign-in on app load (non-blocking)
 document.addEventListener('DOMContentLoaded', () => {
+  updateSignInUI();   // immediately relabel/hide platform UI (esp. hide Google Play refs on iOS)
   setTimeout(async () => {
     await PGS.signIn();
     updateTitleAvatar();
@@ -7143,7 +7155,7 @@ async function mpLoadFriends() {
     .map(g => ({ id: g.id, name: g.name || 'Player', avatarUrl: null }));
   const friends = [...gameFriends, ...pgsFriends];
   if (!friends.length) {
-    listEl.innerHTML = '<div class="mp-friends-empty">No friends yet. Add friends via Google Play Games — or add your opponent after a random match!</div>';
+    listEl.innerHTML = '<div class="mp-friends-empty">No friends yet. Add your opponent after a random match!</div>';
     return;
   }
   const presenceState = mpPresenceChannel ? mpPresenceChannel.presenceState() : {};
