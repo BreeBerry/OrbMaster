@@ -19,6 +19,7 @@ import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 
+import com.google.android.gms.games.AchievementsClient;
 import com.google.android.gms.games.GamesSignInClient;
 import com.google.android.gms.games.PlayGames;
 import com.google.android.gms.games.PlayersClient;
@@ -170,6 +171,69 @@ public class PlayGamesPlugin extends Plugin {
                 call.resolve(result);
             }
         });
+    }
+
+    /**
+     * Unlock a Play Games achievement. Expects: { id: "<PGS achievement ID>" }.
+     * Idempotent — unlocking an already-unlocked achievement is a no-op.
+     */
+    @PluginMethod()
+    public void unlockAchievement(PluginCall call) {
+        String id = call.getString("id", "");
+        if (id == null || id.isEmpty()) { call.reject("Missing achievement id"); return; }
+        try {
+            AchievementsClient client = PlayGames.getAchievementsClient(getActivity());
+            client.unlockImmediate(id).addOnCompleteListener(task -> {
+                JSObject res = new JSObject();
+                res.put("success", task.isSuccessful());
+                if (!task.isSuccessful() && task.getException() != null) {
+                    res.put("error", task.getException().getMessage());
+                }
+                call.resolve(res);
+            });
+        } catch (Exception e) {
+            Log.e(TAG, "unlockAchievement failed", e);
+            call.reject("unlockAchievement failed: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Increment a step-based achievement. Expects: { id: "<id>", steps: <int> }.
+     */
+    @PluginMethod()
+    public void incrementAchievement(PluginCall call) {
+        String id = call.getString("id", "");
+        int steps = call.getInt("steps", 1);
+        if (id == null || id.isEmpty()) { call.reject("Missing achievement id"); return; }
+        try {
+            AchievementsClient client = PlayGames.getAchievementsClient(getActivity());
+            client.incrementImmediate(id, steps).addOnCompleteListener(task -> {
+                JSObject res = new JSObject();
+                res.put("success", task.isSuccessful());
+                call.resolve(res);
+            });
+        } catch (Exception e) {
+            Log.e(TAG, "incrementAchievement failed", e);
+            call.reject("incrementAchievement failed: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Open the native Play Games achievements UI.
+     */
+    @PluginMethod()
+    public void showAchievements(PluginCall call) {
+        try {
+            AchievementsClient client = PlayGames.getAchievementsClient(getActivity());
+            client.getAchievementsIntent().addOnSuccessListener(intent -> {
+                getActivity().startActivity(intent);
+                JSObject res = new JSObject();
+                res.put("success", true);
+                call.resolve(res);
+            }).addOnFailureListener(e -> call.reject("Failed to open achievements: " + e.getMessage()));
+        } catch (Exception e) {
+            call.reject("showAchievements failed: " + e.getMessage());
+        }
     }
 
     /**

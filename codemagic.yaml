@@ -68,7 +68,7 @@ workflows:
         script: |
           cd $CM_BUILD_DIR/ios/App
           agvtool new-version -all $(($BUILD_NUMBER))
-          agvtool new-marketing-version "1.11"
+          agvtool new-marketing-version "1.12"
       - name: Build signed IPA
         script: |
           set -e

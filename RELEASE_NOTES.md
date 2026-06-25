@@ -1,5 +1,15 @@
 # OrbMaster — Release Notes
 
+## v1.12 (June 2026)
+
+### What's new in 1.12
+
+- **Play Games achievements** — your 19 achievements now unlock through Google Play Games (Level Up program), in addition to the in-game rewards. View them via the new "View on Play Games" button in the Achievements screen.
+- **Simpler gestures** — eliminating a color in the picker is now a **double-tap** (was triple-tap); double-tap again to restore. Locking a slot stays a double-tap. This also makes the game cleaner to play with a mouse on PC.
+- Internal: groundwork toward Google Play Games on PC readiness.
+
+---
+
 ## v1.11 (June 2026)
 
 ### What's new in 1.11

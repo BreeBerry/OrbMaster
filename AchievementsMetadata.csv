@@ -1,0 +1,19 @@
+First Blood,Defeat your first boss.,False,,REVEALED,25,1
+Swift Solver,Beat a boss in 3 turns or fewer.,False,,REVEALED,25,2
+Read My Mind,Crack a code in a single turn.,False,,HIDDEN,50,3
+Bare Hands,Beat a boss with no ability orbs equipped.,False,,REVEALED,50,4
+MindMaster,Defeat all 10 campaign bosses.,False,,REVEALED,150,5
+Apprentice Smith,Forge your first ability orb.,False,,REVEALED,10,6
+Orb Collector,Forge all 12 ability orbs.,False,,REVEALED,75,7
+Six Slots,Upgrade the MindBreaker Altar to Rank 6.,False,,REVEALED,50,8
+Daily Grind,Complete a Daily Challenge.,False,,REVEALED,15,9
+On Fire,Reach a 7-day daily streak.,False,,REVEALED,50,10
+Unbreakable,Reach a 30-day daily streak.,False,,REVEALED,100,11
+Duelist,Win a ranked PvP duel.,False,,REVEALED,50,12
+Gauntlet Initiate,Reach depth 5 in the Gauntlet.,False,,REVEALED,25,13
+Gauntlet Adept,Reach depth 10 in the Gauntlet.,False,,REVEALED,50,14
+Gauntlet Master,Reach depth 15 in the Gauntlet.,False,,REVEALED,50,15
+Gauntlet Legend,Reach depth 20 in the Gauntlet.,False,,REVEALED,75,16
+Fully Armed,Assemble a full 4-orb Gauntlet loadout.,False,,REVEALED,25,17
+Perfectionist,Earn 3 stars on any boss.,False,,REVEALED,25,18
+Grand Master,Earn 3 stars on all 10 bosses.,False,,REVEALED,100,19

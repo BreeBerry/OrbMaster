@@ -1598,7 +1598,7 @@
       <div class="codex-h2">🔒 Orb Locking</div>
       <div class="codex-rule"><strong>Double-tap a guess slot</strong> to lock that color to that position. Locked orbs carry forward into every future guess automatically. A gold glow marks locked slots. Double-tap again to unlock.</div>
       <div class="codex-h2">✕ Color Elimination</div>
-      <div class="codex-rule"><strong>Triple-tap a color in the picker</strong> to eliminate it — graying it out when you're confident it's not in the sequence. Double-tap a grayed color to restore it.</div>
+      <div class="codex-rule"><strong>Double-tap a color in the picker</strong> to eliminate it — graying it out when you're confident it's not in the sequence. Double-tap it again to restore it.</div>
       <div class="codex-tip">Locked and eliminated colors are automatically filtered out by orb abilities — so hints and reveals focus on orbs you haven't figured out yet.</div>
     </div>
 
@@ -1907,6 +1907,7 @@
     <div class="modal-title">🏅 Achievements</div>
     <div id="ach-count" style="text-align:center;font-size:12px;color:#a78bfa;margin-bottom:10px;"></div>
     <div id="ach-list" class="ach-list"></div>
+    <button class="modal-btn" id="ach-pgs-btn" style="display:none;" onclick="PGS.showAchievements()">🎮 View on Play Games</button>
     <button class="modal-btn cancel" onclick="closeModal('modal-achievements')">Close</button>
   </div>
 </div>
@@ -1979,7 +1980,7 @@
       </div>
       <button class="reset-btn" onclick="confirmReset()">⚠️ Reset</button>
     </div>
-    <div class="settings-version">OrbMaster v1.11 · BreezyBee Games</div>
+    <div class="settings-version">OrbMaster v1.12 · BreezyBee Games</div>
     <button class="modal-btn cancel" style="margin-top:14px;" onclick="closeModal('modal-settings')">Close</button>
   </div>
 </div>
@@ -2019,7 +2020,7 @@
       <p style="margin:10px 0 0;font-size:12px;color:#c4b5fd;">Pegs show only the <em>totals</em> — not which slot each one belongs to. Use deduction to narrow it down.</p>
       <p style="margin:12px 0 6px;"><strong>Win:</strong> every orb is the right color in the right spot. <strong>Lose:</strong> run out of turns.</p>
       <p style="margin:10px 0 6px;"><strong>Ability orbs</strong> (equipped before battle) give hints, extra turns, or eliminate colors — tap them above the board.</p>
-      <p style="margin:10px 0 0;font-size:12px;color:#c4b5fd;"><strong>🔒 Lock:</strong> double-tap a slot to keep that orb in every future guess. <strong>✕ Eliminate:</strong> triple-tap a picker color to gray out one you've ruled out.</p>
+      <p style="margin:10px 0 0;font-size:12px;color:#c4b5fd;"><strong>🔒 Lock:</strong> double-tap a slot to keep that orb in every future guess. <strong>✕ Eliminate:</strong> double-tap a picker color to gray out one you've ruled out.</p>
     </div>
     <button class="modal-btn cancel" style="margin-top:14px;" onclick="closeModal('modal-howtoplay')">Got it</button>
   </div>
@@ -3329,6 +3330,31 @@ const ACHIEVEMENTS = {
 };
 const ACHIEVEMENT_ORDER = ['first_blood','swift','one_turn','bare_hands','campaign','forge_first','collector','altar_max','daily_first','streak_7','streak_30','duelist','gauntlet_5','gauntlet_10','gauntlet_15','gauntlet_20','fully_armed','three_star','all_stars'];
 
+// Google Play Games achievement IDs (Level Up program). Create each achievement
+// in Play Console → Play Games Services → Achievements, then paste its ID here
+// (looks like "CgkI…"). Until filled in, PGS unlocking is skipped harmlessly.
+const PGS_ACHIEVEMENT_IDS = {
+  first_blood:'CgkI2oSv-sQbEAIQAg',   // First Blood
+  swift:'CgkI2oSv-sQbEAIQDQ',         // Swift Solver
+  one_turn:'CgkI2oSv-sQbEAIQBw',      // Read My Mind
+  bare_hands:'CgkI2oSv-sQbEAIQDg',    // Bare Hands
+  campaign:'CgkI2oSv-sQbEAIQFA',      // MindMaster
+  forge_first:'CgkI2oSv-sQbEAIQEQ',   // Apprentice Smith
+  collector:'CgkI2oSv-sQbEAIQEw',     // Orb Collector
+  altar_max:'CgkI2oSv-sQbEAIQAw',     // Six Slots
+  daily_first:'CgkI2oSv-sQbEAIQBQ',   // Daily Grind
+  streak_7:'CgkI2oSv-sQbEAIQEg',      // On Fire
+  streak_30:'CgkI2oSv-sQbEAIQBg',     // Unbreakable
+  duelist:'CgkI2oSv-sQbEAIQBA',       // Duelist
+  gauntlet_5:'CgkI2oSv-sQbEAIQCQ',    // Gauntlet Initiate
+  gauntlet_10:'CgkI2oSv-sQbEAIQDA',   // Gauntlet Adept
+  gauntlet_15:'CgkI2oSv-sQbEAIQDw',   // Gauntlet Master
+  gauntlet_20:'CgkI2oSv-sQbEAIQCA',   // Gauntlet Legend
+  fully_armed:'CgkI2oSv-sQbEAIQCg',   // Fully Armed
+  three_star:'CgkI2oSv-sQbEAIQCw',    // Perfectionist
+  all_stars:'CgkI2oSv-sQbEAIQEA'      // Grand Master
+};
+
 function hasAchievement(id) { return !!(STATE.achievements && STATE.achievements[id]); }
 
 function grantAchievement(id) {
@@ -3339,7 +3365,18 @@ function grantAchievement(id) {
   for (const [c, a] of Object.entries(reward)) STATE.fragments[c] = (STATE.fragments[c] || 0) + a;
   saveState();
   showAchievementToast(id);
+  // Also unlock the matching Play Games achievement (Level Up program).
+  try { if (typeof PGS !== 'undefined' && PGS.unlockAchievement) PGS.unlockAchievement(PGS_ACHIEVEMENT_IDS[id]); } catch (e) {}
   return true;
+}
+
+// Push every locally-earned achievement to Play Games (idempotent). Called after
+// sign-in so achievements earned before PGS integration still register.
+function syncAchievementsToPGS() {
+  if (typeof PGS === 'undefined' || !PGS.unlockAchievement || !STATE.achievements) return;
+  Object.keys(STATE.achievements).forEach(id => {
+    if (PGS_ACHIEVEMENT_IDS[id]) PGS.unlockAchievement(PGS_ACHIEVEMENT_IDS[id]);
+  });
 }
 
 // Re-evaluate all threshold-based achievements from current STATE. Safe to call often.
@@ -3392,7 +3429,12 @@ function renderAchievements() {
     </div>`;
   }).join('');
 }
-function openAchievements() { renderAchievements(); openModal('modal-achievements'); }
+function openAchievements() {
+  renderAchievements();
+  const pgsBtn = document.getElementById('ach-pgs-btn');
+  if (pgsBtn) pgsBtn.style.display = (typeof PGS !== 'undefined' && PGS.platform() === 'android' && PGS.signedIn) ? '' : 'none';
+  openModal('modal-achievements');
+}
 
 // Per-solve achievement checks (shared by campaign + daily wins).
 function evaluateSolveAchievements(b) {
@@ -4069,7 +4111,7 @@ function newBattle(bossIdx, codeSize, opts) {
     disabledAbilities: {}, // abilityKey -> true (yellow orb)
     revealedPositions: {}, // pos -> color (red/burn/black)
     lockedSlots: {},       // pos -> color (player double-tapped to lock in)
-    lockedOutColors: [],   // colors player triple-tapped to eliminate
+    lockedOutColors: [],   // colors player double-tapped to eliminate
     hintMode: false,       // waiting for player to pick a slot for black orb
     revealedWrong: [],   // colors not in code (green)
     multiplier: 1.0,
@@ -4720,7 +4762,7 @@ function renderPicker() {
       btn.title = 'Not in sequence';
     }
 
-    // Triple-tap to lock out / double-tap to undo lockout
+    // Single-tap = pick the color; double-tap = eliminate it (or restore if already eliminated).
     let tapCount = 0, tapTimer = null;
     btn.addEventListener('click', () => {
       tapCount++;
@@ -4728,14 +4770,14 @@ function renderPicker() {
       tapTimer = setTimeout(() => {
         if (tapCount === 1) {
           pickColor(color);
-        } else if (tapCount === 2 && isLockedOut) {
-          // Undo lockout
+        } else if (isLockedOut) {
+          // Restore an eliminated color
           b.lockedOutColors = b.lockedOutColors.filter(c => c !== color);
           AUDIO.sfx.navigate();
-          showToast(`🔓 ${def.name} unlocked from elimination`);
+          showToast(`🔓 ${def.name} restored`);
           renderPicker();
-        } else if (tapCount >= 3 && !isLockedOut) {
-          // Lock out
+        } else {
+          // Eliminate the color from the sequence
           if (!b.lockedOutColors.includes(color)) b.lockedOutColors.push(color);
           AUDIO.sfx.lose ? AUDIO.sfx.lose() : AUDIO.sfx.navigate();
           showToast(`✕ ${def.name} eliminated from sequence`);
@@ -6688,6 +6730,21 @@ var PGS = {
       console.error('[PGS] Cloud load error:', e);
       return null;
     }
+  },
+
+  // ── Achievements (Android / Play Games — Level Up program) ──
+  async unlockAchievement(pgsId) {
+    if (this.platform() !== 'android' || !pgsId) return;
+    const plugin = this.getPlugin();
+    if (!plugin || !this.signedIn) return;
+    try { await plugin.unlockAchievement({ id: pgsId }); }
+    catch (e) { console.warn('[PGS] unlockAchievement failed:', e); }
+  },
+  async showAchievements() {
+    const plugin = this.getPlugin();
+    if (!plugin || !this.signedIn) { showToast(serviceLabel() + ' sign-in required'); return; }
+    try { await plugin.showAchievements(); }
+    catch (e) { console.warn('[PGS] showAchievements failed:', e); }
   }
 };
 
@@ -6775,6 +6832,7 @@ async function manualPgsSignIn() {
     if (result && result.isSignedIn) {
       showToast('✅ Signed in as ' + (result.displayName || 'Player'));
       await loadPlayerSave();
+      syncAchievementsToPGS();
       // Refresh open modals with the new identity
       const profileModal = document.getElementById('modal-profile');
       if (profileModal && profileModal.classList.contains('show')) openProfileModal();
@@ -6828,6 +6886,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (PGS.signedIn) {
       showToast('🎮 Signed in as ' + PGS.getName());
       await loadPlayerSave();
+      syncAchievementsToPGS();
       updateSignInUI();
     }
   }, 1000);
@@ -6896,7 +6955,7 @@ let MP = {
   revealedPositions: {},  // slot index -> revealed color (Burn / Hint)
   revealedWrong: [],      // colors known to NOT be in the opponent's code
   lockedSlots: {},        // slot index -> color (double-tapped to lock in)
-  lockedOutColors: [],    // colors triple-tapped to eliminate
+  lockedOutColors: [],    // colors double-tapped to eliminate
   hintMode: false,        // waiting for the player to tap a slot to reveal
   disablePickMode: false, // choosing which opponent ability to disable
   // AI ability bookkeeping (vs-Computer)
@@ -8465,7 +8524,7 @@ function mpRenderBattlePicker() {
       + (isOut ? `<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;font-weight:bold;text-shadow:0 0 3px #000;">✕</span>` : '')
       + (isFrozen ? `<span style="position:absolute;top:-6px;right:-6px;font-size:14px;filter:drop-shadow(0 0 3px #0ea5e9);">❄️</span>` : '');
     wrap.title = isFrozen ? `Frozen by Temple Ice — ${MP.frozenRoundsLeft} round${MP.frozenRoundsLeft===1?'':'s'} left`
-      : isOut ? 'Eliminated — double-tap to restore' : (isWrong ? 'Revealed not in code' : def.name + ' — triple-tap to eliminate');
+      : isOut ? 'Eliminated — double-tap to restore' : (isWrong ? 'Revealed not in code' : def.name + ' — double-tap to eliminate');
     wrap.onclick = () => mpColorTap(c);
     picker.appendChild(wrap);
   });
@@ -8545,8 +8604,8 @@ function mpColorTap(color) {
     const n = _mpColorTap.count; _mpColorTap.count = 0; _mpColorTap.color = null;
     const isOut = MP.lockedOutColors.includes(color);
     if (n === 1) mpPickBattleColor(color);
-    else if (n === 2 && isOut) mpRestoreColor(color);
-    else if (n >= 3 && !isOut) mpEliminateColor(color);
+    else if (isOut) mpRestoreColor(color);   // double-tap an eliminated color = restore
+    else mpEliminateColor(color);            // double-tap a color = eliminate
   }, 350);
 }
 
@@ -9363,8 +9422,8 @@ function tutExplainEliminate() {
   const f = tutLastFeedback();
   return `A guess of all yellow scored ${f.reds} red and ${f.whites} white.\n\n`
     + (f.reds === 0 && f.whites === 0
-      ? "Zero pegs of any kind means yellow appears NOWHERE in the code. Triple-tap the 🟡 yellow orb in the picker to cross it out so it's out of your way. (Changed your mind? Double-tap a grayed-out orb to bring it back.)"
-      : "🔴 Red = right color & spot.  ⚪ White = right color, wrong spot. A color that scores nothing isn't in the code — triple-tap it to eliminate it (double-tap a grayed orb to restore it).");
+      ? "Zero pegs of any kind means yellow appears NOWHERE in the code. Double-tap the 🟡 yellow orb in the picker to cross it out so it's out of your way. (Changed your mind? Double-tap it again to bring it back.)"
+      : "🔴 Red = right color & spot.  ⚪ White = right color, wrong spot. A color that scores nothing isn't in the code — double-tap it to eliminate it (double-tap again to restore it).");
 }
 function tutExplainReds() {
   const f = tutLastFeedback();
@@ -9577,7 +9636,7 @@ function tutOnGuess() {
   tutShow(TUT.step + 1);
 }
 
-// Advance when the player triple-taps to eliminate a color at an awaitEliminate step.
+// Advance when the player double-taps to eliminate a color at an awaitEliminate step.
 function tutOnEliminate(color) {
   if (!TUT.active) return;
   const step = TUT_STEPS[TUT.step];
