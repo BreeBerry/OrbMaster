@@ -1,5 +1,20 @@
 # OrbMaster — Release Notes
 
+## v1.13 (September 2026)
+
+### Play Store "What's new" (short)
+
+> New Game Plus! Beat the campaign to unlock Campaign+ — replay the whole run with a special ability on EVERY boss, not just the final three. Celebrate the unlock with a brand-new fireworks moment. Plus a big screen-fit overhaul: menus and buttons now stay locked on screen above the navigation bar on every screen, and the title screen, Gauntlet, and battle screens fit properly on all phones.
+
+### What's new in 1.13
+
+- **🔄 Campaign+ (New Game Plus)** — beat the campaign once to unlock Campaign+, then replay the campaign with a special ability on **every** boss, not just the last three. On a first playthrough, boss specials are reserved for the final three bosses (Queen Asabeth, Elkgore, Mad Martin) the way it was originally; Campaign+ turns them all on for a tougher second run. Toggle it on or off any time from the Campaign screen.
+- **🎉 Unlock celebration** — unlocking Campaign+ now pops a centered, animated celebration with a fireworks burst, whether you just beat the campaign or already had.
+- **📱 Screen-fit overhaul** — the bottom menu bar (Home, Campaign, Orb Forge, Orb Stash) now stays locked to the bottom of the screen and always visible, no scrolling to reach it. The title screen, Gauntlet, and all battle screens now fit fully above the system navigation bar on every phone, and the menu bar is consistent across all screens.
+- **Polish** — in-game messages are now centered and no longer run off the edges of the screen.
+
+---
+
 ## v1.12 (June 2026)
 
 ### What's new in 1.12
