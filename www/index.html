@@ -1232,9 +1232,52 @@
     color: #e9d5ff; padding: 10px 20px; border-radius: 20px;
     font-size: 13px; z-index: 200; pointer-events: none;
     opacity: 0; transition: opacity 0.3s;
-    white-space: nowrap;
+    max-width: min(88vw, 360px); text-align: center; line-height: 1.4;
+    box-sizing: border-box;
   }
   .toast.show { opacity: 1; }
+
+  /* ── CAMPAIGN+ UNLOCK CELEBRATION ── */
+  .cp-celebrate-overlay {
+    position: fixed; inset: 0; z-index: 9999;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px; box-sizing: border-box;
+    background: rgba(6,2,18,0.74); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+    opacity: 0; transition: opacity 0.25s ease;
+  }
+  .cp-celebrate-overlay.show { opacity: 1; }
+  .cp-fireworks { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 1; }
+  .cp-spark { position: absolute; width: 8px; height: 8px; border-radius: 50%; opacity: 0; will-change: transform, opacity; }
+  .cp-celebrate-card {
+    position: relative; z-index: 2;
+    width: 100%; max-width: 340px;
+    background: linear-gradient(160deg, #2b1466, #160a3a);
+    border: 2px solid #f59e0b; border-radius: 22px;
+    padding: 28px 22px 22px; text-align: center;
+    box-shadow: 0 0 42px rgba(245,158,11,0.45), 0 14px 44px rgba(0,0,0,0.6);
+    animation: cpPop 0.55s cubic-bezier(.18,.9,.3,1.3);
+  }
+  @keyframes cpPop { 0%{transform:scale(0.55);opacity:0;} 60%{transform:scale(1.06);opacity:1;} 100%{transform:scale(1);opacity:1;} }
+  .cp-badge { font-size: 56px; line-height: 1; filter: drop-shadow(0 0 16px #f59e0b); display: inline-block; animation: cpSpin 3.2s linear infinite; }
+  @keyframes cpSpin { to { transform: rotate(360deg); } }
+  .cp-sub { font-family: var(--font-mono); font-size: 11px; letter-spacing: 4px; color: #f0abfc; margin: 12px 0 2px; }
+  .cp-title {
+    font-family: 'Press Start 2P', var(--font-mono);
+    font-size: 16px; line-height: 1.5; color: #fde68a; letter-spacing: 1px;
+    margin: 4px 0 2px; text-shadow: 0 2px 12px rgba(245,158,11,0.7);
+  }
+  .cp-desc { font-size: 13px; color: #d8c7ff; line-height: 1.6; margin: 14px 6px 20px; }
+  .cp-desc b { color: #fed7aa; }
+  .cp-btn {
+    background: linear-gradient(135deg, #f59e0b, #f97316);
+    color: #1e0a3c; font-weight: bold; font-family: var(--font-mono);
+    border: none; border-radius: 999px; padding: 13px 36px; font-size: 14px;
+    cursor: pointer; letter-spacing: 1px;
+    box-shadow: 0 0 20px rgba(245,158,11,0.6);
+    animation: cpGlow 1.6s ease-in-out infinite;
+  }
+  @keyframes cpGlow { 0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5);} 50%{box-shadow:0 0 26px rgba(245,158,11,0.85);} }
+  .cp-btn:active { transform: scale(0.96); }
 
   /* ── ORB LOCK SYSTEM ── */
   .guess-orb-slot.locked-in {
@@ -2508,6 +2551,63 @@ function toggleCampaignPlus() {
     ? '🔄 Campaign+ ON — every boss now has a special ability!'
     : 'Campaign+ OFF — specials only on the final three bosses.');
   if (typeof renderCampaign === 'function') renderCampaign();
+}
+
+// A single firework burst of colored sparks from (cx, cy) inside `container`.
+function cpFirework(container, cx, cy) {
+  const colors = ['#f59e0b','#f472b6','#a855f7','#38bdf8','#34d399','#fde047','#fb7185'];
+  const n = 18;
+  for (let i = 0; i < n; i++) {
+    const p = document.createElement('div');
+    p.className = 'cp-spark';
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    p.style.left = cx + 'px'; p.style.top = cy + 'px';
+    p.style.background = color;
+    p.style.boxShadow = '0 0 8px ' + color;
+    container.appendChild(p);
+    const ang = (Math.PI * 2 * i) / n + Math.random() * 0.25;
+    const dist = 55 + Math.random() * 80;
+    const dx = Math.cos(ang) * dist, dy = Math.sin(ang) * dist;
+    requestAnimationFrame(() => {
+      p.style.transition = 'transform 0.95s cubic-bezier(.12,.6,.35,1), opacity 0.95s ease';
+      p.style.transform = `translate(${dx}px, ${dy}px) scale(0.35)`;
+      p.style.opacity = '1';
+    });
+    setTimeout(() => { p.style.opacity = '0'; }, 520);
+    setTimeout(() => { p.remove(); }, 1000);
+  }
+}
+
+// Big celebratory, centered Campaign+ unlock popup with fireworks.
+function showCampaignPlusUnlock() {
+  if (document.getElementById('cp-celebrate')) return; // avoid duplicates
+  const ov = document.createElement('div');
+  ov.className = 'cp-celebrate-overlay';
+  ov.id = 'cp-celebrate';
+  ov.innerHTML = `
+    <div class="cp-fireworks" id="cp-fireworks"></div>
+    <div class="cp-celebrate-card">
+      <div class="cp-badge">🔄</div>
+      <div class="cp-sub">✦ NEW GAME PLUS ✦</div>
+      <div class="cp-title">CAMPAIGN+<br>UNLOCKED!</div>
+      <div class="cp-desc">You've conquered the campaign! Replay it in <b>Campaign+</b> — now <b>every</b> boss fights with a special ability, not just the final three. Toggle it on from the Campaign screen whenever you're ready.</div>
+      <button class="cp-btn">Let's go! ✨</button>
+    </div>`;
+  document.body.appendChild(ov);
+  requestAnimationFrame(() => ov.classList.add('show'));
+
+  const fw = ov.querySelector('#cp-fireworks');
+  const burst = () => {
+    const r = ov.getBoundingClientRect();
+    cpFirework(fw, r.width * (0.18 + Math.random() * 0.64), r.height * (0.2 + Math.random() * 0.5));
+  };
+  [0, 280, 620, 980, 1400].forEach(t => setTimeout(burst, t));
+
+  const close = () => {
+    ov.classList.remove('show');
+    setTimeout(() => ov.remove(), 250);
+  };
+  ov.addEventListener('click', close);
 }
 
 // ══════════════════════════════════════════════
@@ -4300,7 +4400,7 @@ function renderCampaign() {
     if (!STATE.campaignPlusAnnounced) {
       STATE.campaignPlusAnnounced = true;
       saveState();
-      setTimeout(() => showToast('🎉 New feature — Campaign+ unlocked! Since you\'ve beaten the campaign, you can now replay it with a special ability on EVERY boss, not just the final three. Toggle it on right here.', 7000), 500);
+      setTimeout(() => showCampaignPlusUnlock(), 450);
     }
     const on = campaignPlusOn();
     const banner = document.createElement('div');
@@ -5611,15 +5711,15 @@ function showBattleResult(won) {
 }
 
 // ── Campaign completion: ending + unlock reveals ──
-function showOverlaySequence(cards, idx) {
+function showOverlaySequence(cards, idx, onDone) {
   idx = idx || 0;
   document.querySelectorAll('#screen-results .campaign-victory-overlay').forEach(o => o.remove());
-  if (idx >= cards.length) return;
+  if (idx >= cards.length) { if (typeof onDone === 'function') onDone(); return; }
   const ov = document.createElement('div');
   ov.className = 'boss-quip-overlay campaign-victory-overlay';
   ov.innerHTML = `<div class="boss-quip-card">${cards[idx]}<div class="boss-quip-tap">▼ TAP TO CONTINUE</div></div>`;
   let done = false;
-  ov.addEventListener('click', () => { if (done) return; done = true; ov.remove(); showOverlaySequence(cards, idx + 1); });
+  ov.addEventListener('click', () => { if (done) return; done = true; ov.remove(); showOverlaySequence(cards, idx + 1, onDone); });
   document.getElementById('screen-results').appendChild(ov);
 }
 
@@ -5646,10 +5746,9 @@ function showCampaignCompleteSequence() {
      <div style="font-size:12px;color:#a78bfa;margin-top:6px;">Equip it any time from your Profile.</div>`,
     `<div style="font-size:20px;font-weight:bold;color:#5eead4;margin-bottom:8px;">⚔️ Multiplayer Specials Unlocked!</div>
      <div style="font-size:13px;color:#c4b5fd;line-height:1.6;">Boss-style special attacks are now <strong>for sale in the Orb Forge</strong> — Temple Ice, Brute Fog, Nano Swap, Royal Transmute and Feral Scramble. Own as many as you like, equip <strong>one</strong>, and unleash it in online duels.</div>`,
-    `<div style="font-size:20px;font-weight:bold;color:#fb923c;margin-bottom:8px;">🔄 Campaign+ Unlocked!</div>
-     <div style="font-size:13px;color:#c4b5fd;line-height:1.6;">Replay the campaign in <strong>Campaign+</strong> — this time <strong>every</strong> boss fights with a special ability, not just the final three. Toggle it on from the Campaign screen whenever you're ready for a harder run.</div>`,
   ];
-  showOverlaySequence(cards);
+  // After the reveal cards, finish with the big Campaign+ unlock celebration.
+  showOverlaySequence(cards, 0, () => showCampaignPlusUnlock());
 }
 
 function rematch() {
