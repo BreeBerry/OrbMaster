@@ -101,7 +101,22 @@
     max-width: 480px;
     margin: 0 auto;
   }
-  .screen { display: none; min-height: 100vh; min-height: 100dvh; flex-direction: column; }
+  /* Every screen is a pinned, non-scrolling, safe-area-aware viewport.
+     position:fixed + inset:0 stops the page from body-scrolling on WebViews
+     where 100dvh wrongly includes the system bar areas; each screen's own
+     inner region scrolls instead, and bottom chrome (nav bar / action buttons)
+     stays above the navigation bar. padding-top clears the status bar/notch;
+     the bottom inset is handled per-screen (nav-bar padding, or the screen's
+     own padding-bottom on screens without a nav bar). */
+  .screen {
+    display: none;
+    flex-direction: column;
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+  }
   .screen.active { display: flex; }
 
   /* ── TITLE SCREEN ── */
@@ -205,22 +220,6 @@
     background-position: -28px 0px; /* frame 2 */
   }
 
-  /* Screens with a bottom nav bar are PINNED to the viewport (same fix as the
-     title screen). position:fixed + inset:0 stops the page from body-scrolling
-     — instead the list inside (.campaign-scroll / .inv-scroll / .forge-scroll)
-     scrolls on its own and the menu bar stays locked to the bottom, always
-     visible without scrolling to reach it. This is robust even on WebViews
-     where 100dvh wrongly includes the system bar areas. */
-  #screen-campaign, #screen-inventory, #screen-forge {
-    position: fixed;
-    inset: 0;
-    overflow: hidden;
-    box-sizing: border-box;
-    /* Restore the top inset that body's safe-area padding used to provide
-       (fixed positioning ignores it) so the header still clears the status
-       bar/notch. No hardcoded floor here — the bottom is handled by .nav-bar. */
-    padding-top: env(safe-area-inset-top, 0px);
-  }
   /* ── CAMPAIGN SCREEN ── */
   #screen-campaign {
     background: url('Images/stone wall.png') center/cover fixed;
@@ -296,8 +295,9 @@
   /* ── LOADOUT SCREEN ── */
   #screen-loadout {
     background: linear-gradient(180deg, #1a0a2e, #0f0520);
-    flex-direction: column; height: 100vh; height: 100dvh;
-    min-height: 0; max-height: 100vh; max-height: 100dvh; overflow: hidden;
+    /* base .screen pins the viewport; add bottom inset so the ENTER BATTLE
+       button clears the navigation bar. */
+    padding-bottom: max(48px, env(safe-area-inset-bottom, 0px));
   }
   .loadout-boss-section {
     background: linear-gradient(180deg,#1a0a2e,#2d1b69);
@@ -447,7 +447,9 @@
   /* ── BATTLE SCREEN ── */
   #screen-battle {
     background: url('Images/OrbMaster blank.png') center/cover;
-    position: relative;
+    /* base .screen pins the viewport; add bottom inset so the color picker and
+       Submit button clear the nav bar (Campaign, Daily, Gauntlet battles). */
+    padding-bottom: max(48px, env(safe-area-inset-bottom, 0px));
   }
   #screen-battle::before {
     content: ''; position: fixed; inset: 0;
@@ -600,8 +602,9 @@
   #screen-results {
     background: linear-gradient(180deg,#1a0a2e,#0f0520);
     align-items: center; justify-content: center;
+    padding-bottom: max(48px, env(safe-area-inset-bottom, 0px));
   }
-  .results-box { padding: 24px; text-align: center; max-width: 360px; width: 100%; }
+  .results-box { padding: 24px; text-align: center; max-width: 360px; width: 100%; max-height: 100%; overflow-y: auto; }
   .results-boss-img { width: 200px; height: 200px; object-fit: contain; border-radius: 12px; margin-bottom: 14px; filter: drop-shadow(0 0 24px rgba(168,85,247,0.5)); }
   .results-outcome { font-size: 28px; font-weight: bold; margin-bottom: 6px; }
   .results-outcome.win { color: #34d399; text-shadow: 0 0 20px #34d399; }
@@ -1137,7 +1140,7 @@
   .altar-upgrade-btn.locked { background: #3b1fa0; color: #4c1d95; cursor: not-allowed; }
 
   /* ── CODEX SCREEN ── */
-  #screen-codex { background: linear-gradient(180deg,#1a0a2e,#0a0318); }
+  #screen-codex { background: linear-gradient(180deg,#1a0a2e,#0a0318); padding-bottom: max(48px, env(safe-area-inset-bottom, 0px)); }
   .codex-header {
     background: linear-gradient(135deg,#2d1b69,#1e0a4a);
     padding: 14px; display: flex; align-items: center; gap: 12px;
@@ -1161,7 +1164,7 @@
   }
   .codex-tab.active { color: #e9d5ff; border-bottom-color: #a855f7; }
   .codex-tab:active { color: #c4b5fd; }
-  .codex-body { flex: 1; overflow-y: auto; padding: 14px; }
+  .codex-body { flex: 1; min-height: 0; overflow-y: auto; padding: 14px; }
   .codex-section { display: none; }
   .codex-section.active { display: block; }
   .codex-h1 {
@@ -1361,12 +1364,13 @@
   /* ── MULTIPLAYER ── */
   #screen-multiplayer {
     background: url('Images/stone wall.png') center/cover fixed;
+    padding-bottom: max(48px, env(safe-area-inset-bottom, 0px));
   }
   #screen-multiplayer::before {
     content: ''; position: fixed; inset: 0;
     background: rgba(5,0,20,0.7); pointer-events: none;
   }
-  .mp-scroll { flex:1; overflow-y:auto; padding:16px; position:relative; }
+  .mp-scroll { flex:1; min-height:0; overflow-y:auto; padding:16px; position:relative; }
   .mp-section {
     background: linear-gradient(135deg,rgba(45,27,105,0.95),rgba(15,5,40,0.95));
     border:1px solid #7c3aed; border-radius:16px; padding:20px; margin-bottom:16px;
@@ -1501,7 +1505,8 @@
   @keyframes mpSearchPulse { 0%,100% { transform:scale(1); opacity:1; } 50% { transform:scale(1.3); opacity:0.6; } }
 
   /* In-battle settings gear */
-  #screen-battle, #screen-multiplayer { position: relative; }
+  /* (screens are position:fixed from the base .screen rule — that already
+     establishes the containing block for the absolute .battle-gear) */
   .battle-gear {
     position: absolute; top: 8px; right: 8px; z-index: 60;
     background: rgba(45,27,105,0.78);
