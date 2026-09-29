@@ -177,8 +177,11 @@
     display: flex;
     flex: 0 0 auto;
     z-index: 5;
-    /* Sits above the system navigation bar / home-indicator safe area. */
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+    /* Sits above the system navigation bar / home-indicator safe area. The
+       max() fallback (48px ≈ a 3-button nav bar) covers WebViews that report
+       the inset as 0; the padding strip takes the bar's own color, so the
+       area behind the system bar blends in seamlessly. */
+    padding-bottom: max(48px, env(safe-area-inset-bottom, 0px));
   }
   .nav-btn {
     flex: 1; padding: 10px 4px; text-align: center;
@@ -202,13 +205,21 @@
     background-position: -28px 0px; /* frame 2 */
   }
 
-  /* Screens with a bottom nav bar are locked to the viewport height so their
-     content scrolls internally and the menu bar stays pinned to the bottom
-     (always visible, no scrolling to reach it). */
+  /* Screens with a bottom nav bar are PINNED to the viewport (same fix as the
+     title screen). position:fixed + inset:0 stops the page from body-scrolling
+     — instead the list inside (.campaign-scroll / .inv-scroll / .forge-scroll)
+     scrolls on its own and the menu bar stays locked to the bottom, always
+     visible without scrolling to reach it. This is robust even on WebViews
+     where 100dvh wrongly includes the system bar areas. */
   #screen-campaign, #screen-inventory, #screen-forge {
-    height: 100vh; height: 100dvh;
-    max-height: 100vh; max-height: 100dvh;
+    position: fixed;
+    inset: 0;
     overflow: hidden;
+    box-sizing: border-box;
+    /* Restore the top inset that body's safe-area padding used to provide
+       (fixed positioning ignores it) so the header still clears the status
+       bar/notch. No hardcoded floor here — the bottom is handled by .nav-bar. */
+    padding-top: env(safe-area-inset-top, 0px);
   }
   /* ── CAMPAIGN SCREEN ── */
   #screen-campaign {
