@@ -110,18 +110,27 @@
     align-items: stretch;
     justify-content: flex-start;
     flex-direction: column;
-    position: relative;
-    height: 100vh;
-    height: 100dvh;
+    /* Pinned to the viewport (not in the body's flow) so the body's own
+       safe-area padding can't push it past the screen and make the page
+       scroll — that scroll is what hid the bottom buttons behind the
+       navigation bar. */
+    position: fixed;
+    top: 0; bottom: 0; left: 0; right: 0;
+    width: 100%; max-width: 480px;
+    margin: 0 auto;
     min-height: 0;
-    max-height: 100vh;
-    max-height: 100dvh;
     overflow: hidden;
     box-sizing: border-box;
     /* Keep everything inside the safe area so nothing hides behind the
-       Android/iOS system bars — top notch and bottom navigation bar. */
-    padding-top: env(safe-area-inset-top, 0px);
-    padding-bottom: max(14px, env(safe-area-inset-bottom, 0px));
+       Android/iOS system bars — top notch and bottom navigation bar.
+       --safe-area-inset-* is the Capacitor fallback for older WebViews
+       that don't report env() insets. */
+    padding-top: max(env(safe-area-inset-top, 0px), var(--safe-area-inset-top, 0px));
+    padding-bottom: max(14px, env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px));
+  }
+  /* Landscape lets the body span the full width, so the title does too. */
+  @media (orientation: landscape) {
+    #screen-title { max-width: 100%; }
   }
   #screen-title::before {
     content: '';
