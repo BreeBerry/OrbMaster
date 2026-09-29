@@ -144,7 +144,16 @@
   }
   .back-btn:active { background: #5b21b6; }
   .header-title { font-size: 17px; color: #ffffff; font-weight: bold; letter-spacing: 1px; text-shadow: 0 1px 6px rgba(0,0,0,0.8); }
-  .fragment-display { display: flex; align-items: center; gap: 4px; font-size: 13px; color: #fde68a; font-weight: bold; text-shadow: 0 1px 4px rgba(0,0,0,0.8); font-family: var(--font-mono); }
+  .fragment-display { display: flex; align-items: center; gap: 4px; font-size: 13px; color: #fde68a; font-weight: bold; text-shadow: 0 1px 4px rgba(0,0,0,0.8); font-family: var(--font-mono); cursor: pointer; }
+  .fragment-display:active, .forge-frags:active { opacity: 0.7; }
+  /* Fragment breakdown popup */
+  .frag-list { max-height: 55vh; overflow-y: auto; margin: 6px 0 4px; }
+  .frag-row { display: flex; align-items: center; gap: 10px; padding: 7px 4px; border-bottom: 1px solid rgba(124,58,237,0.2); }
+  .frag-row.zero { opacity: 0.4; }
+  .frag-row img { width: 30px; height: 30px; object-fit: contain; }
+  .frag-name { flex: 1; font-size: 13px; color: #e9d5ff; text-align: left; }
+  .frag-amt { font-family: var(--font-mono); font-weight: bold; color: #fbbf24; min-width: 46px; text-align: right; }
+  .frag-total-row { display: flex; justify-content: space-between; align-items: center; font-weight: bold; color: #fde68a; padding: 10px 4px 2px; border-top: 2px solid #7c3aed; font-family: var(--font-mono); margin-top: 4px; }
 
   /* ── NAV BAR ── */
   .nav-bar {
@@ -152,6 +161,11 @@
     border-top: 2px solid #7c3aed;
     display: flex;
     flex-shrink: 0;
+    /* Keep the menu bar pinned to the bottom of the viewport (above the
+       home-indicator safe area) instead of at the end of a long list. */
+    position: sticky;
+    bottom: env(safe-area-inset-bottom, 0px);
+    z-index: 5;
   }
   .nav-btn {
     flex: 1; padding: 10px 4px; text-align: center;
@@ -184,9 +198,29 @@
     background: rgba(10,0,30,0.45); pointer-events: none;
   }
   .campaign-scroll {
-    flex: 1; overflow-y: auto; padding: 14px;
+    flex: 1; overflow-y: auto; padding: 14px 14px 76px;
     position: relative;
   }
+  .campaign-plus-banner {
+    display: flex; align-items: center; gap: 12px;
+    background: linear-gradient(135deg, rgba(120,53,15,0.85), rgba(30,10,40,0.9));
+    border: 1px solid #b45309; border-radius: 14px;
+    padding: 12px 14px; margin-bottom: 14px;
+  }
+  .campaign-plus-banner.on {
+    background: linear-gradient(135deg, rgba(180,83,9,0.95), rgba(88,28,135,0.9));
+    border-color: #f59e0b; box-shadow: 0 0 14px rgba(245,158,11,0.35);
+  }
+  .campaign-plus-banner .cpb-text { flex: 1; min-width: 0; }
+  .campaign-plus-banner .cpb-title { font-size: 14px; font-weight: bold; color: #fed7aa; }
+  .campaign-plus-banner .cpb-sub { font-size: 11px; color: #fdba74; margin-top: 2px; }
+  .campaign-plus-banner .cpb-state { font-size: 10px; font-weight: bold; color: #cbd5e1; }
+  .campaign-plus-banner .cpb-state.on { color: #34d399; }
+  .campaign-plus-banner .cpb-toggle {
+    flex: none; background: #f59e0b; color: #1e0a3c; border: none;
+    border-radius: 999px; padding: 8px 14px; font-size: 12px; font-weight: bold; cursor: pointer;
+  }
+  .campaign-plus-banner .cpb-toggle:active { transform: scale(0.96); }
   .boss-card {
     background: linear-gradient(135deg, rgba(45,27,105,0.92), rgba(15,5,40,0.92));
     border: 1px solid #7c3aed;
@@ -686,7 +720,7 @@
 
   /* ── INVENTORY SCREEN ── */
   #screen-inventory { background: linear-gradient(180deg,#1a0a2e,#0f0520); height: 100vh; max-height: 100vh; overflow: hidden; flex-direction: column; }
-  .inv-scroll { flex: 1; overflow-y: auto; padding: 14px; }
+  .inv-scroll { flex: 1; overflow-y: auto; padding: 14px 14px 76px; }
   .inv-section-title { font-size: 12px; color: #a78bfa; letter-spacing: 1px; margin: 14px 0 8px; }
   .orb-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
   .orb-card {
@@ -887,8 +921,8 @@
   }
   .forge-title { font-size: 22px; color: #fbbf24; font-weight: bold; letter-spacing: 2px; text-shadow: 0 0 14px #f59e0b; }
   .forge-subtitle { font-size: 11px; color: #a78bfa; margin-top: 4px; }
-  .forge-frags { font-size: 14px; color: #fbbf24; margin-top: 6px; font-family: var(--font-mono); }
-  .forge-scroll { flex: 1; overflow-y: auto; padding: 14px; }
+  .forge-frags { font-size: 14px; color: #fbbf24; margin-top: 6px; font-family: var(--font-mono); cursor: pointer; }
+  .forge-scroll { flex: 1; overflow-y: auto; padding: 14px 14px 76px; }
   .forge-section-title {
     font-size: 12px; color: #f59e0b; letter-spacing: 2px;
     margin: 14px 0 8px; text-transform: uppercase;
@@ -1461,7 +1495,7 @@
 <div id="screen-campaign" class="screen">
   <div class="game-header">
     <div class="header-title">⚔️ Campaign</div>
-    <div class="fragment-display"><img src="Images/Mind Orb Assets/multi_orb.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"> <span id="header-frags">0</span> frags</div>
+    <div class="fragment-display" onclick="openFragBreakdown()" title="Fragment breakdown"><img src="Images/Mind Orb Assets/multi_orb.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"> <span id="header-frags">0</span> frags</div>
   </div>
   <div class="campaign-tabs">
     <button id="camptab-campaign" class="camptab active" onclick="showCampaignTab('campaign')">⚔️ Campaign</button>
@@ -1484,7 +1518,7 @@
   <div class="game-header">
     <button class="back-btn" onclick="showScreen('campaign')">← Back</button>
     <div class="header-title">Pre-Battle Loadout</div>
-    <div class="fragment-display"><img src="Images/Mind Orb Assets/multi_orb.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"> <span id="loadout-frags">0</span></div>
+    <div class="fragment-display" onclick="openFragBreakdown()" title="Fragment breakdown"><img src="Images/Mind Orb Assets/multi_orb.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"> <span id="loadout-frags">0</span></div>
   </div>
   <div id="loadout-boss-section" class="loadout-boss-section"></div>
   <div class="loadout-body">
@@ -1525,7 +1559,7 @@
 <div id="screen-inventory" class="screen">
   <div class="game-header">
     <div class="header-title"><img src="Images/Mind Orb Assets/crystal_ball.png" style="width:20px;height:20px;object-fit:contain;vertical-align:middle;margin-right:6px;">Orb Stash</div>
-    <div class="fragment-display"><img src="Images/Mind Orb Assets/multi_orb.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"> <span id="inv-frags">0</span> frags</div>
+    <div class="fragment-display" onclick="openFragBreakdown()" title="Fragment breakdown"><img src="Images/Mind Orb Assets/multi_orb.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"> <span id="inv-frags">0</span> frags</div>
   </div>
   <div class="inv-scroll" id="inv-content"></div>
   <div class="nav-bar">
@@ -1539,7 +1573,7 @@
   <div class="forge-header-banner">
     <div class="forge-title"><img src="Images/Mind Orb Assets/multi_orb.png" style="width:28px;height:28px;object-fit:contain;vertical-align:middle;margin-right:6px;">ORB FORGE</div>
     <div class="forge-subtitle">Spend fragments to forge powerful orbs</div>
-    <div class="forge-frags"><img src="Images/Mind Orb Assets/multi_orb.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"> <span id="forge-frags">0</span> fragments available</div>
+    <div class="forge-frags" onclick="openFragBreakdown()" title="Fragment breakdown"><img src="Images/Mind Orb Assets/multi_orb.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"> <span id="forge-frags">0</span> fragments available</div>
   </div>
   <div class="forge-scroll" id="forge-content"></div>
   <div class="nav-bar" style="border-top:2px solid #f59e0b;">
@@ -1909,6 +1943,16 @@
     <div id="ach-list" class="ach-list"></div>
     <button class="modal-btn" id="ach-pgs-btn" style="display:none;" onclick="PGS.showAchievements()">🎮 View on Play Games</button>
     <button class="modal-btn cancel" onclick="closeModal('modal-achievements')">Close</button>
+  </div>
+</div>
+
+<!-- Fragment breakdown -->
+<div class="modal-overlay" id="modal-frag-breakdown">
+  <div class="modal-box">
+    <div class="modal-title"><img src="Images/Mind Orb Assets/multi_orb.png" style="width:22px;height:22px;object-fit:contain;vertical-align:middle;margin-right:4px;">Orb Fragments</div>
+    <div id="frag-breakdown-list" class="frag-list"></div>
+    <div class="frag-total-row"><span>Total</span><span id="frag-breakdown-total">0</span></div>
+    <button class="modal-btn cancel" style="margin-top:12px;" onclick="closeModal('modal-frag-breakdown')">Close</button>
   </div>
 </div>
 
@@ -2409,6 +2453,26 @@ const MP_SPECIAL_ORDER = ['templeIce','bruteFog','nanoSwap','royalTransmute','fe
 
 function campaignComplete() {
   return STATE.bossProgress[9] === 2;
+}
+
+// ══════════════════════════════════════════════
+//  CAMPAIGN+ (New Game Plus)
+//  First playthrough: only the FINAL THREE bosses (idx 7,8,9 — Queen Asabeth,
+//  Elkgore, Mad Martin) wield a special ability. Beat the campaign once to
+//  unlock Campaign+, a replay in which EVERY boss's special ability is live.
+// ══════════════════════════════════════════════
+function campaignPlusUnlocked() { return !!STATE.campaignPlus; }
+function campaignPlusOn() { return !!(STATE.campaignPlus && STATE.campaignPlusActive); }
+// Whether the campaign boss at this index should have its special ability active.
+function bossSpecialActive(bossIdx) { return campaignPlusOn() ? true : bossIdx >= 7; }
+function toggleCampaignPlus() {
+  if (!campaignPlusUnlocked()) return;
+  STATE.campaignPlusActive = !STATE.campaignPlusActive;
+  saveState();
+  showToast(STATE.campaignPlusActive
+    ? '🔄 Campaign+ ON — every boss now has a special ability!'
+    : 'Campaign+ OFF — specials only on the final three bosses.');
+  if (typeof renderCampaign === 'function') renderCampaign();
 }
 
 // ══════════════════════════════════════════════
@@ -3910,6 +3974,8 @@ function defaultState() {
     achievements: {},       // achievementId -> unlock timestamp
     bossStars: {},          // bossIdx -> best stars earned (0-3)
     gauntlet: { bestDepth: 0, bestTurns: 0 }, // Gauntlet endless-run record
+    campaignPlus: false,       // unlocked after beating the campaign once (New Game Plus)
+    campaignPlusActive: false, // player is currently replaying in Campaign+ mode
   };
 }
 
@@ -3940,6 +4006,9 @@ function migrateState(parsed) {
   if (!parsed.bossStars) parsed.bossStars = {};
   if (!parsed.gauntlet) parsed.gauntlet = { bestDepth: 0, bestTurns: 0 };
   if (!parsed.upgradedOrbs) parsed.upgradedOrbs = {};
+  // Grandfather existing players who already finished the campaign into Campaign+.
+  if (parsed.campaignPlus === undefined) parsed.campaignPlus = !!(parsed.bossProgress && parsed.bossProgress[9] === 2);
+  if (parsed.campaignPlusActive === undefined) parsed.campaignPlusActive = false;
   return parsed;
 }
 
@@ -4074,6 +4143,26 @@ function getTotalFrags() {
   return Object.values(STATE.fragments).reduce((a,b)=>a+b,0);
 }
 
+// Tap any fragment counter to see a per-orb breakdown of your fragments.
+function openFragBreakdown() {
+  const frags = STATE.fragments || {};
+  const host = document.getElementById('frag-breakdown-list');
+  const owned = ORB_ORDER.filter(c => (frags[c] || 0) > 0);
+  host.innerHTML = owned.length
+    ? owned.map(c => {
+        const def = ORB_DEFS[c];
+        return `<div class="frag-row">
+          <img src="${def.img}" alt="${c}">
+          <span class="frag-name">${def.name}</span>
+          <span class="orb-rarity-badge rarity-${def.rarity}">${def.rarity}</span>
+          <span class="frag-amt">${frags[c]}</span>
+        </div>`;
+      }).join('')
+    : '<div style="text-align:center;color:#6d28d9;font-size:12px;padding:14px 0;">No fragments yet — win battles to earn them!</div>';
+  document.getElementById('frag-breakdown-total').textContent = getTotalFrags();
+  openModal('modal-frag-breakdown');
+}
+
 // ══════════════════════════════════════════════
 //  BATTLE STATE
 // ══════════════════════════════════════════════
@@ -4167,6 +4256,23 @@ function renderCampaign() {
   const list = document.getElementById('boss-list');
   list.innerHTML = '';
 
+  // Campaign+ banner — only once the campaign has been beaten at least once.
+  if (campaignPlusUnlocked()) {
+    const on = campaignPlusOn();
+    const banner = document.createElement('div');
+    banner.className = 'campaign-plus-banner' + (on ? ' on' : '');
+    banner.innerHTML = `
+      <div class="cpb-text">
+        <div class="cpb-title">🔄 Campaign+ ${on ? '<span class="cpb-state on">ON</span>' : '<span class="cpb-state">OFF</span>'}</div>
+        <div class="cpb-sub">${on
+          ? 'Every boss fights with a special ability.'
+          : 'Replay with a special ability on every boss.'}</div>
+      </div>
+      <button class="cpb-toggle" onclick="toggleCampaignPlus()">${on ? 'Turn Off' : 'Turn On'}</button>
+    `;
+    list.appendChild(banner);
+  }
+
   BOSS_DEFS.forEach((boss, i) => {
     const prog = STATE.bossProgress[i];
     const locked = prog === 0;
@@ -4195,7 +4301,7 @@ function renderCampaign() {
           ${prog>=1 ? `<div class="boss-stars" title="Mastery stars">${starString(STATE.bossStars?.[i]||0)}</div>` : ''}
           <div class="boss-loot">${lootStr}</div>
           ${reqStr?`<div class="boss-req">${reqStr}</div>`:''}
-          ${boss.specialDesc?`<div style="font-size:10px;color:#fb923c;margin-top:3px;">⚡ ${boss.specialDesc}</div>`:''}
+          ${boss.specialDesc&&bossSpecialActive(i)?`<div style="font-size:10px;color:#fb923c;margin-top:3px;">⚡ ${boss.specialDesc}</div>`:''}
           <div class="boss-orb-preview">${orbPreviews}</div>
         </div>
       </div>
@@ -4351,7 +4457,7 @@ function renderLoadout() {
       <div style="font-size:11px;color:#c4b5fd;margin-top:3px;">Orb Set: ${boss.minCodeSize} &nbsp;|&nbsp; Max 10 turns</div>
       <div style="font-size:9px;color:#a78bfa;margin-top:5px;margin-bottom:3px;">ORB POOL</div>
       <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;">${poolImgs}</div>
-      ${boss.specialDesc?`<div class="loadout-boss-special" style="margin-top:6px;">⚡ ${boss.specialDesc}</div>`:''}
+      ${boss.specialDesc&&bossSpecialActive(STATE._selectedBoss)?`<div class="loadout-boss-special" style="margin-top:6px;">⚡ ${boss.specialDesc}</div>`:''}
     </div>
   `;
 
@@ -4517,13 +4623,18 @@ function startBattle() {
   if (codeSize === 5) BATTLE.multiplier *= 1.3;
   if (codeSize === 6) BATTLE.multiplier *= 1.7;
 
-  if (boss.special === 'bossSubmerge') BATTLE.bossSubmergeTurn = Math.floor(Math.random()*5)+1;
-  if (boss.special === 'blockAbilities') BATTLE.abilitiesBlocked = true;
-  if (boss.special === 'royalDecree') {
-    BATTLE.disabledAbilities['disable'] = true; // Queen disables the Yellow Orb
-    BATTLE.tamperActive = true;
+  // Boss specials only fire for the final three bosses on a first playthrough;
+  // Campaign+ turns every boss's special back on.
+  BATTLE.specialActive = bossSpecialActive(idx);
+  if (BATTLE.specialActive) {
+    if (boss.special === 'bossSubmerge') BATTLE.bossSubmergeTurn = Math.floor(Math.random()*5)+1;
+    if (boss.special === 'blockAbilities') BATTLE.abilitiesBlocked = true;
+    if (boss.special === 'royalDecree') {
+      BATTLE.disabledAbilities['disable'] = true; // Queen disables the Yellow Orb
+      BATTLE.tamperActive = true;
+    }
+    if (boss.special === 'freezeColor') updateFreezeState();
   }
-  if (boss.special === 'freezeColor') updateFreezeState();
 
   // Play boss-specific track if one exists, otherwise use main music
   if (BOSS_TRACKS[idx]) {
@@ -4552,8 +4663,8 @@ function renderBattle() {
     <div class="battle-boss-info">
       <div>
         <div class="battle-boss-name">${bossTitle(boss)}</div>
-        ${boss.specialDesc&&!b.bossSpecialDisabled?`<div class="battle-boss-special">⚡ ${boss.specialDesc}</div>`:''}
-        ${b.bossSpecialDisabled?`<div style="font-size:10px;color:#34d399;">✅ Boss ability disabled!</div>`:''}
+        ${boss.specialDesc&&b.specialActive!==false&&!b.bossSpecialDisabled?`<div class="battle-boss-special">⚡ ${boss.specialDesc}</div>`:''}
+        ${b.specialActive!==false&&b.bossSpecialDisabled?`<div style="font-size:10px;color:#34d399;">✅ Boss ability disabled!</div>`:''}
         ${b.isDaily?`<div class="battle-boss-special" style="color:#5eead4;">Orb Set ${b.codeSize} · Pool ${b.pool.length}${(b.providedOrbs&&b.providedOrbs.length)?' · helper orbs provided':''}</div>`:''}
       </div>
       <div class="turns-left">⏱ ${b.turnsLeft} / ${totalTurns}</div>
@@ -4906,7 +5017,7 @@ function submitGuess() {
 
   const boss = battleBoss();
   const guessNum = b.guesses.length + 1; // 1-based number of this guess
-  const specialOn = !b.bossSpecialDisabled;
+  const specialOn = !b.bossSpecialDisabled && b.specialActive !== false;
   let swappedSlots = null, tamperedSlot = null;
 
   // Boss 4 (Nanomic): swaps two of your orbs every other guess
@@ -5046,8 +5157,8 @@ function updateBattleBanner() {
     <div class="battle-boss-info">
       <div>
         <div class="battle-boss-name">${bossTitle(boss)}</div>
-        ${boss.specialDesc&&!b.bossSpecialDisabled?`<div class="battle-boss-special">⚡ ${boss.specialDesc}</div>`:''}
-        ${b.bossSpecialDisabled?`<div style="font-size:10px;color:#34d399;">✅ Boss ability disabled!</div>`:''}
+        ${boss.specialDesc&&b.specialActive!==false&&!b.bossSpecialDisabled?`<div class="battle-boss-special">⚡ ${boss.specialDesc}</div>`:''}
+        ${b.specialActive!==false&&b.bossSpecialDisabled?`<div style="font-size:10px;color:#34d399;">✅ Boss ability disabled!</div>`:''}
         ${b.isDaily?`<div class="battle-boss-special" style="color:#5eead4;">Orb Set ${b.codeSize} · Pool ${b.pool.length}</div>`:''}
       </div>
       <div class="turns-left">⏱ ${b.turnsLeft} / ${totalTurns}</div>
@@ -5471,6 +5582,7 @@ function showOverlaySequence(cards, idx) {
 function showCampaignCompleteSequence() {
   if (!STATE.cosmetics) STATE.cosmetics = { ownedFrames: ['novice'], selectedFrame: 'novice' };
   if (!ownsFrame(CAMPAIGN_FRAME)) { STATE.cosmetics.ownedFrames.push(CAMPAIGN_FRAME); saveState(); }
+  if (!STATE.campaignPlus) { STATE.campaignPlus = true; saveState(); } // unlock New Game Plus
   const martin = BOSS_DEFS[9];
   const fdef = FRAMES[CAMPAIGN_FRAME];
   const avUrl = (typeof PGS !== 'undefined' && PGS.signedIn && PGS.avatarUrl) ? PGS.avatarUrl : null;
@@ -5486,6 +5598,8 @@ function showCampaignCompleteSequence() {
      <div style="font-size:12px;color:#a78bfa;margin-top:6px;">Equip it any time from your Profile.</div>`,
     `<div style="font-size:20px;font-weight:bold;color:#5eead4;margin-bottom:8px;">⚔️ Multiplayer Specials Unlocked!</div>
      <div style="font-size:13px;color:#c4b5fd;line-height:1.6;">Boss-style special attacks are now <strong>for sale in the Orb Forge</strong> — Temple Ice, Brute Fog, Nano Swap, Royal Transmute and Feral Scramble. Own as many as you like, equip <strong>one</strong>, and unleash it in online duels.</div>`,
+    `<div style="font-size:20px;font-weight:bold;color:#fb923c;margin-bottom:8px;">🔄 Campaign+ Unlocked!</div>
+     <div style="font-size:13px;color:#c4b5fd;line-height:1.6;">Replay the campaign in <strong>Campaign+</strong> — this time <strong>every</strong> boss fights with a special ability, not just the final three. Toggle it on from the Campaign screen whenever you're ready for a harder run.</div>`,
   ];
   showOverlaySequence(cards);
 }
@@ -6348,7 +6462,7 @@ function renderCodexBosses() {
         <div class="codex-boss-loot">${lootStr}</div>
         <div class="codex-boss-pool">Color pool: ${poolImgs}</div>
         <div style="font-size:10px;color:#c4b5fd;margin-top:2px;">Orb Set: ${boss.minCodeSize}</div>
-        ${boss.specialDesc ? `<div class="codex-boss-special">⚡ ${boss.specialDesc}</div>` : '<div style="font-size:10px;color:#6d28d9;margin-top:2px;">No special ability</div>'}
+        ${boss.specialDesc ? `<div class="codex-boss-special">⚡ ${boss.specialDesc}${(boss.id-1) < 7 ? ' <span style="color:#a78bfa;">(Campaign+ only)</span>' : ''}</div>` : '<div style="font-size:10px;color:#6d28d9;margin-top:2px;">No special ability</div>'}
       </div>
     `;
     container.appendChild(el);

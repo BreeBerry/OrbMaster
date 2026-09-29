@@ -1,0 +1,1362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OrbMaster — Gameplay (Portrait 9:16)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  html, body { margin:0; height:100%; background:#07030f; overflow:hidden; }
+  #root { position:fixed; inset:0; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+<script type="text/babel" data-from="animations.jsx">
+// @ds-adherence-ignore -- omelette starter scaffold (raw elements/hex/px by design)
+
+/* BEGIN USAGE */
+// animations.jsx — timeline engine. Exports (on window): Stage, Sprite,
+//   TextSprite, ImageSprite, RectSprite, VideoSprite, PlaybackBar,
+//   useTime, useTimeline, useSprite, Easing, interpolate, animate, clamp.
+//
+//   <Stage width={1280} height={720} duration={10} background="#f6f4ef">
+//     <Sprite start={0} end={3}>
+//       <TextSprite text="Hello" x={100} y={300} size={72} color="#111" />
+//     </Sprite>
+//     <Sprite start={2} end={8}>
+//       <ImageSprite src="hero.png" x={200} y={120} width={640} height={360} kenBurns />
+//     </Sprite>
+//   </Stage>
+//
+// Stage({width,height,duration,background,fps,loop,autoplay}) — auto-scales to
+//   viewport; scrubber + play/pause + ←/→ seek + space + 0-reset; persists
+//   playhead. The canvas is an <svg><foreignObject>, export-ready: Share →
+//   Export → Video (or the PlaybackBar's download button) renders it to .mp4.
+//   Screenshot tools DOM-rerender (not pixel-capture) and unwrap this wrapper
+//   so captures should work — but if one comes back black, that's a capture
+//   artifact, not a render bug; trust the live preview.
+// Sprite({start,end,keepMounted}) — mounts children only while playhead is in
+//   [start,end]. Children read {localTime, progress, duration} via useSprite().
+// useTime() → seconds; useTimeline() → {time,duration,playing,setTime,setPlaying}.
+// TextSprite({text,x,y,size,color,font,weight,align,entryDur,exitDur}) — fades/scales in+out.
+// ImageSprite({src,x,y,width,height,fit,radius,kenBurns,placeholder}) — same, with optional ken-burns.
+// RectSprite({x,y,width,height,color,radius}) — solid box with entry/exit.
+// VideoSprite({src,start,end,speed,style}) — looped <video> clip synced to the
+//   timeline; its audio is mixed into the exported video.
+// Easing.{linear,easeIn/Out/InOut Quad/Cubic/Quart/Quint/Expo/Back, …}
+// interpolate([t0,t1,…],[v0,v1,…],ease?) → (t)=>v  — piecewise tween.
+// animate({from,to,start,end,ease}) → (t)=>v  — single tween.
+//
+// Build scenes by composing Sprites inside Stage. Absolutely-position elements.
+//
+// In a .dc.html project, put your scene in a sibling my-scene.jsx (reading
+// {Stage, Sprite, useTime, Easing, …} from window is safe) and mount BOTH:
+//   <x-import component-from-global-scope="MyScene"
+//             from="./animations.jsx ./my-scene.jsx"></x-import>
+// The two files in from= load in order, so my-scene.jsx can use the globals
+// animations.jsx set.
+/* END USAGE */
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── Easing functions (hand-rolled, Popmotion-style) ─────────────────────────
+// All easings take t ∈ [0,1] and return eased t ∈ [0,1] (may overshoot for back/elastic).
+const Easing = {
+  linear: (t) => t,
+
+  // Quad
+  easeInQuad:    (t) => t * t,
+  easeOutQuad:   (t) => t * (2 - t),
+  easeInOutQuad: (t) => (t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t),
+
+  // Cubic
+  easeInCubic:    (t) => t * t * t,
+  easeOutCubic:   (t) => (--t) * t * t + 1,
+  easeInOutCubic: (t) => (t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1),
+
+  // Quart
+  easeInQuart:    (t) => t * t * t * t,
+  easeOutQuart:   (t) => 1 - (--t) * t * t * t,
+  easeInOutQuart: (t) => (t < 0.5 ? 8 * t * t * t * t : 1 - 8 * (--t) * t * t * t),
+
+  // Expo
+  easeInExpo:  (t) => (t === 0 ? 0 : Math.pow(2, 10 * (t - 1))),
+  easeOutExpo: (t) => (t === 1 ? 1 : 1 - Math.pow(2, -10 * t)),
+  easeInOutExpo: (t) => {
+    if (t === 0) return 0;
+    if (t === 1) return 1;
+    if (t < 0.5) return 0.5 * Math.pow(2, 20 * t - 10);
+    return 1 - 0.5 * Math.pow(2, -20 * t + 10);
+  },
+
+  // Sine
+  easeInSine:    (t) => 1 - Math.cos((t * Math.PI) / 2),
+  easeOutSine:   (t) => Math.sin((t * Math.PI) / 2),
+  easeInOutSine: (t) => -(Math.cos(Math.PI * t) - 1) / 2,
+
+  // Back (overshoot)
+  easeOutBack: (t) => {
+    const c1 = 1.70158, c3 = c1 + 1;
+    return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+  },
+  easeInBack: (t) => {
+    const c1 = 1.70158, c3 = c1 + 1;
+    return c3 * t * t * t - c1 * t * t;
+  },
+  easeInOutBack: (t) => {
+    const c1 = 1.70158, c2 = c1 * 1.525;
+    return t < 0.5
+      ? (Math.pow(2 * t, 2) * ((c2 + 1) * 2 * t - c2)) / 2
+      : (Math.pow(2 * t - 2, 2) * ((c2 + 1) * (t * 2 - 2) + c2) + 2) / 2;
+  },
+
+  // Elastic
+  easeOutElastic: (t) => {
+    const c4 = (2 * Math.PI) / 3;
+    if (t === 0) return 0;
+    if (t === 1) return 1;
+    return Math.pow(2, -10 * t) * Math.sin((t * 10 - 0.75) * c4) + 1;
+  },
+};
+
+// ── Core interpolation helpers ──────────────────────────────────────────────
+
+// Clamp a value to [min, max]
+const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+
+// interpolate([0, 0.5, 1], [0, 100, 50], ease?) -> fn(t)
+// Popmotion-style: linearly maps t across input keyframes to output values,
+// with optional easing per segment (single fn or array of fns).
+function interpolate(input, output, ease = Easing.linear) {
+  return (t) => {
+    if (t <= input[0]) return output[0];
+    if (t >= input[input.length - 1]) return output[output.length - 1];
+    for (let i = 0; i < input.length - 1; i++) {
+      if (t >= input[i] && t <= input[i + 1]) {
+        const span = input[i + 1] - input[i];
+        const local = span === 0 ? 0 : (t - input[i]) / span;
+        const easeFn = Array.isArray(ease) ? (ease[i] || Easing.linear) : ease;
+        const eased = easeFn(local);
+        return output[i] + (output[i + 1] - output[i]) * eased;
+      }
+    }
+    return output[output.length - 1];
+  };
+}
+
+// animate({from, to, start, end, ease})(t) — simpler single-segment tween.
+// Returns `from` before `start`, `to` after `end`.
+function animate({ from = 0, to = 1, start = 0, end = 1, ease = Easing.easeInOutCubic }) {
+  return (t) => {
+    if (t <= start) return from;
+    if (t >= end) return to;
+    const local = (t - start) / (end - start);
+    return from + (to - from) * ease(local);
+  };
+}
+
+// ── Timeline context ────────────────────────────────────────────────────────
+
+const TimelineContext = React.createContext({ time: 0, duration: 10, playing: false });
+
+const useTime = () => React.useContext(TimelineContext).time;
+const useTimeline = () => React.useContext(TimelineContext);
+
+// ── Sprite ──────────────────────────────────────────────────────────────────
+// Renders children only when the playhead is inside [start, end]. Provides
+// a sub-context with `localTime` (seconds since start) and `progress` (0..1).
+//
+//   <Sprite start={2} end={5}>
+//     {({ localTime, progress }) => <Thing x={progress * 100} />}
+//   </Sprite>
+//
+// Or as a plain wrapper — children can call useSprite() themselves.
+
+const SpriteContext = React.createContext({ localTime: 0, progress: 0, duration: 0 });
+const useSprite = () => React.useContext(SpriteContext);
+
+function Sprite({ start = 0, end = Infinity, children, keepMounted = false }) {
+  const { time } = useTimeline();
+  const visible = time >= start && time <= end;
+  if (!visible && !keepMounted) return null;
+
+  const duration = end - start;
+  const localTime = Math.max(0, time - start);
+  const progress = duration > 0 && isFinite(duration)
+    ? clamp(localTime / duration, 0, 1)
+    : 0;
+
+  const value = { localTime, progress, duration, visible };
+
+  return (
+    <SpriteContext.Provider value={value}>
+      {typeof children === 'function' ? children(value) : children}
+    </SpriteContext.Provider>
+  );
+}
+
+// ── Sample sprite components ────────────────────────────────────────────────
+
+// TextSprite: fades/slides text in on entry, holds, then fades out on exit.
+// Props: text, x, y, size, color, font, entryDur, exitDur, align
+function TextSprite({
+  text,
+  x = 0, y = 0,
+  size = 48,
+  color = '#111',
+  font = 'Inter, system-ui, sans-serif',
+  weight = 600,
+  entryDur = 0.45,
+  exitDur = 0.35,
+  entryEase = Easing.easeOutBack,
+  exitEase = Easing.easeInCubic,
+  align = 'left',
+  letterSpacing = '-0.01em',
+}) {
+  const { localTime, duration } = useSprite();
+  const exitStart = Math.max(0, duration - exitDur);
+
+  let opacity = 1;
+  let ty = 0;
+
+  if (localTime < entryDur) {
+    const t = entryEase(clamp(localTime / entryDur, 0, 1));
+    opacity = t;
+    ty = (1 - t) * 16;
+  } else if (localTime > exitStart) {
+    const t = exitEase(clamp((localTime - exitStart) / exitDur, 0, 1));
+    opacity = 1 - t;
+    ty = -t * 8;
+  }
+
+  const translateX = align === 'center' ? '-50%' : align === 'right' ? '-100%' : '0';
+
+  return (
+    <div style={{
+      position: 'absolute',
+      left: x, top: y,
+      transform: `translate(${translateX}, ${ty}px)`,
+      opacity,
+      fontFamily: font,
+      fontSize: size,
+      fontWeight: weight,
+      color,
+      letterSpacing,
+      whiteSpace: 'pre',
+      lineHeight: 1.1,
+      willChange: 'transform, opacity',
+    }}>
+      {text}
+    </div>
+  );
+}
+
+// ImageSprite: scales + fades in; optional Ken Burns drift during hold.
+function ImageSprite({
+  src,
+  x = 0, y = 0,
+  width = 400, height = 300,
+  entryDur = 0.6,
+  exitDur = 0.4,
+  kenBurns = false,
+  kenBurnsScale = 1.08,
+  radius = 12,
+  fit = 'cover',
+  placeholder = null, // {label: string} for striped placeholder
+}) {
+  const { localTime, duration } = useSprite();
+  const exitStart = Math.max(0, duration - exitDur);
+
+  let opacity = 1;
+  let scale = 1;
+
+  if (localTime < entryDur) {
+    const t = Easing.easeOutCubic(clamp(localTime / entryDur, 0, 1));
+    opacity = t;
+    scale = 0.96 + 0.04 * t;
+  } else if (localTime > exitStart) {
+    const t = Easing.easeInCubic(clamp((localTime - exitStart) / exitDur, 0, 1));
+    opacity = 1 - t;
+    scale = (kenBurns ? kenBurnsScale : 1) + 0.02 * t;
+  } else if (kenBurns) {
+    const holdSpan = exitStart - entryDur;
+    const holdT = holdSpan > 0 ? (localTime - entryDur) / holdSpan : 0;
+    scale = 1 + (kenBurnsScale - 1) * holdT;
+  }
+
+  const content = placeholder ? (
+    <div style={{
+      width: '100%', height: '100%',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      background: 'repeating-linear-gradient(135deg, #e9e6df 0 10px, #dcd8cf 10px 20px)',
+      color: '#6b6458',
+      fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+      fontSize: 13,
+      letterSpacing: '0.04em',
+      textTransform: 'uppercase',
+    }}>
+      {placeholder.label || 'image'}
+    </div>
+  ) : (
+    <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: fit, display: 'block' }} />
+  );
+
+  return (
+    <div style={{
+      position: 'absolute',
+      left: x, top: y,
+      width, height,
+      opacity,
+      transform: `scale(${scale})`,
+      transformOrigin: 'center',
+      borderRadius: radius,
+      overflow: 'hidden',
+      willChange: 'transform, opacity',
+    }}>
+      {content}
+    </div>
+  );
+}
+
+// RectSprite: simple rectangle that animates position/size/color via props.
+// Useful demo primitive — takes a `render` fn for per-frame customization.
+function RectSprite({
+  x = 0, y = 0,
+  width = 100, height = 100,
+  color = '#111',
+  radius = 8,
+  entryDur = 0.4,
+  exitDur = 0.3,
+  render, // optional: (ctx) => style overrides
+}) {
+  const spriteCtx = useSprite();
+  const { localTime, duration } = spriteCtx;
+  const exitStart = Math.max(0, duration - exitDur);
+
+  let opacity = 1;
+  let scale = 1;
+
+  if (localTime < entryDur) {
+    const t = Easing.easeOutBack(clamp(localTime / entryDur, 0, 1));
+    opacity = clamp(localTime / entryDur, 0, 1);
+    scale = 0.4 + 0.6 * t;
+  } else if (localTime > exitStart) {
+    const t = Easing.easeInQuad(clamp((localTime - exitStart) / exitDur, 0, 1));
+    opacity = 1 - t;
+    scale = 1 - 0.15 * t;
+  }
+
+  const overrides = render ? render(spriteCtx) : {};
+
+  return (
+    <div style={{
+      position: 'absolute',
+      left: x, top: y,
+      width, height,
+      background: color,
+      borderRadius: radius,
+      opacity,
+      transform: `scale(${scale})`,
+      transformOrigin: 'center',
+      willChange: 'transform, opacity',
+      ...overrides,
+    }} />
+  );
+}
+
+
+// ── Font inlining ───────────────────────────────────────────────────────────
+// Copy every @font-face rule from the page into a <style> inside the svg's
+// foreignObject, with font URLs rewritten to data: URLs. Makes the svg
+// self-describing so serializing it alone (video export fast path) still
+// renders with the right fonts. Sets data-om-fonts-inlined on the svg when
+// done so the exporter can wait for it.
+
+function useInlineFontsInto(svgRef) {
+  React.useEffect(() => {
+    const svg = svgRef.current;
+    const host = svg && svg.querySelector('foreignObject > div');
+    if (!svg || !host) return;
+    let cancelled = false;
+    (async () => {
+      const rules = [];
+      for (const ss of document.styleSheets) {
+        let cssRules;
+        try { cssRules = ss.cssRules; } catch {
+          // Cross-origin sheet without crossorigin attr (e.g. the standard
+          // fonts.googleapis.com <link>) — fetch the CSS text directly and
+          // regex-extract the @font-face blocks.
+          if (ss.href) {
+            try {
+              const txt = await fetch(ss.href).then(r => { if (!r.ok) throw 0; return r.text(); });
+              for (const ff of (txt.match(/@font-face\s*{[^}]*}/g) || []))
+                rules.push({ css: ff, base: ss.href });
+            } catch {}
+          }
+          continue;
+        }
+        if (!cssRules) continue;
+        for (const r of cssRules) {
+          if (r.type === CSSRule.FONT_FACE_RULE) {
+            rules.push({ css: r.cssText, base: ss.href || location.href });
+          }
+        }
+      }
+      const toDataURL = (url) => fetch(url)
+        .then(r => { if (!r.ok) throw 0; return r.blob(); })
+        .then(b => new Promise(res => {
+          const fr = new FileReader();
+          fr.onload = () => res(fr.result);
+          fr.onerror = () => res(url);
+          fr.readAsDataURL(b);
+        }))
+        .catch(() => url);
+      const parts = await Promise.all(rules.map(async ({ css, base }) => {
+        const re = /url\((['"]?)([^'")]+)\1\)/g;
+        let out = css, m;
+        while ((m = re.exec(css))) {
+          const u = m[2];
+          if (u.startsWith('data:')) continue;
+          let abs; try { abs = new URL(u, base).href; } catch { continue; }
+          out = out.split(m[0]).join(`url("${await toDataURL(abs)}")`);
+        }
+        return out;
+      }));
+      if (cancelled || !parts.length) {
+        svg.setAttribute('data-om-fonts-inlined', 'true');
+        return;
+      }
+      const style = document.createElement('style');
+      style.textContent = parts.join('\n');
+      host.insertBefore(style, host.firstChild);
+      svg.setAttribute('data-om-fonts-inlined', 'true');
+    })();
+    return () => { cancelled = true; };
+  }, []);
+}
+
+
+function Stage({
+  width = 1280,
+  height = 720,
+  duration = 10,
+  background = '#f6f4ef',
+  fps = 60,
+  loop = true,
+  autoplay = true,
+  persistKey = 'animstage',
+  children,
+}) {
+  // Props arrive as strings when Stage is mounted via <x-import> (DC
+  // projects) — coerce so style={{width}} gets a number React can px-ify.
+  width = +width || 1280; height = +height || 720;
+  duration = +duration || 10; fps = +fps || 60;
+  if (typeof loop === 'string') loop = loop !== 'false';
+  if (typeof autoplay === 'string') autoplay = autoplay !== 'false';
+
+  const [time, setTime] = React.useState(() => {
+    try {
+      const v = parseFloat(localStorage.getItem(persistKey + ':t') || '0');
+      return isFinite(v) ? clamp(v, 0, duration) : 0;
+    } catch { return 0; }
+  });
+  const [playing, setPlaying] = React.useState(autoplay);
+  const [hoverTime, setHoverTime] = React.useState(null);
+  const [scale, setScale] = React.useState(1);
+
+  const stageRef = React.useRef(null);
+  const canvasRef = React.useRef(null);
+  const rafRef = React.useRef(null);
+  const lastTsRef = React.useRef(null);
+
+  // Persist playhead
+  React.useEffect(() => {
+    try { localStorage.setItem(persistKey + ':t', String(time)); } catch {}
+  }, [time, persistKey]);
+
+  // Auto-scale to fit viewport
+  React.useEffect(() => {
+    if (!stageRef.current) return;
+    const el = stageRef.current;
+    const measure = () => {
+      const barH = 44; // playback bar height
+      const s = Math.min(
+        el.clientWidth / width,
+        (el.clientHeight - barH) / height
+      );
+      setScale(Math.max(0.05, s));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    window.addEventListener('resize', measure);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', measure);
+    };
+  }, [width, height]);
+
+  // Animation loop
+  React.useEffect(() => {
+    if (!playing) {
+      lastTsRef.current = null;
+      return;
+    }
+    const step = (ts) => {
+      if (lastTsRef.current == null) lastTsRef.current = ts;
+      const dt = (ts - lastTsRef.current) / 1000;
+      lastTsRef.current = ts;
+      setTime((t) => {
+        let next = t + dt;
+        if (next >= duration) {
+          if (loop) next = next % duration;
+          else { next = duration; setPlaying(false); }
+        }
+        return next;
+      });
+      rafRef.current = requestAnimationFrame(step);
+    };
+    rafRef.current = requestAnimationFrame(step);
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      lastTsRef.current = null;
+    };
+  }, [playing, duration, loop]);
+
+  // Keyboard: space = play/pause, ← → = seek
+  React.useEffect(() => {
+    const onKey = (e) => {
+      if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+      if (e.code === 'Space') {
+        e.preventDefault();
+        setPlaying(p => !p);
+      } else if (e.code === 'ArrowLeft') {
+        setTime(t => clamp(t - (e.shiftKey ? 1 : 0.1), 0, duration));
+      } else if (e.code === 'ArrowRight') {
+        setTime(t => clamp(t + (e.shiftKey ? 1 : 0.1), 0, duration));
+      } else if (e.key === '0' || e.code === 'Home') {
+        setTime(0);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [duration]);
+
+  // Video-export protocol: the exporter dispatches this event per frame;
+  // pause + sync the playhead so the capture sees exactly that timestamp.
+  React.useEffect(() => {
+    const el = canvasRef.current;
+    if (!el) return;
+    const onSeek = (e) => {
+      setPlaying(false);
+      setTime(clamp(e.detail.time, 0, duration));
+    };
+    el.addEventListener('data-om-seek-to-time-frame', onSeek);
+    return () => el.removeEventListener('data-om-seek-to-time-frame', onSeek);
+  }, [duration]);
+
+  // Inline @font-face rules into the svg's foreignObject so the svg is
+  // self-describing — serializing it alone (for video export) then renders
+  // with the right fonts. Sets data-om-fonts-inlined once done.
+  useInlineFontsInto(canvasRef);
+
+  const displayTime = hoverTime != null ? hoverTime : time;
+
+  const ctxValue = React.useMemo(
+    () => ({ time: displayTime, duration, playing, setTime, setPlaying }),
+    [displayTime, duration, playing]
+  );
+
+  return (
+    <div
+      ref={stageRef}
+      style={{
+        position: 'absolute', inset: 0,
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center',
+        background: '#0a0a0a',
+        fontFamily: 'Inter, system-ui, sans-serif',
+      }}
+    >
+      {/* Canvas area — vertically centered in remaining space */}
+      <div style={{
+        flex: 1,
+        width: '100%',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        overflow: 'hidden',
+        minHeight: 0,
+      }}>
+        <svg
+          ref={canvasRef}
+          width={width} height={height}
+          data-om-exportable-video-with-duration-secs={duration}
+          style={{
+            transform: `scale(${scale})`,
+            transformOrigin: 'center',
+            flexShrink: 0,
+            boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
+            display: 'block',
+          }}
+        >
+          <foreignObject x="0" y="0" width="100%" height="100%">
+            <div
+              xmlns="http://www.w3.org/1999/xhtml"
+              style={{
+                width, height,
+                background,
+                position: 'relative',
+                overflow: 'hidden',
+              }}
+            >
+              <TimelineContext.Provider value={ctxValue}>
+                {children}
+              </TimelineContext.Provider>
+            </div>
+          </foreignObject>
+        </svg>
+      </div>
+
+      {/* Playback bar — stacked below canvas, never overlapping */}
+      <PlaybackBar
+        time={displayTime}
+        actualTime={time}
+        duration={duration}
+        playing={playing}
+        onPlayPause={() => setPlaying(p => !p)}
+        onReset={() => { setTime(0); }}
+        onSeek={(t) => setTime(t)}
+        onHover={(t) => setHoverTime(t)}
+      />
+    </div>
+  );
+}
+
+// ── Playback bar ────────────────────────────────────────────────────────────
+// Play/pause, return-to-begin, scrub track, time display.
+// Uses fixed-width time fields so layout doesn't thrash.
+
+function PlaybackBar({ time, duration, playing, onPlayPause, onReset, onSeek, onHover }) {
+  const trackRef = React.useRef(null);
+  const [dragging, setDragging] = React.useState(false);
+
+  const timeFromEvent = React.useCallback((e) => {
+    const rect = trackRef.current.getBoundingClientRect();
+    const x = clamp((e.clientX - rect.left) / rect.width, 0, 1);
+    return x * duration;
+  }, [duration]);
+
+  const onTrackMove = (e) => {
+    if (!trackRef.current) return;
+    const t = timeFromEvent(e);
+    if (dragging) {
+      onSeek(t);
+    } else {
+      onHover(t);
+    }
+  };
+
+  const onTrackLeave = () => {
+    if (!dragging) onHover(null);
+  };
+
+  const onTrackDown = (e) => {
+    setDragging(true);
+    const t = timeFromEvent(e);
+    onSeek(t);
+    onHover(null);
+  };
+
+  React.useEffect(() => {
+    if (!dragging) return;
+    const onUp = () => setDragging(false);
+    const onMove = (e) => {
+      if (!trackRef.current) return;
+      const t = timeFromEvent(e);
+      onSeek(t);
+    };
+    window.addEventListener('mouseup', onUp);
+    window.addEventListener('mousemove', onMove);
+    return () => {
+      window.removeEventListener('mouseup', onUp);
+      window.removeEventListener('mousemove', onMove);
+    };
+  }, [dragging, timeFromEvent, onSeek]);
+
+  const pct = duration > 0 ? (time / duration) * 100 : 0;
+  const fmt = (t) => {
+    const total = Math.max(0, t);
+    const m = Math.floor(total / 60);
+    const s = Math.floor(total % 60);
+    const cs = Math.floor((total * 100) % 100);
+    return `${String(m).padStart(1, '0')}:${String(s).padStart(2, '0')}.${String(cs).padStart(2, '0')}`;
+  };
+
+  const mono = 'JetBrains Mono, ui-monospace, SFMono-Regular, monospace';
+
+  return (
+    <div data-omelette-chrome style={{
+      display: 'flex', alignItems: 'center', gap: 12,
+      padding: '8px 16px',
+      background: 'rgba(20,20,20,0.92)',
+      borderTop: '1px solid rgba(255,255,255,0.08)',
+      width: '100%',
+      maxWidth: 680,
+      alignSelf: 'center',
+
+      borderRadius: 8,
+      color: '#f6f4ef',
+      fontFamily: 'Inter, system-ui, sans-serif',
+      userSelect: 'none',
+      flexShrink: 0,
+    }}>
+      <IconButton onClick={onReset} title="Return to start (0)">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M3 2v10M12 2L5 7l7 5V2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round"/>
+        </svg>
+      </IconButton>
+      <IconButton onClick={onPlayPause} title="Play/pause (space)">
+        {playing ? (
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <rect x="3" y="2" width="3" height="10" fill="currentColor"/>
+            <rect x="8" y="2" width="3" height="10" fill="currentColor"/>
+          </svg>
+        ) : (
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M3 2l9 5-9 5V2z" fill="currentColor"/>
+          </svg>
+        )}
+      </IconButton>
+
+      {/* Current time: fixed width so it doesn't thrash */}
+      <div style={{
+        fontFamily: mono,
+        fontSize: 12,
+        fontVariantNumeric: 'tabular-nums',
+        width: 64, textAlign: 'right',
+        color: '#f6f4ef',
+      }}>
+        {fmt(time)}
+      </div>
+
+      {/* Scrub track */}
+      <div
+        ref={trackRef}
+        onMouseMove={onTrackMove}
+        onMouseLeave={onTrackLeave}
+        onMouseDown={onTrackDown}
+        style={{
+          flex: 1,
+          height: 22,
+          position: 'relative',
+          cursor: 'pointer',
+          display: 'flex', alignItems: 'center',
+        }}
+      >
+        <div style={{
+          position: 'absolute',
+          left: 0, right: 0, height: 4,
+          background: 'rgba(255,255,255,0.12)',
+          borderRadius: 2,
+        }}/>
+        <div style={{
+          position: 'absolute',
+          left: 0, width: `${pct}%`, height: 4,
+          background: 'oklch(72% 0.12 250)',
+          borderRadius: 2,
+        }}/>
+        <div style={{
+          position: 'absolute',
+          left: `${pct}%`, top: '50%',
+          width: 12, height: 12,
+          marginLeft: -6, marginTop: -6,
+          background: '#fff',
+          borderRadius: 6,
+          boxShadow: '0 2px 4px rgba(0,0,0,0.4)',
+        }}/>
+      </div>
+
+      {/* Duration: fixed width */}
+      <div style={{
+        fontFamily: mono,
+        fontSize: 12,
+        fontVariantNumeric: 'tabular-nums',
+        width: 64, textAlign: 'left',
+        color: 'rgba(246,244,239,0.55)',
+      }}>
+        {fmt(duration)}
+      </div>
+
+      {typeof VideoEncoder !== 'undefined' && (
+        <IconButton
+          title="Export video"
+          onClick={() => window.parent.postMessage({ type: 'omelette:request-video-export' }, '*')}
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M7 2v7m0 0L4 6m3 3l3-3M2 12h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </IconButton>
+      )}
+    </div>
+  );
+}
+
+function IconButton({ children, onClick, title }) {
+  const [hover, setHover] = React.useState(false);
+  return (
+    <button
+      onClick={onClick}
+      title={title}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        width: 28, height: 28,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: hover ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.04)',
+        border: '1px solid rgba(255,255,255,0.1)',
+        borderRadius: 6,
+        color: '#f6f4ef',
+        cursor: 'pointer',
+        padding: 0,
+        transition: 'background 120ms',
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+
+// ── VideoSprite ─────────────────────────────────────────────────────────────
+// Renders a <video> that loops within [start,end] of its source at `speed`,
+// kept in sync with the Stage's playhead. Carries the
+// data-om-exportable-video-play-* attrs so video export can mix its audio.
+//
+//   <VideoSprite src="clip.mp4" start={2} end={5} speed={1}
+//     style={{ width: 640, height: 360 }} />
+
+function VideoSprite({ src, start = 0, end, speed = 1, style, ...rest }) {
+  start = +start || 0; speed = +speed || 1;
+  if (end != null) end = +end || undefined;
+  const t = useTime();
+  const ref = React.useRef(null);
+  const span = Math.max(0.001, ((end ?? start + 1) - start));
+  React.useEffect(() => {
+    const v = ref.current;
+    if (!v || v.readyState < 1) return;
+    const target = start + ((t * speed) % span);
+    if (Math.abs(v.currentTime - target) > 0.05) v.currentTime = target;
+  }, [t, start, span, speed]);
+  return (
+    <video
+      ref={ref}
+      src={src}
+      muted playsInline preload="auto"
+      data-om-exportable-video-play-start={start}
+      data-om-exportable-video-play-end={end ?? start + span}
+      data-om-exportable-video-play-speed={speed}
+      style={{ display: 'block', objectFit: 'cover', ...style }}
+      {...rest}
+    />
+  );
+}
+
+
+Object.assign(window, {
+  Easing, interpolate, animate, clamp,
+  TimelineContext, useTime, useTimeline,
+  Sprite, SpriteContext, useSprite,
+  TextSprite, ImageSprite, RectSprite, VideoSprite,
+  Stage, PlaybackBar,
+});
+
+
+</script>
+<script type="text/babel" data-from="atoms.jsx">
+/* OrbMaster trailer — scene library.
+   Reads the timeline globals from window (animations.jsx loads first).
+   Orientation-aware: every scene takes {W, H, port}. Brand colors are
+   hardcoded hex (CSS custom props don't survive the SVG video export). */
+(function () {
+  const { Sprite, useSprite, useTime, Easing, interpolate, animate, clamp } = window;
+
+  // ── brand palette ──
+  const C = {
+    night: '#1a0a2e', abyss: '#0d0020', void: '#07030f',
+    violet: '#7c3aed', amethyst: '#a855f7', indigo: '#4f46e5',
+    lav: '#e9d5ff', lav2: '#c4b5fd', lav3: '#a78bfa', cream: '#f0e6d3',
+    magenta: '#e879f9', pink: '#f9a8d4',
+    gold: '#fbbf24', amber: '#f59e0b', orange: '#fb923c',
+    teal: '#0d9488', teal3: '#5eead4', cyan: '#22d3ee',
+    win: '#34d399', lose: '#f87171', red: '#dc2626', white: '#f0f0f0',
+  };
+  const SANS = '"Segoe UI", system-ui, -apple-system, Roboto, sans-serif';
+  const MONO = '"Roboto Mono", ui-monospace, monospace';
+  const PIXEL = '"Press Start 2P", monospace';
+  const A = '../assets/';
+  const orbSrc = (c) => A + 'orbs/' + c + '.png';
+
+  // ── small helpers ──
+  const lerp = (a, b, t) => a + (b - a) * t;
+  // pop-in 0→1 with overshoot, gated to appear at `at`
+  function popIn(lt, at, dur = 0.45) {
+    if (lt < at) return 0;
+    return Easing.easeOutBack(clamp((lt - at) / dur, 0, 1));
+  }
+  function fadeIn(lt, at, dur = 0.4) {
+    return clamp((lt - at) / dur, 0, 1);
+  }
+
+  // =====================================================================
+  // Shared atoms
+  // =====================================================================
+
+  function Backdrop({ src, scrim = 0.62, scale0 = 1.06, scale1 = 1.16, tint }) {
+    const { localTime, duration } = useSprite();
+    const p = clamp(localTime / Math.max(0.01, duration), 0, 1);
+    const s = lerp(scale0, scale1, p);
+    return (
+      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', background: C.void }}>
+        {src && <img src={src} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', transform: `scale(${s})`, transformOrigin: 'center' }} />}
+        <div style={{ position: 'absolute', inset: 0, background: tint || `radial-gradient(circle at 50% 42%, rgba(40,12,80,0.25), rgba(7,3,15,${scrim}) 78%)` }} />
+        <div style={{ position: 'absolute', inset: 0, boxShadow: 'inset 0 0 240px rgba(0,0,0,0.85)' }} />
+      </div>
+    );
+  }
+
+  // Big marketing caption — kicker + headline, centered.
+  function Caption({ W, H, port, at = 0, kicker, lines, color = '#fff', y, accent = C.amethyst }) {
+    const { localTime } = useSprite();
+    const o = fadeIn(localTime, at, 0.45);
+    const rise = (1 - Easing.easeOutCubic(clamp((localTime - at) / 0.6, 0, 1))) * 26;
+    const big = port ? 88 : 76;
+    const cy = y != null ? y : (port ? H - 360 : H - 230);
+    return (
+      <div style={{ position: 'absolute', left: 0, right: 0, top: cy, textAlign: 'center', opacity: o, transform: `translateY(${rise}px)`, padding: '0 8%' }}>
+        {kicker && (
+          <div style={{ fontFamily: MONO, fontWeight: 700, fontSize: port ? 26 : 24, letterSpacing: '0.42em', textTransform: 'uppercase', color: accent, marginBottom: 18, textShadow: `0 0 16px ${accent}` }}>{kicker}</div>
+        )}
+        {lines.map((ln, i) => (
+          <div key={i} style={{ fontFamily: SANS, fontWeight: 800, fontSize: big, lineHeight: 1.04, color, letterSpacing: '-0.01em', textShadow: '0 4px 24px rgba(0,0,0,0.8)' }}>{ln}</div>
+        ))}
+      </div>
+    );
+  }
+
+  function Orb({ c, size, x, y, scale = 1, glow = true, dim = false }) {
+    return (
+      <div style={{ position: 'absolute', left: x, top: y, width: size, height: size, transform: `translate(-50%,-50%) scale(${scale})`, filter: glow ? `drop-shadow(0 0 ${size * 0.22}px ${({red:C.red,blue:C.indigo,green:C.win,yellow:C.gold,orange:C.orange,purple:C.amethyst,pink:C.pink,teal:C.teal3}[c]) || C.amethyst})` : 'none', opacity: dim ? 0.5 : 1 }}>
+        <img src={orbSrc(c)} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+      </div>
+    );
+  }
+
+  function Peg({ kind, size, x, y, scale = 1 }) {
+    const bg = kind === 'red' ? C.red : kind === 'white' ? C.white : 'rgba(255,255,255,0.10)';
+    const glow = kind === 'red' ? `0 0 ${size * 0.5}px ${C.red}` : kind === 'white' ? `0 0 ${size * 0.5}px rgba(255,255,255,0.7)` : 'none';
+    return <div style={{ position: 'absolute', left: x, top: y, width: size, height: size, borderRadius: '50%', background: bg, boxShadow: glow, transform: `translate(-50%,-50%) scale(${scale})`, border: kind === 'empty' ? '1px solid rgba(255,255,255,0.15)' : 'none' }} />;
+  }
+
+  window.OM_ATOMS = { C, SANS, MONO, PIXEL, A, orbSrc, lerp, popIn, fadeIn, Backdrop, Caption, Orb, Peg, Sprite, useSprite, useTime, Easing, interpolate, animate, clamp };
+})();
+
+</script>
+<script type="text/babel" data-from="scenes.jsx">
+/* OrbMaster trailer — scenes. Reads atoms from window.OM_ATOMS.
+   Each scene is a component taking {W,H,port}; it lives inside a <Sprite>
+   so useSprite() gives localTime within the scene's window. */
+(function () {
+  const T = window.OM_ATOMS;
+  const { C, SANS, MONO, PIXEL, A, orbSrc, lerp, popIn, fadeIn, Orb, Peg, Caption, Backdrop, useSprite, Easing, clamp } = T;
+
+  // ===================================================================
+  // HERO — the deduction board (place orbs → pegs → crack the code)
+  // ===================================================================
+  function GuessRow({ orbs, reds, whites, x, y, os, og, lt, orbAt, orbStagger, pegAt, active }) {
+    const cells = orbs.length;
+    const pegBox = os * 0.92;
+    // peg cluster sits right of the orbs
+    const pegX = x + cells * (os + og) + os * 0.35;
+    const pegS = os * 0.30, pegGap = pegS * 1.35;
+    const pegs = [];
+    for (let i = 0; i < 4; i++) {
+      const kind = i < reds ? 'red' : i < reds + whites ? 'white' : 'empty';
+      pegs.push(kind);
+    }
+    return (
+      <div>
+        {/* row plate */}
+        <div style={{ position: 'absolute', left: x - os * 0.4, top: y - os * 0.62, width: cells * (os + og) + pegBox + os * 0.5, height: os * 1.24, borderRadius: os * 0.32,
+          background: active ? 'rgba(88,28,220,0.28)' : 'rgba(30,10,74,0.55)', border: `2px solid ${active ? C.amethyst : 'rgba(124,58,237,0.5)'}`,
+          boxShadow: active ? `0 0 26px rgba(168,85,247,0.45)` : 'none' }} />
+        {orbs.map((c, i) => {
+          const at = orbAt + i * orbStagger;
+          const s = orbAt >= 0 ? popIn(lt, at, 0.42) : 1;
+          const drop = orbAt >= 0 ? (1 - clamp((lt - at) / 0.42, 0, 1)) * -os * 0.9 : 0;
+          if (s <= 0) return null;
+          return <Orb key={i} c={c} size={os} x={x + i * (os + og) + os / 2} y={y + drop} scale={s} glow />;
+        })}
+        {pegs.map((k, i) => {
+          const col = i % 2, rw = Math.floor(i / 2);
+          const ps = popIn(lt, pegAt + i * 0.08, 0.3);
+          return <Peg key={i} kind={k} size={pegS} x={pegX + col * pegGap} y={y - pegGap / 2 + rw * pegGap} scale={k === 'empty' ? 1 : ps} />;
+        })}
+      </div>
+    );
+  }
+
+  function DeductionScene({ W, H, port }) {
+    const { localTime } = useSprite();
+    const lt = localTime;
+    const os = port ? 104 : 92, og = port ? 20 : 18;
+    const cells = 4;
+    const boardW = cells * (os + og) + os * 1.9;
+    const bx = W / 2 - boardW / 2 + os * 0.4;
+    const topY = port ? 600 : 300;
+    const rowH = os * 1.5;
+    const boardTop = port ? 510 : 250;
+    const boardH = port ? 1090 : 640;
+
+    // header (boss strip)
+    const headO = fadeIn(lt, 0.1, 0.5);
+    // prior rows
+    const prior = [
+      { orbs: ['red', 'blue', 'green', 'yellow'], reds: 1, whites: 1 },
+      { orbs: ['orange', 'purple', 'blue', 'green'], reds: 1, whites: 2 },
+      { orbs: ['orange', 'blue', 'green', 'purple'], reds: 2, whites: 1 },
+    ];
+    const solve = ['orange', 'blue', 'purple', 'green'];
+    const solved = lt > 3.5;
+    const winGlow = clamp((lt - 3.4) / 0.5, 0, 1);
+
+    return (
+      <div style={{ position: 'absolute', inset: 0 }}>
+        <Backdrop src={A + 'backgrounds/bg-1.png'} scrim={0.72} />
+        {/* phone frame */}
+        <div style={{ position: 'absolute', left: W / 2, top: boardTop + boardH / 2, transform: 'translate(-50%,-50%)',
+          width: boardW + os * 1.1, height: boardH, borderRadius: 64, border: '3px solid rgba(124,58,237,0.5)',
+          background: 'linear-gradient(180deg, rgba(26,10,46,0.6), rgba(13,0,32,0.75))', boxShadow: '0 0 0 12px rgba(10,5,25,0.6), 0 40px 120px rgba(0,0,0,0.7)', opacity: headO }} />
+
+        {/* boss banner — 16:9 thumbnail above the board */}
+        <div style={{ position: 'absolute', left: W / 2, top: port ? 250 : 64, transform: 'translateX(-50%)', textAlign: 'center', opacity: headO }}>
+          <img src={A + 'bosses/06-pretty-pea.png'} alt="" style={{ width: port ? 380 : 232, borderRadius: 18, border: '2px solid rgba(124,58,237,0.6)', boxShadow: '0 0 24px rgba(168,85,247,0.4)' }} />
+          <div style={{ fontFamily: SANS, fontWeight: 800, fontSize: port ? 40 : 28, color: C.lav, marginTop: 6 }}>Pretty Pea&nbsp;&nbsp;<span style={{ fontFamily: MONO, fontWeight: 700, fontSize: port ? 24 : 19, color: solved ? C.win : C.orange, letterSpacing: '0.08em' }}>{solved ? '· CRACKED' : '· 3 LEFT'}</span></div>
+        </div>
+
+        {prior.map((r, i) => (
+          <GuessRow key={i} {...r} x={bx} y={topY + i * rowH} os={os} og={og} lt={lt}
+            orbAt={0.2 + i * 0.12} orbStagger={0.05} pegAt={0.5 + i * 0.12} />
+        ))}
+        {/* active solve row */}
+        <GuessRow orbs={solve} reds={4} whites={0} x={bx} y={topY + 3 * rowH} os={os} og={og} lt={lt}
+          orbAt={1.5} orbStagger={0.28} pegAt={3.0} active={!solved} />
+
+        {/* SOLVED burst */}
+        {winGlow > 0 && (
+          <div style={{ position: 'absolute', left: W / 2, top: topY + 3 * rowH, transform: `translate(-50%,-50%) scale(${0.6 + winGlow * 0.4})`, opacity: winGlow }}>
+            <div style={{ fontFamily: SANS, fontWeight: 900, fontSize: port ? 96 : 78, color: C.win, textShadow: `0 0 40px ${C.win}`, letterSpacing: '0.04em' }}>SOLVED</div>
+          </div>
+        )}
+
+        <Caption W={W} H={H} port={port} at={0.6} kicker="The deduction duel"
+          lines={port ? ['Read the pegs.', 'Crack the code.'] : ['Read the pegs. Crack the code.']}
+          y={port ? H - 250 : H - 170} accent={C.amethyst} />
+      </div>
+    );
+  }
+
+  // ===================================================================
+  // BOSS ROSTER montage → MindBreaker
+  // ===================================================================
+  function BossScene({ W, H, port }) {
+    const { localTime, duration } = useSprite();
+    const lt = localTime;
+    const ALL = ['01-lemons','02-templefrist','03-bigginsly','04-nanomic','05-natty-d','06-pretty-pea','07-sir-louie','08-queen-asabeth','09-elkgore','10-mad-martin'];
+    // gentle full-scene drift on the whole grid
+    const drift = lerp(1.0, 1.06, clamp(lt / duration, 0, 1));
+
+    return (
+      <div style={{ position: 'absolute', inset: 0 }}>
+        <Backdrop src={A + 'backgrounds/stone-wall.png'} scrim={0.74} />
+
+        {/* all ten bosses — staggered pop-in, then hold */}
+        <div style={{ position: 'absolute', left: W / 2, top: port ? H / 2 - 180 : H / 2 - 70, transform: `translate(-50%,-50%) scale(${drift})`, display: 'grid', gridTemplateColumns: port ? 'repeat(2, 1fr)' : 'repeat(5, 1fr)', gap: port ? 28 : 26, width: port ? 900 : 1480 }}>
+          {ALL.map((f, i) => {
+            const s = popIn(lt, 0.15 + i * 0.07, 0.45);
+            return <div key={f} style={{ transform: `scale(${clamp(s, 0, 1.12)})`, opacity: clamp(s, 0, 1) }}><img src={`${A}bosses/${f}.png`} alt="" style={{ width: '100%', borderRadius: 16, border: '2px solid rgba(124,58,237,0.45)', filter: 'drop-shadow(0 0 18px rgba(168,85,247,0.4))' }} /></div>;
+          })}
+        </div>
+
+        <Caption W={W} H={H} port={port} at={1.1} kicker="The campaign"
+          lines={port ? ['Ten minds.', 'One you.'] : ['Ten minds. One you.']}
+          accent={C.amethyst}
+          y={port ? H - 320 : H - 160} />
+      </div>
+    );
+  }
+
+  // ===================================================================
+  // DAILY + STREAK + LEADERBOARD
+  // ===================================================================
+  function DailyScene({ W, H, port }) {
+    const { localTime } = useSprite();
+    const lt = localTime;
+    const cardO = popIn(lt, 0.2, 0.5);
+    const streakN = Math.round(interpFlame(lt));
+    function interpFlame(t) { return clamp((t - 0.8) / 1.0, 0, 1) * 12; }
+    const rows = [
+      ['cipher_kate', '3 · 0:41', false, '🦊'],
+      ['orbwizard', '3 · 0:58', false, '🧙'],
+      ['You', '4 · 0:52', true, '🔮'],
+      ['deductodon', '4 · 1:10', false, '🦕'],
+    ];
+    const lbAt = 1.6;
+    const cardW = port ? 760 : 560;
+
+    return (
+      <div style={{ position: 'absolute', inset: 0 }}>
+        <Backdrop src={A + 'backgrounds/bg-4.png'} scrim={0.74} tint={`radial-gradient(circle at 50% 40%, rgba(13,80,74,0.30), rgba(7,3,15,0.82) 75%)`} />
+
+        {/* Daily card */}
+        <div style={{ position: 'absolute', left: port ? W / 2 : W * 0.30, top: port ? 300 : H / 2, transform: `translate(-50%,${port ? '0' : '-50%'}) scale(${cardO})`, width: cardW,
+          background: 'linear-gradient(160deg, rgba(45,27,105,0.62), rgba(15,5,40,0.7))', border: `2px solid ${C.teal}`, borderRadius: 36, padding: port ? 40 : 30, textAlign: 'center', boxShadow: '0 0 40px rgba(13,148,136,0.4)' }}>
+          <img src={A + 'bosses/mindbreaker.png'} alt="" style={{ width: '74%', filter: 'drop-shadow(0 0 22px rgba(13,148,136,0.7))' }} />
+          <div style={{ display: 'inline-block', fontFamily: SANS, fontWeight: 800, fontSize: port ? 26 : 22, color: C.teal3, border: `2px solid ${C.teal3}`, borderRadius: 999, padding: '6px 22px', margin: '6px 0' }}>DAILY · HARD</div>
+          <div style={{ fontFamily: MONO, fontWeight: 700, fontSize: port ? 40 : 32, color: C.orange, marginTop: 10 }}>🔥 {streakN} DAY STREAK</div>
+        </div>
+
+        {/* Leaderboard rows */}
+        <div style={{ position: 'absolute', left: port ? W / 2 : W * 0.72, top: port ? 1140 : H / 2, transform: `translate(-50%,${port ? '0' : '-50%'})`, width: port ? 800 : 620, display: 'flex', flexDirection: 'column', gap: port ? 14 : 12 }}>
+          {rows.map((r, i) => {
+            const s = popIn(lt - lbAt, i * 0.12, 0.42);
+            const slide = (1 - clamp((lt - lbAt - i * 0.12) / 0.42, 0, 1)) * 60;
+            return (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 18, padding: port ? '16px 22px' : '12px 18px', borderRadius: 18, opacity: clamp(s, 0, 1), transform: `translateX(${slide}px)`,
+                background: r[2] ? 'rgba(13,148,136,0.22)' : 'rgba(45,27,105,0.5)', border: `2px solid ${r[2] ? C.teal3 : 'rgba(124,58,237,0.35)'}` }}>
+                <div style={{ fontFamily: MONO, fontWeight: 700, fontSize: port ? 30 : 24, color: C.gold, width: 36 }}>{i + 1}</div>
+                <div style={{ width: port ? 52 : 44, height: port ? 52 : 44, borderRadius: '50%', background: 'rgba(13,0,32,0.6)', border: `2px solid ${C.violet}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: port ? 28 : 22 }}>{r[3]}</div>
+                <div style={{ flex: 1, fontFamily: SANS, fontWeight: 700, fontSize: port ? 32 : 26, color: C.lav }}>{r[0]}{r[2] && <span style={{ fontFamily: MONO, fontSize: port ? 18 : 15, background: C.teal, color: '#fff', borderRadius: 8, padding: '2px 10px', marginLeft: 12 }}>YOU</span>}</div>
+                <div style={{ fontFamily: MONO, fontSize: port ? 24 : 20, color: C.lav3 }}>{r[1]}</div>
+              </div>
+            );
+          })}
+        </div>
+
+        <Caption W={W} H={H} port={port} at={lbAt + 0.4} kicker="Compete worldwide"
+          lines={port ? ['A new code', 'every day.'] : ['A new code every day.']} accent={C.teal3}
+          y={port ? H - 300 : H - 150} />
+      </div>
+    );
+  }
+
+  // ===================================================================
+  // LOGO STING
+  // ===================================================================
+  function LogoScene({ W, H, port }) {
+    const { localTime, duration } = useSprite();
+    const lt = localTime;
+    const logoS = Easing.easeOutBack(clamp(lt / 0.8, 0, 1));
+    const glow = 0.4 + 0.6 * Math.abs(Math.sin(lt * 1.6));
+    const tagO = fadeIn(lt, 0.9, 0.6);
+    const iconO = popIn(lt, 1.4, 0.6);
+    return (
+      <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(circle at 50% 42%, #2a0f4e 0%, ${C.abyss} 60%, ${C.void} 100%)` }}>
+        {/* drifting orb sparks */}
+        {['purple','teal','pink','gold','red','blue'].map((c, i) => {
+          const ang = (i / 6) * Math.PI * 2 + lt * 0.4;
+          const rad = (port ? 360 : 320) + Math.sin(lt + i) * 24;
+          return <Orb key={c} c={c} size={port ? 70 : 60} x={W / 2 + Math.cos(ang) * rad} y={(port ? H / 2 - 120 : H / 2 - 40) + Math.sin(ang) * rad * 0.6} glow scale={0.8} dim />;
+        })}
+        <img src={A + 'logos/title.png'} alt="OrbMaster" style={{ position: 'absolute', left: W / 2, top: port ? H / 2 - 140 : H / 2 - 60, transform: `translate(-50%,-50%) scale(${logoS})`, width: port ? 860 : 760, filter: `drop-shadow(0 0 ${30 * glow}px rgba(168,85,247,0.9))` }} />
+        <div style={{ position: 'absolute', left: W / 2, top: port ? H / 2 + 180 : H / 2 + 200, transform: 'translateX(-50%)', textAlign: 'center', opacity: tagO }}>
+          <div style={{ fontFamily: SANS, fontWeight: 800, fontSize: port ? 52 : 46, color: '#fff', letterSpacing: '0.01em', textShadow: '0 2px 18px rgba(0,0,0,0.7)' }}>Crack the code. Master the Orbs.</div>
+          <div style={{ marginTop: port ? 40 : 28, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20, opacity: iconO }}>
+            <img src={A + 'logos/app-icon.png'} alt="" style={{ width: port ? 110 : 92, borderRadius: 24, boxShadow: '0 0 30px rgba(168,85,247,0.6)' }} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ===================================================================
+  // HOOKS (0–5.5s) — three openings
+  // ===================================================================
+  function HookMindbreaker({ W, H, port }) {
+    const { localTime } = useSprite();
+    const lt = localTime;
+    const zoom = lerp(1.18, 1.0, Easing.easeOutCubic(clamp(lt / 3.2, 0, 1)));
+    const reveal = fadeIn(lt, 0.3, 1.0);
+    const line1 = fadeIn(lt, 1.2, 0.5);
+    const line2 = fadeIn(lt, 2.7, 0.5);
+    const flick = 0.86 + 0.14 * Math.abs(Math.sin(lt * 9));
+    return (
+      <div style={{ position: 'absolute', inset: 0, background: C.void }}>
+        <img src={A + 'bosses/mindbreaker.png'} alt="" style={{ position: 'absolute', left: W / 2, top: port ? H * 0.40 : H / 2, transform: `translate(-50%,-50%) scale(${zoom})`, width: port ? 1340 : 1500, opacity: reveal * flick, filter: 'drop-shadow(0 0 70px rgba(232,121,249,0.6))' }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 50% 45%, transparent 30%, rgba(7,3,15,0.85) 78%)' }} />
+        {/* scanlines */}
+        <div style={{ position: 'absolute', inset: 0, background: 'repeating-linear-gradient(0deg, rgba(232,121,249,0.05) 0 2px, transparent 2px 5px)', mixBlendMode: 'screen', opacity: 0.6 }} />
+        <div style={{ position: 'absolute', left: 0, right: 0, top: port ? H - 620 : H - 250, textAlign: 'center', padding: '0 8%' }}>
+          <div style={{ fontFamily: MONO, fontWeight: 700, fontSize: port ? 30 : 26, letterSpacing: '0.3em', color: C.magenta, opacity: line1, textShadow: `0 0 18px ${C.magenta}` }}>I HID THE CODE.</div>
+          <div style={{ fontFamily: SANS, fontWeight: 900, fontSize: port ? 92 : 78, color: '#fff', marginTop: 18, opacity: line2, textShadow: '0 4px 24px rgba(0,0,0,0.8)' }}>Think you can crack it?</div>
+        </div>
+      </div>
+    );
+  }
+
+  function HookCrack({ W, H, port }) {
+    const { localTime } = useSprite();
+    const lt = localTime;
+    const os = port ? 150 : 130;
+    const seq = ['orange', 'blue', 'purple', 'green'];
+    const cx = W / 2, cy = port ? H / 2 - 120 : H / 2 - 40;
+    const totalW = seq.length * os + (seq.length - 1) * 28;
+    const startX = cx - totalW / 2 + os / 2;
+    const pegAt = 2.2;
+    const flash = clamp((lt - 2.5) / 0.18, 0, 1) * clamp(1 - (lt - 2.7) / 0.4, 0, 1);
+    const headO = fadeIn(lt, 3.0, 0.5);
+    return (
+      <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(circle at 50% 42%, #240b44, ${C.void} 75%)` }}>
+        {seq.map((c, i) => {
+          const at = 0.4 + i * 0.32;
+          const s = popIn(lt, at, 0.4);
+          const drop = (1 - clamp((lt - at) / 0.4, 0, 1)) * -260;
+          if (s <= 0) return null;
+          return <Orb key={i} c={c} size={os} x={startX + i * (os + 28)} y={cy + drop} scale={s} glow />;
+        })}
+        {/* pegs */}
+        {[0,1,2,3].map((i) => {
+          const s = popIn(lt, pegAt + i * 0.1, 0.3);
+          return <Peg key={i} kind={i < 3 ? 'red' : 'white'} size={os * 0.34} x={cx - os * 0.55 + (i % 2) * os * 0.7} y={cy + os * 0.95 + Math.floor(i / 2) * os * 0.7} scale={s} />;
+        })}
+        <div style={{ position: 'absolute', inset: 0, background: '#fff', opacity: flash * 0.5 }} />
+        <div style={{ position: 'absolute', left: 0, right: 0, top: port ? H - 520 : H - 250, textAlign: 'center', opacity: headO }}>
+          <div style={{ fontFamily: MONO, fontWeight: 700, fontSize: port ? 28 : 24, letterSpacing: '0.34em', color: C.amethyst }}>RED. WHITE. REPEAT.</div>
+          <div style={{ fontFamily: SANS, fontWeight: 900, fontSize: port ? 104 : 86, color: '#fff', marginTop: 16, textShadow: '0 4px 24px rgba(0,0,0,0.8)' }}>CRACK THE CODE</div>
+        </div>
+      </div>
+    );
+  }
+
+  function HookClimb({ W, H, port }) {
+    const { localTime } = useSprite();
+    const lt = localTime;
+    const tiers = ['Novice', 'Cipher', 'Adept', 'Savant', 'MindBreaker', 'OrbMaster'];
+    const ti = Math.min(tiers.length - 1, Math.floor(lt / 0.5));
+    const frames = ['novice','cipher','adept','savant','mindbreaker','orbmaster'];
+    const headO = fadeIn(lt, 3.2, 0.5);
+    const crestS = popIn(lt, 0.2, 0.5);
+    return (
+      <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(circle at 50% 40%, #102a3e, ${C.void} 76%)` }}>
+        {/* climbing crest */}
+        <div style={{ position: 'absolute', left: W / 2, top: port ? H / 2 - 180 : H / 2 - 70, transform: `translate(-50%,-50%) scale(${crestS})`, textAlign: 'center' }}>
+          <img src={`${A}frames/${frames[ti]}.png`} alt="" style={{ width: port ? 380 : 320, filter: 'drop-shadow(0 0 30px rgba(168,85,247,0.6))' }} />
+          <div style={{ fontFamily: SANS, fontWeight: 800, fontSize: port ? 54 : 44, color: ti >= 4 ? C.gold : C.lav, marginTop: 8, textShadow: ti >= 4 ? `0 0 24px ${C.gold}` : 'none' }}>{tiers[ti]}</div>
+        </div>
+        {/* rising bar */}
+        <div style={{ position: 'absolute', left: W / 2, top: port ? H / 2 + 120 : H / 2 + 140, transform: 'translateX(-50%)', width: port ? 620 : 540, height: 16, borderRadius: 999, background: 'rgba(13,0,32,0.6)', overflow: 'hidden', border: '2px solid rgba(124,58,237,0.4)' }}>
+          <div style={{ width: `${clamp(lt / 3.0, 0, 1) * 100}%`, height: '100%', background: `linear-gradient(90deg, ${C.violet}, ${C.cyan})` }} />
+        </div>
+        <div style={{ position: 'absolute', left: 0, right: 0, top: port ? H - 520 : H - 250, textAlign: 'center', opacity: headO }}>
+          <div style={{ fontFamily: MONO, fontWeight: 700, fontSize: port ? 28 : 24, letterSpacing: '0.3em', color: C.cyan }}>SIX RANKS. ONE THRONE.</div>
+          <div style={{ fontFamily: SANS, fontWeight: 900, fontSize: port ? 100 : 84, color: '#fff', marginTop: 16, textShadow: '0 4px 24px rgba(0,0,0,0.8)' }}>OUTRANK THEM ALL</div>
+        </div>
+      </div>
+    );
+  }
+
+  const { interpolate } = T;
+  window.OM_SCENES = { DeductionScene, BossScene, DailyScene, LogoScene, HookMindbreaker, HookCrack, HookClimb };
+})();
+
+</script>
+<script type="text/babel" data-from="trailer.jsx">
+/* OrbMaster trailer — composition + audio. Reads window.OM_SCENES. */
+(function () {
+  const { Sprite, useTimeline } = window;
+  const S = window.OM_SCENES;
+
+  const HOOKS = { mindbreaker: S.HookMindbreaker, crack: S.HookCrack, climb: S.HookClimb };
+  const DUR = 30;
+
+  // Background music as an in-timeline <video> (an mp3 plays audio-only).
+  // The data-om-exportable-video-play-* attrs make the exporter MIX its audio
+  // into the rendered MP4. It is NOT muted, so it also plays in live preview.
+  function MusicTrack({ src }) {
+    const { time, playing } = useTimeline();
+    const ref = React.useRef(null);
+    const playingRef = React.useRef(playing);
+    playingRef.current = playing;
+    React.useEffect(() => {
+      const v = ref.current;
+      if (!v) return;
+      if (playing) v.play().catch(() => {});
+      else v.pause();
+    }, [playing]);
+    React.useEffect(() => {
+      const v = ref.current;
+      if (!v || !v.duration) return;
+      const target = Math.min(time, v.duration - 0.05);
+      if (Math.abs(v.currentTime - target) > 0.3) v.currentTime = target;
+    }, [time]);
+    // Browsers block unmuted autoplay without a gesture, and the Stage
+    // autoplays. Start the track on the first user interaction (the play
+    // button, space, or any click anywhere in the page all count).
+    React.useEffect(() => {
+      const kick = () => { const v = ref.current; if (v && playingRef.current) v.play().catch(() => {}); };
+      window.addEventListener('pointerdown', kick);
+      window.addEventListener('keydown', kick);
+      return () => { window.removeEventListener('pointerdown', kick); window.removeEventListener('keydown', kick); };
+    }, []);
+    return (
+      <video
+        ref={ref}
+        src={src}
+        playsInline
+        preload="auto"
+        data-om-exportable-video-play-start={0}
+        data-om-exportable-video-play-end={DUR}
+        data-om-exportable-video-play-speed={1}
+        style={{ position: 'absolute', left: 0, top: 0, width: 2, height: 2, opacity: 0, pointerEvents: 'none' }}
+      />
+    );
+  }
+
+  function Trailer({ variant = 'mindbreaker', W, H, port, audioSrc = '../assets/audio/mindbreaker-theme.mp3' }) {
+    const Hook = HOOKS[variant] || S.HookMindbreaker;
+    return (
+      <>
+        <MusicTrack src={audioSrc} />
+        <Sprite start={0} end={5.5}><Hook W={W} H={H} port={port} /></Sprite>
+        <Sprite start={5.5} end={13.5}><S.DeductionScene W={W} H={H} port={port} /></Sprite>
+        <Sprite start={13.5} end={20.5}><S.BossScene W={W} H={H} port={port} /></Sprite>
+        <Sprite start={20.5} end={26.0}><S.DailyScene W={W} H={H} port={port} /></Sprite>
+        <Sprite start={26.0} end={30.0}><S.LogoScene W={W} H={H} port={port} /></Sprite>
+      </>
+    );
+  }
+
+  // Kept as a no-op for backward compatibility (audio now lives in MusicTrack).
+  function AudioSync() { return null; }
+
+  window.OM_TRAILER = { Trailer, AudioSync, MusicTrack };
+})();
+
+</script>
+<script type="text/babel">
+  const { Stage } = window;
+  const { Trailer, AudioSync } = window.OM_TRAILER;
+  function App() {
+    return (
+      <Stage width={1080} height={1920} duration={30} autoplay={true} background="#07030f" persistKey="om-clean-crack">
+        <AudioSync />
+        <Trailer variant="crack" W={1080} H={1920} port={true} />
+      </Stage>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
