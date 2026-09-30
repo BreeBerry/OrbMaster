@@ -502,11 +502,16 @@
   .ability-name { margin-top: 2px; text-align: center; line-height: 1.2; }
 
   .guess-grid-area {
-    flex: 1; overflow-y: auto; padding: 8px 12px;
-    display: flex; flex-direction: column; justify-content: flex-end;
+    flex: 1; min-height: 0; overflow-y: auto; padding: 8px 12px;
+    display: flex; flex-direction: column;
+    -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
   }
+  /* Bottom-anchor the rows while they fit. (justify-content:flex-end would push
+     overflow above the top edge, where it can't be scrolled to.) */
+  .guess-grid-area > :first-child { margin-top: auto; }
   .guess-row {
     display: flex; align-items: center; gap: 6px;
+    flex-shrink: 0;
     margin-bottom: 6px; background: rgba(30,10,74,0.6);
     border-radius: 8px; padding: 5px 8px;
     border: 1px solid #4c1d95;
@@ -1032,6 +1037,24 @@
   }
   .toggle-btn.on::after { left: 23px; }
   .toggle-btn.off::after { left: 3px; }
+  .settings-row-slider { flex-direction: column; align-items: stretch; gap: 8px; }
+  .settings-slider-head { display: flex; justify-content: space-between; align-items: center; }
+  .settings-slider-val { font-size: 12px; color: #a78bfa; font-variant-numeric: tabular-nums; }
+  .volume-slider {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 6px; border-radius: 3px; outline: none; margin: 8px 0;
+    background: linear-gradient(to right, #7c3aed var(--vol, 50%), #3b1fa0 var(--vol, 50%));
+    touch-action: pan-y;
+  }
+  .volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 22px; height: 22px; border-radius: 50%; background: white;
+    border: 2px solid #7c3aed; cursor: pointer;
+  }
+  .volume-slider::-moz-range-thumb {
+    width: 18px; height: 18px; border-radius: 50%; background: white;
+    border: 2px solid #7c3aed; cursor: pointer;
+  }
   .reset-btn {
     padding: 8px 14px; background: #7f1d1d;
     border: 1px solid #dc2626; border-radius: 8px;
@@ -2058,6 +2081,14 @@
       </div>
       <button class="toggle-btn on" id="toggle-music" onclick="toggleSetting('music')"></button>
     </div>
+    <div class="settings-row settings-row-slider">
+      <div class="settings-slider-head">
+        <div class="settings-label">Music Volume</div>
+        <div class="settings-slider-val" id="music-volume-val">50%</div>
+      </div>
+      <input type="range" class="volume-slider" id="music-volume" min="0" max="100" step="1" value="50"
+             aria-label="Music volume" oninput="setMusicVolume(this.value)" onchange="commitMusicVolume()">
+    </div>
     <div class="settings-row">
       <div>
         <div class="settings-label">Animations</div>
@@ -2107,7 +2138,7 @@
       </div>
       <button class="reset-btn" onclick="confirmReset()">⚠️ Reset</button>
     </div>
-    <div class="settings-version">OrbMaster v1.12 · BreezyBee Games</div>
+    <div class="settings-version">OrbMaster v1.14 · BreezyBee Games</div>
     <button class="modal-btn cancel" style="margin-top:14px;" onclick="closeModal('modal-settings')">Close</button>
   </div>
 </div>
@@ -6315,6 +6346,7 @@ function initSettings() {
     const btn = document.getElementById('toggle-'+key);
     if (btn) { btn.className = 'toggle-btn ' + (val?'on':'off'); }
   });
+  syncMusicVolumeUI();
   renderBgPicker();
   applyTitleBg();
   if (typeof updateSignInUI === 'function') updateSignInUI();
@@ -6380,6 +6412,34 @@ function battleInProgress() {
   const mpScreen = document.getElementById('screen-multiplayer');
   if (mp && mpScreen && mpScreen.classList.contains('active') && mp.style.display !== 'none') return true;
   return false;
+}
+
+// Music volume: 0–100 slider. 50 matches the original fixed level (gain 0.35);
+// 100 doubles it. Stored as STATE.settings.musicVolume (default 50).
+function getMusicVolume() {
+  const v = Number(STATE.settings?.musicVolume);
+  return Number.isFinite(v) ? Math.min(100, Math.max(0, v)) : 50;
+}
+
+function syncMusicVolumeUI() {
+  const v = getMusicVolume();
+  const slider = document.getElementById('music-volume');
+  const label  = document.getElementById('music-volume-val');
+  if (slider) { slider.value = v; slider.style.setProperty('--vol', v + '%'); }
+  if (label)  label.textContent = v + '%';
+}
+
+function setMusicVolume(val) {
+  if (!STATE.settings) STATE.settings = {};
+  STATE.settings.musicVolume = Math.round(Number(val));
+  syncMusicVolumeUI();
+  AUDIO.applySettings();
+}
+
+function commitMusicVolume() {
+  saveState();
+  // Dragging up from 0 while music is toggled on should be audible immediately
+  if (STATE.settings?.music !== false) AUDIO.startMusic();
 }
 
 function toggleSetting(key) {
@@ -6647,7 +6707,7 @@ const AUDIO = {
   applySettings() {
     if (!this.ctx) return;
     const s = STATE.settings || {};
-    this.bgGain.gain.setTargetAtTime(s.music  !== false ? 0.35 : 0, this.ctx.currentTime, 0.1);
+    this.bgGain.gain.setTargetAtTime(s.music  !== false ? (getMusicVolume() / 100) * 0.7 : 0, this.ctx.currentTime, 0.1);
     this.sfxGain.gain.setTargetAtTime(s.sfx !== false ? 1.0  : 0, this.ctx.currentTime, 0.1);
   },
 

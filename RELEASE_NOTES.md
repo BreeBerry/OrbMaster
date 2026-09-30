@@ -1,5 +1,19 @@
 # OrbMaster — Release Notes
 
+## v1.14 (September 2026)
+
+### Play Store "What's new" (short)
+
+> Turn the music your way! There's a new Music Volume slider in Settings. Plus a fix so you can scroll back through all your earlier guesses during a battle again.
+
+### What's new in 1.14
+
+- **🔊 Music volume slider** — Settings now has a Music Volume slider under the Music toggle. Drag it to set the level for the main theme and boss tracks; it applies instantly and is remembered. The default matches the previous loudness, and you can go up to twice as loud. The Music toggle still mutes everything and keeps your slider position.
+- **🐞 Battle scrolling fixed** — when a battle ran long, the earliest guesses could get stuck above the top of the board and couldn't be scrolled to. You can now scroll back through every guess and its feedback in Campaign, Daily Challenge, and Gauntlet battles.
+- Internal: the version shown at the bottom of Settings now matches the store version.
+
+---
+
 ## v1.13 (September 2026)
 
 ### Play Store "What's new" (short)
